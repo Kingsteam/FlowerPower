@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Irrigation Planner",
+        "description": "Basic settings. At most {max_open_valves} valve per water supply is open at any time.",
+        "data": {
+          "weather_entity": "Weather source",
+          "window_start": "Watering window start",
+          "window_end": "Watering window end"
+        },
+        "data_description": {
+          "weather_entity": "Optional. A weather entity used for rain and frost forecasts.",
+          "window_start": "Earliest start of a watering run.",
+          "window_end": "The watering run must be finished by this time."
+        }
+      }
+    },
+    "error": {
+      "window_empty": "Start and end of the watering window must not be equal."
+    },
+    "abort": {
+      "single_instance_allowed": "Irrigation Planner is already configured."
+    }
+  }
+}

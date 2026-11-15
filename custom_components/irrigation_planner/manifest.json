@@ -1,0 +1,14 @@
+{
+  "domain": "irrigation_planner",
+  "name": "Bewässerungsplaner",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/Kingsteam/irrigation_planner",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/Kingsteam/irrigation_planner/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.1.0"
+}

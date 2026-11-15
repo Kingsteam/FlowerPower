@@ -1,0 +1,45 @@
+[project]
+name = "irrigation_planner"
+version = "0.1.0"
+description = "Bewässerungsplaner: Home-Assistant-Integration (HACS)"
+requires-python = ">=3.14"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+  "ASYNC", # asyncio
+  "B",     # bugbear
+  "C4",    # comprehensions
+  "D",     # docstrings
+  "E",     # pycodestyle
+  "F",     # pyflakes
+  "I",     # isort
+  "PT",    # pytest
+  "RUF",   # ruff
+  "SIM",   # simplify
+  "UP",    # pyupgrade
+  "W",     # pycodestyle warnings
+]
+ignore = [
+  "D202", # Leerzeile nach Docstring
+  "D203", # widerspricht D211
+  "D213", # widerspricht D212
+  "E501", # Zeilenlänge regelt der Formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D100", "D101", "D102", "D103", "D107"]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+known-first-party = ["custom_components.irrigation_planner"]
+combine-as-imports = true

@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Bewässerungsplaner einrichten",
+        "description": "Grundeinstellungen. An jeder Wasserversorgung ist immer nur {max_open_valves} Ventil gleichzeitig offen.",
+        "data": {
+          "weather_entity": "Wetterquelle",
+          "window_start": "Zeitfenster Beginn",
+          "window_end": "Zeitfenster Ende"
+        },
+        "data_description": {
+          "weather_entity": "Optional. Eine Wetter-Entität für Regen- und Frostprognose.",
+          "window_start": "Frühester Start eines Gießlaufs.",
+          "window_end": "Bis dahin muss der Gießlauf fertig sein."
+        }
+      }
+    },
+    "error": {
+      "window_empty": "Beginn und Ende des Zeitfensters dürfen nicht gleich sein."
+    },
+    "abort": {
+      "single_instance_allowed": "Der Bewässerungsplaner ist bereits eingerichtet."
+    }
+  }
+}
