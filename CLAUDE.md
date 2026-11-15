@@ -1,4 +1,5 @@
 # Bewässerungsplaner (`irrigation_planner`): Hinweise für Claude
+\nDas Repo heißt **FlowerPower** (github.com/Kingsteam/FlowerPower, privat). Die Erweiterung selbst heißt in Home Assistant weiterhin `irrigation_planner`.
 
 Eigene Home-Assistant-Integration (HACS) für die Gartenbewässerung. Der Besitzer ist kein Entwickler: antworte auf Deutsch, in einfacher Sprache, und erkläre, was du änderst und warum.
 

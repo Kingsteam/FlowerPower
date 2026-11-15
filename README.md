@@ -22,7 +22,7 @@ Was geplant ist, steht im [Konzept](docs/KONZEPT.md). Wie die fertige Erweiterun
 Sobald es eine erste nutzbare Version gibt:
 
 1. In HACS oben rechts auf die drei Punkte, dann **Benutzerdefinierte Repositories**.
-2. Die Adresse `https://github.com/Kingsteam/irrigation_planner` eintragen, Typ **Integration**.
+2. Die Adresse `https://github.com/Kingsteam/FlowerPower` eintragen, Typ **Integration**.
 3. „Bewässerungsplaner“ herunterladen und Home Assistant neu starten.
 4. **Einstellungen → Geräte & Dienste → Integration hinzufügen → Bewässerungsplaner.**
 
