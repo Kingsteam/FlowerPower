@@ -10,7 +10,7 @@ Eigene Home-Assistant-Integration (HACS) für die Gartenbewässerung. Der Besitz
 
 Gartenplan, berechnete Gießdauer je Zone, ausfallsichere Ventilsteuerung, Überwachung des Durchflusses und Winterpause, unabhängig von der Hardware. Ziel und Architektur: `docs/KONZEPT.md`. Geplante Bedienung: `docs/HANDBUCH.md`.
 
-Stand 0.3.0: **Phase 1 (MVP Backend) und Phase 2 (Berechnung) fertig.** Die Integration steuert Ventile über Dienste, Knöpfe und den Zeitplan; alles wird in der Oberfläche eingerichtet (Options-Flow mit Ventil-Assistent und Testlauf); Winterpause und Durchflussüberwachung sind eingebaut; die Gießdauer kann je Zone von Hand, berechnet (Wasserhaushalt nach FAO-56) oder aus einer Entität (z. B. Smart Irrigation) kommen. Noch nicht: Plan-Editor/Panel (Phase 3; bis dahin Fläche je Zone von Hand), Dashboard-Karte (Phase 4).
+Stand 0.3.0: **Phase 1 (MVP Backend) und Phase 2 (Berechnung) fertig.** Die Integration steuert Ventile über Dienste, Knöpfe und den Zeitplan; alles wird in der Oberfläche eingerichtet (Options-Flow mit Ventil-Assistent und Testlauf); Winterpause und Durchflussüberwachung sind eingebaut; die Gießdauer kann je Zone von Hand, berechnet (Wasserhaushalt nach FAO-56) oder aus einer Entität (z. B. Smart Irrigation) kommen. Phase 3 (Plan-Editor) läuft: Panel „Bewässerung“ in der Seitenleiste mit Luftbild (basemap.at, Esri, eigene Adresse), eigenem Bild mit Maßstab oder Raster; Sprinkler und Beete zeichnen, Ventile und Sensoren platzieren; die gezeichnete Fläche ersetzt die Fläche von Hand. Noch nicht: Dashboard-Karte (Phase 4).
 
 ## Sicherheitsregeln (nicht verhandelbar)
 
@@ -51,13 +51,16 @@ Das Wissen über die konkrete Anlage des Besitzers liegt im separaten privaten R
 | `water_balance.py` | Rechenkern Phase 2, ohne Home Assistant: ET0 (FAO-56 Penman-Monteith, sonst Hargreaves), `PLANTS` (Kc, Wurzeltiefe), `SOILS` (nutzbare Feldkapazität), wirksamer Regen, Defizit, Liter, Dauer. Tests mit FAO-56-Beispielen |
 | `balance.py` | `BalanceManager`: Wetter sammeln (10 min), Tagesabschluss beim ersten Messwert eines neuen Tages, Läufe verbuchen (`scheduler.async_add_run_listener`), Bodenfeuchte ersetzt Schätzung, Winter ruht und setzt zurück; `planned(zone)` liefert die Dauer nach Dauer-Art (Programme über `ProgramManager.balance`); eigener Store `irrigation_planner.balance`. Regensensor = Sensor `rain_mm` ohne Zonen |
 | `geometry.py` | Plan in Metern (x Osten, y Süden), Winkel wie Kompass (0° Nord, im Uhrzeigersinn): Flächen (Kreissegment, Polygon), `zone_area` (Zeichnung vor Fläche von Hand, nutzt `balance.py`), Punkt-in-Zone, Überlappung (Raster), Karten-Maßstab (Web-Mercator) und Umrechnung Geo ↔ Plan |
-| `websocket_api.py` | nur Platzhalter mit Docstring |
+| `websocket_api.py` | Befehle für das Panel: `plan/get`, `plan/save` (nur Admin; nur Hintergrund und Geometrie, ganzes Modell wird vorher geprüft), `plan/subscribe` (Zustand je Zone). Öffnet nie ein Ventil |
+| `panel.py` | Panel anmelden (`/bewaesserung`, statische Dateien unter `/irrigation_planner_static`), Bilder hochladen/ausliefern (`/api/irrigation_planner/image`, nur PNG/JPEG/WebP, Ordner `<config>/irrigation_planner/`) |
+| `frontend/` | **gebautes** Panel (`irrigation-planner-panel.js`), nie von Hand ändern; CI prüft, dass es zum Quelltext passt |
+| `frontend-src/` | Quelltext des Panels: TypeScript + Lit, Build mit Vite; `geometry.ts` (wie `geometry.py`, Tests mit vitest), `panel.ts`, `styles.ts`, `types.ts` |
 | `strings.json`, `translations/` | Texte (en = `strings.json`, de) |
 | `tests/` | pytest mit `pytest-homeassistant-custom-component`; `helpers.py` (simulierte Ventile `SimValves`, `make_model`), Fixtures `sim`, `setup`, `advance` in `conftest.py`; simulierte Ventile sind echte `switch`-Entitäten der Plattform `test`, mit Durchfluss- und Statussensor (`make_model(sensors=True)`) |
 | `docs/` | `KONZEPT.md`, `HANDBUCH.md`, `bilder/`, `entwuerfe.html` |
 | `devtools/testinstanz/` | simulierte Test-Home-Assistant-Instanz: `start.py`, Simulator `irrigation_sim` (10 Ventile, Bodenfeuchte, Wasserzähler, Störungen); nicht Teil der Auslieferung |
 
-Noch nicht angelegt (siehe Konzept Abschnitt 3): `frontend/`, `frontend-src/`. Neue Zonen/Programme brauchen ein Neuladen des Eintrags, damit ihre Entitäten entstehen.
+Neue Zonen/Programme brauchen ein Neuladen des Eintrags, damit ihre Entitäten entstehen.
 
 ## Tests und Prüfungen
 
@@ -71,6 +74,14 @@ ruff check . && ruff format --check .
 ```
 
 Zum Ausprobieren von Hand: einmalig `uv pip install -r devtools/testinstanz/requirements.txt`, dann `python devtools/testinstanz/start.py` (siehe `devtools/testinstanz/README.md`). Diese Instanz ist komplett simuliert; nie eine Kopie der echten Installation verwenden.
+
+Panel (Node 22):
+
+```bash
+cd frontend-src && npm ci && npm test && npm run build   # schreibt custom_components/irrigation_planner/frontend/
+```
+
+Nach jeder Änderung in `frontend-src/` neu bauen und das Ergebnis mit committen. In der Testinstanz reicht danach ein Neuladen der Seite.
 
 `requirements_test.txt` pinnt `pytest-homeassistant-custom-component`; die Version bestimmt, gegen welche Home-Assistant-Version getestet wird (0.13.375 → HA 2026.10.4). Bei neuen HA-Versionen anheben. Auf GitHub laufen zusätzlich `hassfest` und die HACS-Prüfung (`.github/workflows/`).
 

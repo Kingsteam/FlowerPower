@@ -130,6 +130,23 @@ BERECHNUNG = {
 for _werte in BERECHNUNG.values():
     _werte["duration_mode"] = "calculated"
 
+# Phase 3: Zonen 1 bis 5 sind schon auf dem Plan gezeichnet (Meter, x nach
+# Osten, y nach Süden); 6 bis 10 bleiben zum Ausprobieren leer.
+PLAN = {
+    1: {"polygon": [[-12, 6], [-3, 6], [-3, 7.4], [-12, 7.4]]},
+    2: {"polygon": [[-12, -8], [-9, -8], [-9, -5], [-12, -5]]},
+    3: {"polygon": [[4, -8], [10, -8], [10, -7], [4, -7]]},
+    4: {"center": [-6.5, 0.5], "radius_m": 5.5, "start_angle_deg": 90, "arc_deg": 180},
+    5: {"center": [4, 1], "radius_m": 5.5, "start_angle_deg": 270, "arc_deg": 180},
+}
+NAMEN = {
+    1: "Blumenbeet Süd",
+    2: "Rosen",
+    3: "Töpfe Terrasse",
+    4: "Rasen West",
+    5: "Rasen Ost",
+}
+
 
 def _beispielgarten() -> dict:
     """Gartenmodell mit den 10 simulierten Zonen.
@@ -163,13 +180,14 @@ def _beispielgarten() -> dict:
         zonen.append(
             {
                 "id": f"zone_{n}",
-                "name": f"Zone {n}",
+                "name": NAMEN.get(n, f"Zone {n}"),
                 "type": "drip",
                 "valve_id": f"ventil_{n}",
                 "max_duration_s": 1800,
                 "duration_s": 120 + 30 * n,
                 # Phase 2: Zonen 1 bis 5 mit berechneter Dauer.
                 **(BERECHNUNG.get(n, {})),
+                **(PLAN.get(n, {})),
             }
         )
         ventile.append(
@@ -184,6 +202,8 @@ def _beispielgarten() -> dict:
                 "water_supply_id": "hauswasser",
                 # Durchfluss wie im Simulator (sonst erst nach dem ersten Lauf).
                 "learned_flow_l_min": FLUSS[n - 1],
+                "position": [-3 + 1.2 * n, -10.5] if n <= 5 else None,
+                "safety_level": "device" if n <= 8 else "ha_only",
             }
         )
     return {
@@ -226,6 +246,7 @@ def _beispielgarten() -> dict:
                 "kind": "soil_moisture",
                 "entity": _sim_ref("sensor", f"soil_{n}"),
                 "zone_ids": [f"zone_{n}"],
+                "position": {1: [-4, 6.7], 2: [-9.6, -7.4], 3: [9.4, -7.5]}[n],
                 "field_capacity_pct": 45,
                 "wilting_point_pct": 12,
             }

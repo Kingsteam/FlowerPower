@@ -1,0 +1,88 @@
+# Testinstanz für den Bewässerungsplaner.
+# Komplett simuliert: keine echten Geräte, keine Cloud, keine Zugangsdaten.
+homeassistant:
+  name: Testgarten
+  # Neutraler Beispielort in Österreich (nicht der Wohnort des Besitzers),
+  # damit das Luftbild von basemap.at im Plan-Editor etwas zeigt.
+  latitude: 48.0
+  longitude: 16.0
+  elevation: 500
+  unit_system: metric
+  time_zone: Europe/Vienna
+  country: AT
+  language: de
+  currency: EUR
+
+# Nur das Nötigste statt default_config (das würde Bluetooth, USB usw. laden).
+frontend:
+config:
+history:
+logbook:
+recorder:
+  purge_keep_days: 3
+energy:
+system_health:
+search:
+logger:
+  default: warning
+  logs:
+    custom_components.irrigation_planner: debug
+    custom_components.irrigation_sim: info
+
+# Simulierte Ventile, Sensoren und Wasserzähler
+irrigation_sim:
+
+# Stellschrauben für das simulierte Wetter
+input_number:
+  sim_temperatur:
+    name: Simulierte Temperatur
+    min: -15
+    max: 40
+    step: 0.5
+    initial: 18
+    unit_of_measurement: "°C"
+  sim_luftfeuchte:
+    name: Simulierte Luftfeuchte
+    min: 10
+    max: 100
+    step: 1
+    initial: 60
+    unit_of_measurement: "%"
+  sim_wind:
+    name: Simulierter Wind
+    min: 0
+    max: 80
+    step: 1
+    initial: 8
+    unit_of_measurement: "km/h"
+  sim_regen:
+    name: Simulierter Regen heute
+    min: 0
+    max: 50
+    step: 0.5
+    initial: 0
+    unit_of_measurement: "mm"
+
+input_select:
+  sim_wetterlage:
+    name: Simulierte Wetterlage
+    options: [sunny, partlycloudy, cloudy, rainy, pouring, snowy]
+    initial: sunny
+
+template:
+  - weather:
+      - name: Simuliertes Wetter
+        unique_id: sim_weather
+        condition_template: "{{ states('input_select.sim_wetterlage') }}"
+        temperature_template: "{{ states('input_number.sim_temperatur') | float }}"
+        temperature_unit: "°C"
+        humidity_template: "{{ states('input_number.sim_luftfeuchte') | float }}"
+        wind_speed_template: "{{ states('input_number.sim_wind') | float }}"
+        wind_speed_unit: "km/h"
+  - sensor:
+      - name: Simulierter Regen
+        unique_id: sim_rain
+        unit_of_measurement: "mm"
+        device_class: precipitation
+        state_class: measurement
+        state: "{{ states('input_number.sim_regen') | float }}"

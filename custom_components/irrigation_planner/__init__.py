@@ -21,6 +21,7 @@ from .balance import BalanceManager
 from .const import CONF_WEATHER_ENTITY, CONF_WINDOW_END, DOMAIN, LOGGER, NAME
 from .drivers.ha import HassValveDriver
 from .drivers.registry import create_driver
+from .panel import async_register_panel, async_remove_panel
 from .profiles import Profile, async_load_builtin_profiles
 from .programs import ProgramManager
 from .scheduler import IrrigationScheduler
@@ -28,6 +29,7 @@ from .season import Season
 from .services import async_setup_services
 from .store import IrrigationPlannerStore
 from .watchdog import Watchdog
+from .websocket_api import async_register as async_register_websocket
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -87,6 +89,7 @@ type IrrigationPlannerConfigEntry = ConfigEntry[IrrigationPlannerData]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Registriert die Dienste (einmal, unabhängig vom Config-Entry)."""
     async_setup_services(hass)
+    async_register_websocket(hass)
     return True
 
 
@@ -150,6 +153,7 @@ async def async_setup_entry(
     watchdog.async_start()
     balance.async_start()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await async_register_panel(hass)
     LOGGER.debug(
         "Bewässerungsplaner eingerichtet: %s Zonen, %s steuerbare Ventile",
         len(store.model.zones),
@@ -163,6 +167,7 @@ async def async_unload_entry(
 ) -> bool:
     """Entlädt den Config-Entry und schließt dabei offene Ventile."""
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    async_remove_panel(hass)
     entry.runtime_data.programs.async_stop()
     entry.runtime_data.watchdog.async_stop()
     if entry.runtime_data.season is not None:

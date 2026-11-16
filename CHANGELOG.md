@@ -9,6 +9,11 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 - Geometrie des Gartenplans (`geometry.py`): Flächen von Sprinklern und Beeten, Überlappungen, Maßstab von Kartenkacheln.
 - Modell: Hintergrund des Plans (leer, Bild mit Maßstab oder Luftbild eines Kartendienstes), Position von Ventilen; Prüfung von Radius, Öffnungswinkel und Beet-Punkten.
 - Die Berechnung nimmt die Fläche aus der Zeichnung, sonst die Fläche von Hand.
+- Panel „Bewässerung“ in der Seitenleiste (Plan-Editor): Luftbild von basemap.at oder Esri (live im Browser geladen, gespeichert werden nur Mitte und Zoom), eigene Kartenadresse, eigenes Bild mit Maßstab aus zwei Punkten oder Raster; Sprinkler (Mittelpunkt, Reichweite, Richtung und Bogen mit Anfassern) und Beete (Ecken) zeichnen, Ventile und Sensoren platzieren, Rückgängig, Zustand der Zonen live (läuft, wartet, gesperrt), „Jetzt gießen“ (reiht nur ein).
+- WebSocket-Befehle `irrigation_planner/plan/get`, `plan/save`, `plan/subscribe`; Hochladen von Hintergrundbildern.
+
+### Behoben
+- Die Vorlage `configuration.yaml` der Testinstanz fehlte im Repo (wurde von `.gitignore` ausgeblendet).
 
 ## [0.3.0] – 2026-11-16
 

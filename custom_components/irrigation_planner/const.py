@@ -99,7 +99,7 @@ MAP_PROVIDERS: Final = {
         "name": "basemap.at Orthofoto (nur Österreich)",
         "url": "https://mapsneu.wien.gv.at/basemap/bmaporthofoto30cm/normal/google3857/{z}/{y}/{x}.jpeg",
         "attribution": "Datenquelle: basemap.at (CC BY 4.0)",
-        "max_zoom": 20,
+        "max_zoom": 19,
     },
     "esri": {
         "name": "Esri World Imagery (Nutzungsbedingungen beachten)",

@@ -12,6 +12,8 @@ python devtools/testinstanz/start.py
 
 Dann <http://127.0.0.1:8123> öffnen. Benutzer und Passwort stehen in `../testinstanz-daten/zugang.txt`. Der Datenordner liegt außerhalb des Repos und kann jederzeit gelöscht werden; beim nächsten Start entsteht eine frische Instanz.
 
+Der Plan-Editor ist unter **Bewässerung** in der Seitenleiste. Im Beispielgarten sind die Zonen 1 bis 5 schon gezeichnet, 6 bis 10 sind zum Ausprobieren frei. Der Testort ist ein neutraler Platz in Niederösterreich (Wald), damit das Luftbild von basemap.at etwas zeigt.
+
 Beim ersten Start erledigt das Skript die Ersteinrichtung und legt den Bewässerungsplaner an (Wetter: „Simuliertes Wetter“). Der Code des Bewässerungsplaners ist verlinkt: nach einer Änderung Home Assistant neu starten.
 
 Fehlermeldungen zu `ffmpeg`, `conversation`, `camera` usw. im Log sind harmlos. Diese Teile von Home Assistant werden hier nicht gebraucht.
