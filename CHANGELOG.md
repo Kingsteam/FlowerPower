@@ -6,6 +6,9 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 ## [Unveröffentlicht]
 
 ### Neu
+- Berechnete Dauer wird angewendet: Programme und „Jetzt gießen“ nutzen je Zone die Dauer nach ihrer Dauer-Art (von Hand, berechnet, aus Entität wie Smart Irrigation). Zonen unter 1 mm Bedarf entfallen; ohne gelernten Durchfluss gilt die Dauer von Hand. „Nach Priorität“ sortiert bei Gleichstand nach Bedarf.
+- Regenvorhersage: Sind in den nächsten 24 h mindestens 5 mm angesagt, wird ein geplanter Lauf übersprungen.
+- Anzeigen je Zone „Wasserbedarf“ (mm) und „Geplante Dauer“, dazu „Verdunstung (ET0) gestern“. Dienste `recalculate` und `reset_balance`.
 - Wasserhaushalt im Betrieb (`balance.py`): sammelt alle 10 Minuten Temperatur, Luftfeuchte, Wind (Wetter-Entität) und Regen (Regensensor), schließt nach Mitternacht den Tag ab (ET0, je Zone Defizit fortschreiben), verbucht jede Bewässerung, nutzt Bodenfeuchtesensoren, ruht in der Winterpause und beginnt danach bei 0. Eigener Speicher `.storage/irrigation_planner.balance`.
 - Rechenkern für Phase 2 (`water_balance.py`): Verdunstung ET0 nach FAO-56 Penman-Monteith (Strahlung aus dem Temperaturunterschied geschätzt), sonst Hargreaves; Pflanzenfaktoren, Bodenarten, nutzbare Feldkapazität, wirksamer Regen, Bedarf → Liter → Dauer. Geprüft mit den Rechenbeispielen aus FAO-56.
 - Zonen: Fläche, Effizienz und Dauer-Art (von Hand, berechnet, aus einer Entität); Bodenfeuchtesensoren: Feldkapazität und Welkepunkt.

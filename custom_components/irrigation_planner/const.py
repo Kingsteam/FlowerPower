@@ -85,3 +85,9 @@ LEARN_MIN_RUN_S: Final = 60  # nur aus Läufen ab dieser Länge lernen
 LEARN_WEIGHT: Final = 0.3  # Gewicht eines neuen Laufs im gleitenden Mittel
 EVENT_ALARM: Final = "irrigation_planner_alarm"
 SERVICE_RELEASE_ZONE: Final = "release_zone"
+
+# Phase 2: Berechnung
+MIN_NEED_MM: Final = 1.0  # darunter wird nicht gegossen
+FORECAST_RAIN_SKIP_MM: Final = 5.0  # so viel Regen in 24 h erwartet: überspringen
+SERVICE_RECALCULATE: Final = "recalculate"
+SERVICE_RESET_BALANCE: Final = "reset_balance"

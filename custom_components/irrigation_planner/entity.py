@@ -86,6 +86,9 @@ class PlannerEntity(Entity):
         self.async_on_remove(
             self.data.programs.async_add_listener(self.async_write_ha_state)
         )
+        self.async_on_remove(
+            self.data.balance.async_add_listener(self.async_write_ha_state)
+        )
 
 
 class ZoneEntity(PlannerEntity):

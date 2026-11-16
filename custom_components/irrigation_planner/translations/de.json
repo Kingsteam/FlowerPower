@@ -71,6 +71,20 @@
           "description": "ID der Zone."
         }
       }
+    },
+    "recalculate": {
+      "name": "Neu berechnen",
+      "description": "Frischt Bedarf und geplante Dauer aller Zonen auf."
+    },
+    "reset_balance": {
+      "name": "Wasserhaushalt zurücksetzen",
+      "description": "Setzt das Defizit einer Zone (oder aller Zonen) auf 0, z. B. nach starkem Regen.",
+      "fields": {
+        "zone_id": {
+          "name": "Zonen-ID",
+          "description": "Leer = alle Zonen."
+        }
+      }
     }
   },
   "entity": {
@@ -156,6 +170,15 @@
       },
       "program_duration": {
         "name": "Geschätzte Dauer"
+      },
+      "et0": {
+        "name": "Verdunstung (ET0) gestern"
+      },
+      "need": {
+        "name": "Wasserbedarf"
+      },
+      "planned_duration": {
+        "name": "Geplante Dauer"
       }
     },
     "switch": {

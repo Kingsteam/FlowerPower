@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import UnitOfTime
+from homeassistant.const import UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -32,8 +32,14 @@ async def async_setup_entry(
         RunEndSensor(entry),
         QueueSensor(entry),
     ]
+    entities.append(Et0Sensor(entry))
     for zone in model.zones:
-        entities += [ZoneStateSensor(entry, zone), ZoneLastRunSensor(entry, zone)]
+        entities += [
+            ZoneStateSensor(entry, zone),
+            ZoneLastRunSensor(entry, zone),
+            ZoneNeedSensor(entry, zone),
+            ZonePlannedSensor(entry, zone),
+        ]
     for program in model.programs:
         entities += [
             NextRunSensor(entry, program),
@@ -223,3 +229,96 @@ class ProgramDurationSensor(ProgramEntity, SensorEntity):
     def native_value(self) -> float:
         """Minuten inklusive Pausen."""
         return round(plan_total_s(self.data.programs.plan(self.program)) / 60, 1)
+
+
+class Et0Sensor(PlannerEntity, SensorEntity):
+    """Verdunstung (ET0) des letzten abgeschlossenen Tages."""
+
+    _attr_native_unit_of_measurement = UnitOfLength.MILLIMETERS
+    _attr_suggested_display_precision = 1
+
+    def __init__(self, entry: IrrigationPlannerConfigEntry) -> None:
+        """Legt den Sensor an."""
+        super().__init__(entry, "et0", main_device(entry))
+
+    @property
+    def native_value(self) -> float | None:
+        """Mm des letzten Tages."""
+        history = self.data.balance.history
+        return round(history[-1].et0_mm, 2) if history else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object]:
+        """Tag, Regen und die letzten Tage."""
+        history = self.data.balance.history
+        if not history:
+            return {}
+        return {
+            "day": history[-1].day,
+            "rain_mm": round(history[-1].rain_mm, 1),
+            "history": [
+                {
+                    "day": h.day,
+                    "et0_mm": round(h.et0_mm, 1),
+                    "rain_mm": round(h.rain_mm, 1),
+                }
+                for h in history[-7:]
+            ],
+        }
+
+
+class ZoneNeedSensor(ZoneEntity, SensorEntity):
+    """Wasserbedarf (Defizit) einer Zone in mm."""
+
+    _attr_native_unit_of_measurement = UnitOfLength.MILLIMETERS
+    _attr_suggested_display_precision = 1
+
+    def __init__(self, entry: IrrigationPlannerConfigEntry, zone) -> None:
+        """Legt den Sensor an."""
+        super().__init__(entry, "need", zone)
+
+    @property
+    def native_value(self) -> float:
+        """Defizit in mm."""
+        return round(self.data.balance.deficit_mm(self.zone), 2)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object]:
+        """Bodenspeicher und ob gemessen."""
+        from .balance import zone_taw
+
+        balance = self.data.balance.balance(self.zone_id)
+        return {
+            "soil_storage_mm": round(zone_taw(self.zone), 1),
+            "measured": balance.measured,
+            "last_irrigation_mm": round(balance.last_irrigation_mm, 1),
+        }
+
+
+class ZonePlannedSensor(ZoneEntity, SensorEntity):
+    """Geplante Gießdauer einer Zone (nach ihrer Dauer-Art)."""
+
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_suggested_display_precision = 1
+
+    def __init__(self, entry: IrrigationPlannerConfigEntry, zone) -> None:
+        """Legt den Sensor an."""
+        super().__init__(entry, "planned_duration", zone)
+
+    @property
+    def native_value(self) -> float:
+        """Minuten (0 = kein Bedarf)."""
+        return round(self.data.balance.planned(self.zone).seconds / 60, 2)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object]:
+        """Herkunft, Liter, Dauer-Art."""
+        planned = self.data.balance.planned(self.zone)
+        attrs: dict[str, object] = {
+            "reason": planned.reason,
+            "mode": self.zone.duration_mode.value,
+        }
+        if planned.liters is not None:
+            attrs["liters"] = round(planned.liters, 1)
+        return attrs

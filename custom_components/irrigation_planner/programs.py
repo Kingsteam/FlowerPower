@@ -24,15 +24,18 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
+from typing import TYPE_CHECKING
 
 from homeassistant.const import UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
 
 from .const import (
     CYCLE_DEFAULT_S,
+    FORECAST_RAIN_SKIP_MM,
     FROST_THRESHOLD_C,
     LOGGER,
     RAIN_CONDITIONS,
@@ -41,6 +44,9 @@ from .const import (
 from .model import GardenModel, Program, ProgramMode, Zone
 from .scheduler import IrrigationScheduler, QueueError
 from .store import IrrigationPlannerStore
+
+if TYPE_CHECKING:
+    from .balance import BalanceManager
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,34 +61,57 @@ class Step:
 # Ablaufplan -------------------------------------------------------------------
 
 
-def _zones_of(model: GardenModel, program: Program) -> list[Zone]:
-    """Zonen des Programms, die gießen können (aktiv, mit Ventil und Dauer)."""
+type DurationOf = Callable[[Zone], int]
+type NeedOf = Callable[[Zone], float]
+
+
+def _manual_duration(zone: Zone) -> int:
+    return zone.duration_s or 0
+
+
+def _zones_of(
+    model: GardenModel,
+    program: Program,
+    duration_of: DurationOf,
+    need_of: NeedOf | None,
+) -> list[tuple[Zone, int]]:
+    """Zonen des Programms, die gießen sollen (aktiv, mit Ventil und Dauer > 0)."""
     by_id = {z.id: z for z in model.zones}
     zones = []
     for zone_id in program.zone_ids:
         zone = by_id.get(zone_id)
         if zone is None or not zone.enabled or zone.valve_id is None:
             continue
-        if not zone.duration_s:
-            LOGGER.debug("Programm %s: Zone %s hat keine Dauer", program.id, zone_id)
+        duration = duration_of(zone)
+        if duration <= 0:
+            LOGGER.debug("Programm %s: Zone %s ohne Dauer/Bedarf", program.id, zone_id)
             continue
-        zones.append(zone)
+        if zone.max_duration_s:
+            duration = min(duration, zone.max_duration_s)
+        zones.append((zone, duration))
     if program.mode is ProgramMode.PRIORITY:
-        zones.sort(key=lambda z: -z.priority)  # stabil: gleiche Priorität bleibt
+        # Höchste Priorität zuerst, bei Gleichstand der größte Bedarf.
+        zones.sort(
+            key=lambda zd: (-zd[0].priority, -(need_of(zd[0]) if need_of else 0))
+        )
     return zones
 
 
-def _limit(zone: Zone) -> int:
-    duration = zone.duration_s or 0
-    return min(duration, zone.max_duration_s) if zone.max_duration_s else duration
+def build_plan(
+    model: GardenModel,
+    program: Program,
+    duration_of: DurationOf = _manual_duration,
+    need_of: NeedOf | None = None,
+) -> list[Step]:
+    """Übersetzt ein Programm in Schritte.
 
-
-def build_plan(model: GardenModel, program: Program) -> list[Step]:
-    """Übersetzt ein Programm in Schritte."""
-    zones = _zones_of(model, program)
+    ``duration_of`` liefert die Dauer je Zone (Standard: von Hand); Zonen mit
+    0 entfallen. ``need_of`` sortiert „Nach Priorität“ bei Gleichstand.
+    """
+    zones = _zones_of(model, program, duration_of, need_of)
     pause = max(0, program.pause_between_s)
     if program.mode is not ProgramMode.CYCLE_SOAK:
-        steps = [Step(z.id, _limit(z), pause) for z in zones]
+        steps = [Step(z.id, d, pause) for z, d in zones]
     else:
         steps = _cycle_soak(zones, program, pause)
     if steps:
@@ -90,15 +119,17 @@ def build_plan(model: GardenModel, program: Program) -> list[Step]:
     return steps
 
 
-def _cycle_soak(zones: list[Zone], program: Program, pause: int) -> list[Step]:
+def _cycle_soak(
+    zones: list[tuple[Zone, int]], program: Program, pause: int
+) -> list[Step]:
     cycle = max(1, program.cycle_s or CYCLE_DEFAULT_S)
     soak = max(0, program.soak_s or 0)
-    remaining = {z.id: _limit(z) for z in zones}
+    remaining = {z.id: duration for z, duration in zones}
     steps: list[Step] = []
     clock = 0  # Sekunden seit Programmstart
     last_end: dict[str, int] = {}
     while any(remaining.values()):
-        for zone in zones:
+        for zone, _ in zones:
             if remaining[zone.id] <= 0:
                 continue
             # Einziehen lassen: frühestens soak Sekunden nach der letzten Phase.
@@ -199,6 +230,42 @@ def weather_skip_reason(
     return None
 
 
+async def async_forecast_rain_mm(
+    hass: HomeAssistant, weather_entity: str | None
+) -> float | None:
+    """Erwarteter Regen der nächsten 24 h (mm) aus der Wettervorhersage.
+
+    Erst stündlich (Summe der nächsten 24 h), sonst täglich (erster Tag).
+    ``None``, wenn keine Vorhersage zu bekommen ist.
+    """
+    if not weather_entity or not hass.services.has_service("weather", "get_forecasts"):
+        return None
+    for kind in ("hourly", "daily"):
+        try:
+            response = await hass.services.async_call(
+                "weather",
+                "get_forecasts",
+                {"entity_id": weather_entity, "type": kind},
+                blocking=True,
+                return_response=True,
+            )
+        except HomeAssistantError:
+            continue
+        forecast = ((response or {}).get(weather_entity) or {}).get("forecast") or []
+        if not forecast:
+            continue
+        if kind == "daily":
+            return float(forecast[0].get("precipitation") or 0)
+        limit = dt_util.utcnow() + timedelta(hours=24)
+        total = 0.0
+        for item in forecast:
+            when = dt_util.parse_datetime(str(item.get("datetime", "")))
+            if when is not None and when <= limit:
+                total += float(item.get("precipitation") or 0)
+        return total
+    return None
+
+
 # Verwaltung -------------------------------------------------------------------
 
 
@@ -230,6 +297,8 @@ class ProgramManager:
         self.weather_entity = weather_entity
         self.window_end = window_end
         self.results: dict[str, ProgramResult] = {}
+        # Wasserhaushalt (für berechnete Dauer); wird nach dem Anlegen gesetzt.
+        self.balance: BalanceManager | None = None
         self._skip_next: set[str] = set()
         self._listeners: list[Callable[[], None]] = []
         self._unsub: CALLBACK_TYPE | None = None
@@ -247,8 +316,16 @@ class ProgramManager:
         raise QueueError(f"Programm {program_id} gibt es nicht")
 
     def plan(self, program: Program) -> list[Step]:
-        """Aktueller Plan eines Programms."""
-        return build_plan(self.model, program)
+        """Aktueller Plan eines Programms (mit berechneter Dauer, falls vorhanden)."""
+        if self.balance is None:
+            return build_plan(self.model, program)
+        balance = self.balance
+        return build_plan(
+            self.model,
+            program,
+            lambda zone: balance.planned(zone).seconds,
+            balance.deficit_mm,
+        )
 
     def next_start(
         self, program: Program, now: datetime | None = None
@@ -298,7 +375,8 @@ class ProgramManager:
         steps = self.plan(program)
         if not steps:
             raise QueueError(
-                f"Programm „{program.name}“ hat keine Zone mit Ventil und Dauer"
+                f"Programm „{program.name}“: keine Zone mit Ventil und Bedarf "
+                "bzw. Dauer"
             )
         self.scheduler.async_enqueue_program(
             program.id, [(s.zone_id, s.duration_s, s.pause_after_s) for s in steps]
@@ -323,8 +401,7 @@ class ProgramManager:
         """Gibt an, ob der nächste Start übersprungen wird."""
         return program_id in self._skip_next
 
-    @callback
-    def _on_minute(self, now: datetime) -> None:
+    async def _on_minute(self, now: datetime) -> None:
         if not self.automatic_active:
             return
         now = dt_util.as_local(now).replace(second=0, microsecond=0)
@@ -337,6 +414,10 @@ class ProgramManager:
                 reason = "von Hand übersprungen"
             else:
                 reason = weather_skip_reason(self.hass, self.weather_entity, program)
+            if reason is None and program.skip_on_rain:
+                rain = await async_forecast_rain_mm(self.hass, self.weather_entity)
+                if rain is not None and rain >= FORECAST_RAIN_SKIP_MM:
+                    reason = f"{rain:.1f} mm Regen erwartet"
             if reason is not None:
                 LOGGER.info("Programm %s übersprungen: %s", program.name, reason)
                 self.results[program.id] = ProgramResult(now, False, reason)

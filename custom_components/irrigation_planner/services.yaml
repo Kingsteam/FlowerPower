@@ -36,3 +36,11 @@ release_zone:
       example: rasen_vorne
       selector:
         text:
+recalculate:
+reset_balance:
+  fields:
+    zone_id:
+      required: false
+      example: rasen_vorne
+      selector:
+        text:

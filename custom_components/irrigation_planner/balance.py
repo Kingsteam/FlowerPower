@@ -42,9 +42,9 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, MIN_NEED_MM
 from .drivers.ha import resolve_entity_id
-from .model import GardenModel, Sensor, SensorKind, Zone, ZoneType
+from .model import DurationMode, GardenModel, Sensor, SensorKind, Zone, ZoneType
 from .scheduler import IrrigationScheduler, Run
 from .store import IrrigationPlannerStore
 from .water_balance import (
@@ -53,8 +53,10 @@ from .water_balance import (
     EFFICIENCY_SPRINKLER,
     PLANTS,
     DayWeather,
+    duration_for,
     effective_rain,
     et0_for_day,
+    liters_for,
     mm_delivered,
     total_available_water,
     update_deficit,
@@ -165,6 +167,16 @@ class ZoneBalance:
     deficit_mm: float = 0.0
     measured: bool = False  # aus einem Bodenfeuchtesensor
     last_irrigation_mm: float = 0.0
+
+
+@dataclass(slots=True)
+class Planned:
+    """Geplante Gießdauer einer Zone und woher sie kommt."""
+
+    seconds: int  # 0 = nicht gießen
+    reason: str
+    need_mm: float | None = None
+    liters: float | None = None
 
 
 @dataclass(slots=True)
@@ -287,9 +299,12 @@ class BalanceManager:
         return lambda: self._listeners.remove(update)
 
     @callback
-    def _notify(self) -> None:
+    def async_notify(self) -> None:
+        """Informiert alle Angemeldeten."""
         for update in list(self._listeners):
             update()
+
+    _notify = async_notify
 
     # Abfragen -----------------------------------------------------------------
 
@@ -303,6 +318,48 @@ class BalanceManager:
         if measured is not None:
             return measured
         return self.balance(zone.id).deficit_mm
+
+    def planned(self, zone: Zone) -> Planned:
+        """Geplante Dauer nach der Dauer-Art der Zone."""
+        if zone.duration_mode is DurationMode.ENTITY:
+            seconds = self._entity_seconds(zone)
+            if seconds is None:
+                return self._manual(zone, "Entität ohne Wert, Dauer von Hand")
+            return Planned(seconds, "aus Entität")
+        if zone.duration_mode is DurationMode.CALCULATED:
+            return self._calculated(zone)
+        return self._manual(zone, "von Hand")
+
+    @staticmethod
+    def _manual(zone: Zone, reason: str) -> Planned:
+        return Planned(zone.duration_s or 0, reason)
+
+    def _calculated(self, zone: Zone) -> Planned:
+        need = self.deficit_mm(zone)
+        if need < MIN_NEED_MM:
+            return Planned(0, "kein Bedarf", need_mm=need)
+        valve = next((v for v in self.model.valves if v.id == zone.valve_id), None)
+        flow = valve.learned_flow_l_min if valve else None
+        if not flow or not zone.area_m2:
+            planned = self._manual(zone, "noch kein Durchfluss gelernt, Dauer von Hand")
+            planned.need_mm = need
+            return planned
+        liters = liters_for(need, zone.area_m2, zone_efficiency(zone))
+        return Planned(
+            duration_for(liters, flow), "berechnet", need_mm=need, liters=liters
+        )
+
+    def _entity_seconds(self, zone: Zone) -> int | None:
+        if zone.duration_entity is None:
+            return None
+        entity_id = resolve_entity_id(self.hass, zone.duration_entity)
+        value = self._number(entity_id)
+        if value is None:
+            return None
+        state = self.hass.states.get(entity_id)  # type: ignore[arg-type]
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "s") if state else "s"
+        factor = {"min": 60, "h": 3600}.get(unit, 1)
+        return max(0, round(value * factor))
 
     def _soil_sensor(self, zone: Zone) -> Sensor | None:
         return next(

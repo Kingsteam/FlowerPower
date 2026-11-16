@@ -125,6 +125,7 @@ async def async_setup_entry(
         hass, store, scheduler, weather_entity=entry.data.get(CONF_WEATHER_ENTITY)
     )
     await balance.async_load()
+    programs.balance = balance
     entry.runtime_data = IrrigationPlannerData(
         store=store,
         profiles=profiles,

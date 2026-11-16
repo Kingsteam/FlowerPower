@@ -62,11 +62,12 @@ class WaterNowButton(ZoneEntity, ButtonEntity):
         super().__init__(entry, "water_now", zone)
 
     async def async_press(self) -> None:
-        """Einreihen."""
-        duration = self.zone.duration_s
+        """Einreihen: geplante Dauer, ohne Bedarf die Dauer von Hand."""
+        duration = self.data.balance.planned(self.zone).seconds or self.zone.duration_s
         if not duration:
             raise ServiceValidationError(
-                f"Zone „{self.zone.name}“ hat keine Gießdauer eingestellt"
+                f"Zone „{self.zone.name}“ hat keinen Bedarf und keine Gießdauer "
+                "von Hand"
             )
         try:
             self.data.scheduler.async_enqueue(self.zone_id, duration, source="button")

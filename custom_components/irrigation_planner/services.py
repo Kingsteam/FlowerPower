@@ -21,7 +21,9 @@ from .const import (
     DOMAIN,
     MAX_VALVE_DURATION_S,
     MIN_VALVE_DURATION_S,
+    SERVICE_RECALCULATE,
     SERVICE_RELEASE_ZONE,
+    SERVICE_RESET_BALANCE,
     SERVICE_RUN_PROGRAM,
     SERVICE_RUN_ZONE,
     SERVICE_SKIP_NEXT,
@@ -83,6 +85,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 f"Zone {call.data[ATTR_ZONE_ID]} ist nicht gesperrt"
             )
 
+    async def recalculate(call: ServiceCall) -> None:
+        # Bedarf und geplante Dauer werden laufend aus der Bilanz abgeleitet;
+        # hier nur alle Anzeigen auffrischen.
+        _data(hass).balance.async_notify()
+
+    async def reset_balance(call: ServiceCall) -> None:
+        data = _data(hass)
+        zone_id = call.data.get(ATTR_ZONE_ID)
+        if zone_id and all(z.id != zone_id for z in data.store.model.zones):
+            raise ServiceValidationError(f"Zone {zone_id} gibt es nicht")
+        data.balance.async_reset(zone_id)
+
     async def run_program(call: ServiceCall) -> None:
         try:
             _data(hass).programs.async_run(call.data[ATTR_PROGRAM_ID])
@@ -101,6 +115,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(DOMAIN, SERVICE_STOP_ALL, stop_all)
     hass.services.async_register(
         DOMAIN, SERVICE_RUN_PROGRAM, run_program, schema=PROGRAM_SCHEMA
+    )
+    hass.services.async_register(DOMAIN, SERVICE_RECALCULATE, recalculate)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RESET_BALANCE,
+        reset_balance,
+        schema=vol.Schema(
+            {vol.Optional(ATTR_ZONE_ID): vol.All(str, vol.Length(min=1))}
+        ),
     )
     hass.services.async_register(
         DOMAIN,

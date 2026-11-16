@@ -71,6 +71,20 @@
           "description": "ID of the zone."
         }
       }
+    },
+    "recalculate": {
+      "name": "Recalculate",
+      "description": "Refreshes need and planned duration of all zones."
+    },
+    "reset_balance": {
+      "name": "Reset water balance",
+      "description": "Sets the water deficit of one zone (or all zones) to 0, e.g. after heavy rain.",
+      "fields": {
+        "zone_id": {
+          "name": "Zone ID",
+          "description": "Empty = all zones."
+        }
+      }
     }
   },
   "entity": {
@@ -156,6 +170,15 @@
       },
       "program_duration": {
         "name": "Estimated duration"
+      },
+      "et0": {
+        "name": "Evaporation (ET0) yesterday"
+      },
+      "need": {
+        "name": "Water need"
+      },
+      "planned_duration": {
+        "name": "Planned duration"
       }
     },
     "switch": {
