@@ -1414,6 +1414,36 @@ export const styles = css`
   .flow {
     pointer-events: none;
   }
+  .marker.valve .bowtie {
+    fill: #fff;
+  }
+  .marker.valve .handle-bar {
+    stroke: #fff;
+    stroke-width: 2;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .marker.valve.open rect {
+    fill: #0288d1;
+  }
+  .feature.tap.open circle {
+    fill: #0288d1;
+  }
+  .feature.tap .drip {
+    fill: #29b6f6;
+    animation: drip 1s ease-in infinite;
+    transform-box: fill-box;
+  }
+  @keyframes drip {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(80%);
+      opacity: 0;
+    }
+  }
   .flow .pipe-active {
     stroke: #0288d1;
     stroke-width: 6;
@@ -1873,6 +1903,22 @@ export const styles = css`
   }
 
   /* Betrieb */
+  .saving {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .saving input {
+    width: 110px;
+  }
+  .saving strong {
+    min-width: 44px;
+    font-variant-numeric: tabular-nums;
+  }
+  td.actions-cell {
+    white-space: nowrap;
+  }
   .operation .card h2 {
     font-size: 16px;
     font-weight: 500;

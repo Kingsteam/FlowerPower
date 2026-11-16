@@ -31,6 +31,13 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 - Seite „Zeitplan“ im Panel: Wochenansicht aller Programme (nächste 7 Tage, in der Zeitzone von Home Assistant), Programm-Karten mit Ablauf, nächstem Start und letztem Ergebnis; Programme bearbeiten (Zonen, Reihenfolge, Startzeit oder „fertig bis“ mit Sonnenzeit, Wochentage, Wetter-Überspringen), neu anlegen und löschen (nicht während gegossen wird); „Jetzt starten“ reiht nur ein.
 - Ereignisse für eigene Automationen: `irrigation_planner_run_started`, `irrigation_planner_run_finished` (mit Ergebnis und Sekunden), `irrigation_planner_program_started`, `irrigation_planner_program_skipped` (mit Grund). Die Zeitplan-Seite zeigt sie zusammen mit den Entitäten je Programm.
 - WebSocket-Befehle `irrigation_planner/programs/get`, `programs/save`, `programs/create`, `programs/delete` (Ändern nur für Admins).
+- Wassersparen: geplante Gießdauer aller Zonen um 0–50 % kürzen (Regler auf der Seite „Betrieb“ und Entität `number.…_wassersparen`, z. B. für eine Hitze-Automation). Gespeichert in `Settings.water_saving_pct`; WebSocket `settings/water_saving`.
+- Wasserkonto zurücksetzen („Konto voll“ je Zone oder „Alle Konten voll“ auf der Seite „Betrieb“); WebSocket `balance/reset`.
+- „Jetzt gießen“ wird zu „Gießen abbrechen“ (bzw. „Herausnehmen“), solange die Zone gießt oder wartet, im Plan-Editor und auf der Seite „Betrieb“.
+- Zuleitungen bleiben angehängt: Wasserhahn, Ventil oder Abzweigpunkt verschieben nimmt die angehängten Leitungsenden mit. Punkte (Hahn, Baum) liegen über Linien und lassen sich so anfassen.
+- Symbole: Ventil mit Griff quer (zu) oder längs und blau (offen); Wasserhahn blau mit Tropfen, solange Wasser fließt.
+- Feineres Raster der Wasser-Ansichten (bis 15.000 Kacheln, meist 25 cm).
+- Testinstanz: Regler für simulierten Regen erklärt (Tagessumme, springt um Mitternacht auf 0), Beschreibung der Wetter-Regler in der README.
 - Testinstanz: vollständiger Beispielgarten für alle Ansichten (alle zehn Zonen gezeichnet, Zuleitungen mit Abzweig, Leitungen mit Knicken, gesperrter Grundriss, 14 Tage Wetter, unterschiedlich trockene Zonen, Verlauf der letzten Woche). Neu anlegen mit `--beispiel-neu` (auch über `mac-start.sh … | bash -s -- --beispiel-neu`), der bisherige Stand bleibt als `.bak`.
 - „Bodenfeuchte nach dem Gießen“ rechnet mit dem Wirkungsgrad der Zone (Zustand je Zone enthält `efficiency`).
 - Animation beim Gießen: Wasser fließt vom Wasserhahn durch die Zuleitungen (auch über Abzweige) zum offenen Ventil und weiter durch die Leitung zur Zone; das Ventil pulsiert, Sprinkler zeigen Wellen. Bei „Bewegung reduzieren“ im Betriebssystem ohne Animation.

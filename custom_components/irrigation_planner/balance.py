@@ -327,7 +327,18 @@ class BalanceManager:
         return self.balance(zone.id).deficit_mm
 
     def planned(self, zone: Zone) -> Planned:
-        """Geplante Dauer nach der Dauer-Art der Zone."""
+        """Geplante Dauer nach der Dauer-Art, gekürzt um das Wassersparen."""
+        planned = self._planned(zone)
+        saving = self.model.settings.water_saving_pct
+        if saving and planned.seconds:
+            factor = 1 - saving / 100
+            planned.seconds = max(1, round(planned.seconds * factor))
+            if planned.liters is not None:
+                planned.liters *= factor
+            planned.reason += f", Wassersparen minus {saving} %"
+        return planned
+
+    def _planned(self, zone: Zone) -> Planned:
         if zone.duration_mode is DurationMode.ENTITY:
             seconds = self._entity_seconds(zone)
             if seconds is None:

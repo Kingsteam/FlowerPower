@@ -591,6 +591,18 @@ export class IrrigationPlannerPanel extends LitElement {
     return hit ? [hit[0], hit[1]] : p;
   }
 
+  /**
+   * Zuleitungs-Punkte, die genau bei `old` liegen (am Hahn, am Ventil oder an
+   * einem Abzweig), nach `now` mitnehmen. So bleiben Leitungen angehängt.
+   */
+  private movePipeEnds(old: Point, now: Point, skipFeature?: string): void {
+    if (old[0] === now[0] && old[1] === now[1]) return;
+    for (const f of this.features) {
+      if (f.kind !== "pipe" || f.id === skipFeature || f.locked) continue;
+      f.points = f.points.map((q) => (distance(q, old) < 0.06 ? ([now[0], now[1]] as Point) : q));
+    }
+  }
+
   private pipeLines(): Point[][] {
     return this.features.filter((f) => f.kind === "pipe" && f.points.length >= 2).map((f) => f.points);
   }
@@ -905,7 +917,11 @@ export class IrrigationPlannerPanel extends LitElement {
       return;
     }
     if (drag.type === "marker") {
-      this.marker(drag.kind, drag.id).position = [round(p[0]), round(p[1])];
+      const item = this.marker(drag.kind, drag.id);
+      const old = item.position;
+      item.position = [round(p[0]), round(p[1])];
+      // Zuleitungen, die am Ventil hängen, ziehen mit.
+      if (old && drag.kind === "valve") this.movePipeEnds(old, item.position);
       this.changed();
       return;
     }
@@ -975,14 +991,23 @@ export class IrrigationPlannerPanel extends LitElement {
         f.radius_m = round(Math.max(0.1, distance(f.points[0], p)));
         break;
       case "f-vertex": {
-        const q = this.snap(p, event, f.points[drag.index]);
+        const old = f.points[drag.index];
+        const q = this.snap(p, event, old);
         f.points[drag.index] = [round(q[0]), round(q[1])];
+        // Abzweig: andere Zuleitungen, die an diesem Punkt hängen, ziehen mit.
+        if (f.kind === "pipe") this.movePipeEnds(old, f.points[drag.index], f.id);
         break;
       }
       case "f-move": {
         const dx = p[0] - drag.start[0];
         const dy = p[1] - drag.start[1];
+        const before = f.points.map((q) => [q[0], q[1]] as Point);
         f.points = drag.orig.points.map((q) => [round(q[0] + dx), round(q[1] + dy)]);
+        // Wasserhahn verschoben: angehängte Zuleitungen ziehen mit.
+        if (f.kind === "tap") this.movePipeEnds(before[0], f.points[0], f.id);
+        if (f.kind === "pipe") {
+          for (const [i, q] of before.entries()) this.movePipeEnds(q, f.points[i], f.id);
+        }
         break;
       }
     }
@@ -1396,6 +1421,15 @@ export class IrrigationPlannerPanel extends LitElement {
     try {
       await this._hass!.callService(DOMAIN, "run_zone", { zone_id: zone.id, duration: planned });
       this.showToast(`${zone.name}: ${fmtDuration(planned)} eingereiht`);
+    } catch (err) {
+      this.showToast(this.message(err), true);
+    }
+  }
+
+  private async cancelZone(zone: PlanZone): Promise<void> {
+    try {
+      await this._hass!.callWS({ type: `${DOMAIN}/queue/cancel`, zone_id: zone.id });
+      this.showToast(`${zone.name}: abgebrochen`);
     } catch (err) {
       this.showToast(this.message(err), true);
     }
@@ -2278,7 +2312,11 @@ export class IrrigationPlannerPanel extends LitElement {
   }
 
   private renderFeatures(px: number) {
-    return this.features.map((f) => {
+    // Flächen unten, Linien darüber, Punkte (Hahn, Baum, Beschriftung) oben,
+    // damit man den Hahn auch dort anfassen kann, wo eine Zuleitung beginnt.
+    const order = { area: 0, line: 1, point: 2 } as const;
+    const sorted = [...this.features].sort((a, b) => order[family(a.kind)] - order[family(b.kind)]);
+    return sorted.map((f) => {
       const sel = this.selected?.kind === "feature" && this.selected.id === f.id;
       const fam = family(f.kind);
       const down = (e: PointerEvent) => {
@@ -2321,10 +2359,14 @@ export class IrrigationPlannerPanel extends LitElement {
         return svg`<text class=${cls} x=${x} y=${y} font-size=${14 * px} stroke-width=${3 * px}
           @pointerdown=${down}>${f.label}</text>`;
       }
-      return svg`<g class=${cls} @pointerdown=${down}>
+      const flowing = this.waterFlowing();
+      return svg`<g class="${cls} ${flowing ? "open" : ""}" @pointerdown=${down}>
         <circle cx=${x} cy=${y} r=${8 * px}></circle>
         <text x=${x} y=${y} dy=${4 * px} font-size=${11 * px}>H</text>
-        <title>${featureName(f)}</title></g>`;
+        ${flowing
+          ? svg`<path class="drip" d=${`M${x} ${y + 10 * px} q${-3 * px} ${4 * px} 0 ${6 * px} q${3 * px} ${-2 * px} 0 ${-6 * px} Z`}></path>`
+          : nothing}
+        <title>${featureName(f)}: ${flowing ? "Wasser fließt" : "zu"}</title></g>`;
     });
   }
 
@@ -2574,8 +2616,28 @@ export class IrrigationPlannerPanel extends LitElement {
     if (!item.position) return nothing;
     const [x, y] = item.position;
     const selected = this.selected?.kind === kind && this.selected.id === item.id;
-    const letter = kind === "valve" ? "V" : SENSOR_LETTER[(item as PlanSensor).kind] ?? "S";
+    const letter = SENSOR_LETTER[(item as PlanSensor).kind] ?? "S";
     const r = 11 * px;
+    const open = kind === "valve" && this.valveOpen(item.id);
+    if (kind === "valve") {
+      // Ventil-Symbol: zwei Dreiecke; der Griff steht quer (zu) oder längs (offen).
+      const s = 6 * px;
+      return svg`
+        <g class="marker valve ${selected ? "selected" : ""} ${open ? "open" : ""}"
+          @pointerdown=${(e: PointerEvent) => {
+            if (this.tool !== "select") return;
+            this.selected = { kind, id: item.id };
+            this.tab = "zones";
+            this.startDrag(e, { type: "marker", kind, id: item.id });
+          }}>
+          <rect x=${x - r} y=${y - r} width=${2 * r} height=${2 * r} rx=${4 * px}></rect>
+          <path class="bowtie" d=${`M${x - s} ${y - s * 0.7} L${x + s} ${y + s * 0.7} L${x + s} ${y - s * 0.7} L${x - s} ${y + s * 0.7} Z`}></path>
+          ${open
+            ? svg`<line class="handle-bar" x1=${x - s} y1=${y - s * 1.25} x2=${x + s} y2=${y - s * 1.25}></line>`
+            : svg`<line class="handle-bar" x1=${x} y1=${y} x2=${x} y2=${y - s * 1.45}></line>`}
+          <title>${item.name}: ${open ? "offen" : "zu"}</title>
+        </g>`;
+    }
     return svg`
       <g class="marker ${kind} ${selected ? "selected" : ""}"
         @pointerdown=${(e: PointerEvent) => {
@@ -2584,12 +2646,18 @@ export class IrrigationPlannerPanel extends LitElement {
           this.tab = "zones";
           this.startDrag(e, { type: "marker", kind, id: item.id });
         }}>
-        ${kind === "valve"
-          ? svg`<rect x=${x - r} y=${y - r} width=${2 * r} height=${2 * r} rx=${4 * px}></rect>`
-          : svg`<circle cx=${x} cy=${y} r=${r}></circle>`}
+        <circle cx=${x} cy=${y} r=${r}></circle>
         <text x=${x} y=${y} font-size=${12 * px} dy=${4.2 * px}>${letter}</text>
         <title>${item.name}</title>
       </g>`;
+  }
+
+  private valveOpen(valveId: string): boolean {
+    return this.plan!.zones.some((z) => z.valve_id === valveId && this.status?.zones[z.id]?.state === "running");
+  }
+
+  private waterFlowing(): boolean {
+    return Object.values(this.status?.zones ?? {}).some((z) => z.state === "running");
   }
 
   private renderOverlay(): TemplateResult {
@@ -2925,10 +2993,15 @@ export class IrrigationPlannerPanel extends LitElement {
               </button>`
             : nothing}
           <span class="spacer"></span>
-          <button class="text" title="In die Warteschlange einreihen" ?disabled=${this.status?.winter_mode}
-            @click=${() => this.waterNow(zone)}>
-            <ha-icon icon="mdi:watering-can"></ha-icon>Jetzt gießen
-          </button>
+          ${st && (st.state === "running" || st.state === "queued")
+            ? html`<button class="text danger" title=${st.state === "running" ? "Gießen abbrechen, das Ventil schließt" : "Aus der Warteschlange nehmen"}
+                @click=${() => this.cancelZone(zone)}>
+                <ha-icon icon="mdi:stop"></ha-icon>${st.state === "running" ? "Gießen abbrechen" : "Herausnehmen"}
+              </button>`
+            : html`<button class="text" title="In die Warteschlange einreihen" ?disabled=${this.status?.winter_mode}
+                @click=${() => this.waterNow(zone)}>
+                <ha-icon icon="mdi:watering-can"></ha-icon>Jetzt gießen
+              </button>`}
         </div>
       </div>
     `;

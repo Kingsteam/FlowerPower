@@ -133,6 +133,9 @@
     "number": {
       "duration": {
         "name": "Gießdauer von Hand"
+      },
+      "water_saving": {
+        "name": "Wassersparen"
       }
     },
     "select": {

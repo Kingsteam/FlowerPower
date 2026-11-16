@@ -171,7 +171,7 @@ export function computeRaster(
   status: Status | undefined,
   features: Feature[],
   bounds: [number, number, number, number],
-  maxCells = 6000,
+  maxCells = 15000,
 ): Raster {
   const plots = features.filter((f) => f.kind === "boundary" && f.points.length >= 3);
   let [bx0, by0, bx1, by1] = bounds;

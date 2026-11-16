@@ -90,6 +90,7 @@ export interface OperationData {
   automatic: boolean;
   winter_mode: boolean;
   problems: string[];
+  water_saving_pct: number;
   history_count: number;
   history_last: string | null;
   programs: { id: string; name: string; next: string | null }[];
@@ -272,6 +273,42 @@ export class OperationView extends LitElement {
     }
   }
 
+  /** „Jetzt gießen“ oder, wenn die Zone gießt bzw. wartet, „Abbrechen“. */
+  private renderWaterButton(z: ZoneOperation, d: OperationData): TemplateResult {
+    const item = d.queue.find((q) => q.zone_id === z.id);
+    if (item) {
+      return html`<button class="text danger" ?disabled=${!!this.busy}
+        title=${item.active ? "Gießen abbrechen, das Ventil schließt" : "Aus der Warteschlange nehmen"}
+        @click=${() => this.cancel({ zone_id: z.id }, item.active ? `${z.name}: abgebrochen` : `${z.name}: herausgenommen`)}>
+        <ha-icon icon="mdi:stop"></ha-icon>${item.active ? "Abbrechen" : "Herausnehmen"}
+      </button>`;
+    }
+    return html`<button class="text" ?disabled=${!z.enabled || d.winter_mode || !!z.locked} title="In die Warteschlange einreihen"
+      @click=${() => this.waterNow(z)}>
+      <ha-icon icon="mdi:watering-can"></ha-icon>Jetzt gießen
+    </button>`;
+  }
+
+  private async resetBalance(z?: ZoneOperation): Promise<void> {
+    const what = z ? `das Wasserkonto von „${z.name}“` : "die Wasserkonten aller Zonen";
+    if (!confirm(`${what[0].toUpperCase()}${what.slice(1)} auf „voll“ setzen? Der berechnete Bedarf ist danach 0.`)) return;
+    try {
+      await this.hass!.callWS({ type: `${DOMAIN}/balance/reset`, ...(z ? { zone_id: z.id } : {}) });
+      this.toast(z ? `${z.name}: Wasserkonto voll` : "Alle Wasserkonten voll");
+    } catch (err) {
+      this.toast(this.message(err), true);
+    }
+  }
+
+  private async setWaterSaving(percent: number): Promise<void> {
+    try {
+      await this.hass!.callWS({ type: `${DOMAIN}/settings/water_saving`, percent });
+      this.toast(percent ? `Wassersparen: ${percent} % weniger` : "Wassersparen aus");
+    } catch (err) {
+      this.toast(this.message(err), true);
+    }
+  }
+
   private when(iso: string, withDay = true): string {
     const d = new Date(iso);
     const opts: Intl.DateTimeFormatOptions = { timeZone: this.tz, hour: "2-digit", minute: "2-digit" };
@@ -403,7 +440,19 @@ export class OperationView extends LitElement {
 
   private renderZones(d: OperationData): TemplateResult {
     return html`<section class="card">
-      <h2>Zonen</h2>
+      <div class="card-head">
+        <h2>Zonen</h2>
+        <span class="spacer"></span>
+        <label class="saving" title="Geplante Gießdauer aller Zonen kürzen, z. B. bei Hitze oder Wasserknappheit">
+          <ha-icon icon="mdi:water-minus"></ha-icon>Wassersparen
+          <input type="range" min="0" max="50" step="5" .value=${String(d.water_saving_pct)}
+            @change=${(e: Event) => this.setWaterSaving(Number((e.target as HTMLInputElement).value))} />
+          <strong>${d.water_saving_pct ? `−${d.water_saving_pct} %` : "aus"}</strong>
+        </label>
+        <button class="text small" title="Wasserkonten aller Zonen auf „voll“ setzen" @click=${() => this.resetBalance()}>
+          <ha-icon icon="mdi:restore"></ha-icon>Alle Konten voll
+        </button>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -448,11 +497,12 @@ export class OperationView extends LitElement {
                     ? `${fmtDuration(z.planned_s)}${z.planned_liters != null ? `, ca. ${fmtNumber(z.planned_liters, 0)} L` : ""}`
                     : z.reason}</small>
                 </td>
-                <td class="n">
-                  <button class="text" ?disabled=${!z.enabled || d.winter_mode || !!z.locked} title="In die Warteschlange einreihen"
-                    @click=${() => this.waterNow(z)}>
-                    <ha-icon icon="mdi:watering-can"></ha-icon>Jetzt gießen
-                  </button>
+                <td class="n actions-cell">
+                  ${this.renderWaterButton(z, d)}
+                  ${z.duration_mode === "calculated" && z.need_mm > 0
+                    ? html`<button class="text small" title="Wasserkonto auf „voll“ setzen (z. B. nach Gießen von Hand)"
+                        @click=${() => this.resetBalance(z)}><ha-icon icon="mdi:restore"></ha-icon>Konto voll</button>`
+                    : nothing}
                 </td>
               </tr>`;
             })}

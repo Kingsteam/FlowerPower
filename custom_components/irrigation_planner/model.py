@@ -39,6 +39,7 @@ class EntityRef:
 # Sonnenereignisse für den Zeitplan (statt einer Uhrzeit).
 SUN_EVENTS: Final = ("sunrise", "sunset")
 MAX_SUN_OFFSET_MIN: Final = 360
+MAX_WATER_SAVING_PCT: Final = 50  # höchstens die Hälfte einsparen
 MAX_ROUTE_POINTS: Final = 50  # Zwischenpunkte der Leitung Ventil → Zone
 
 
@@ -290,6 +291,8 @@ class Settings:
     winter_end: str | None = None
     # Geräte, die die Winterpause deaktiviert hat (nur diese werden wieder aktiviert).
     winter_disabled_devices: list[str] = field(default_factory=list)
+    # Wassersparen: geplante Gießdauer um so viel Prozent kürzen (0 = aus).
+    water_saving_pct: int = 0
 
 
 @dataclass(slots=True, kw_only=True)
@@ -318,6 +321,10 @@ class GardenModel:
         ):
             if value is not None:
                 _check_month_day(label, value)
+        if not 0 <= self.settings.water_saving_pct <= MAX_WATER_SAVING_PCT:
+            raise ValueError(
+                f"Wassersparen liegt zwischen 0 und {MAX_WATER_SAVING_PCT} %"
+            )
         self._validate_garden()
         zone_ids = _unique_ids("Zone", self.zones)
         valve_ids = _unique_ids("Ventil", self.valves)

@@ -45,6 +45,18 @@ Die Hilfs-Integration `irrigation_sim` (nur hier, wird nicht ausgeliefert) legt 
 | **Simulierter Wasserzähler Zuleitung** | Durchfluss und Zählerstand (Summe aller Ventile) |
 | Wetter | `weather.simuliertes_wetter` und `sensor.simulierter_regen`, gesteuert über die Regler `input_number.sim_*` und `input_select.sim_wetterlage` |
 
+### Simuliertes Wetter einstellen
+
+Die Regler findest du unter **Einstellungen → Geräte & Dienste → Helfer** (Suche „Simuliert“):
+
+| Regler | Wirkung im Bewässerungsplaner |
+|---|---|
+| Temperatur, Luftfeuchte, Wind | Daraus wird die **Verdunstung** des Tages berechnet (alle 10 Minuten gemessen, beim Tageswechsel verbucht). Heiß, trocken und windig = viel Verdunstung = mehr Bedarf. |
+| Regen heute (Tagessumme) | So viel Regen ist **heute** gefallen, in mm. Der wirksame Teil füllt beim Tageswechsel das Wasserkonto auf. Um Mitternacht springt der Regler von selbst auf 0. |
+| Wetterlage | „rainy“ oder „pouring“: Programme mit „bei Regen überspringen“ fallen aus. Wird in der Seite „Betrieb“ im Verlauf als „übersprungen“ gezeigt. |
+
+Beispiel: Regen auf 15 mm stellen. Am nächsten Tag ist das Wasserkonto entsprechend voller, die Ansicht „Bodenfeuchte jetzt“ wird blauer und die geplante Gießdauer kürzer.
+
 **Gerätetimer:** Zonen 1–8 haben einen eigenen Timer (wie ein Zigbee-Ventil mit `on_time`): Mit `irrigation_sim.open_for` geöffnet, schließen sie nach Ablauf von selbst. Zonen 9 und 10 haben keinen: Dort muss Home Assistant schließen (Sicherheitsstufe 🟡). Ein einfaches Einschalten des Schalters öffnet ohne Dauer, wie ein gewöhnlicher Schalter.
 
 ## Dienste zum Testen

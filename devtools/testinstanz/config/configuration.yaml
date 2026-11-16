@@ -32,7 +32,15 @@ logger:
 # Simulierte Ventile, Sensoren und Wasserzähler
 irrigation_sim:
 
-# Stellschrauben für das simulierte Wetter
+# Stellschrauben für das simulierte Wetter (Einstellungen → Geräte & Dienste →
+# Helfer, oder auf dem Dashboard). Wirkung im Bewässerungsplaner:
+# - Temperatur, Luftfeuchte, Wind: daraus wird die Verdunstung des Tages
+#   berechnet (alle 10 Minuten gemessen, beim Tageswechsel verbucht).
+# - Regen heute: so viel Regen ist heute gefallen (Tagessumme in mm). Der
+#   wirksame Teil füllt beim Tageswechsel das Wasserkonto auf. Um Mitternacht
+#   springt der Regler von selbst auf 0 (siehe Automation unten).
+# - Wetterlage: „rainy“/„pouring“ lässt Programme mit „bei Regen
+#   überspringen“ ausfallen, „snowy“ zusammen mit Frost ebenso.
 input_number:
   sim_temperatur:
     name: Simulierte Temperatur
@@ -56,7 +64,7 @@ input_number:
     initial: 8
     unit_of_measurement: "km/h"
   sim_regen:
-    name: Simulierter Regen heute
+    name: Simulierter Regen heute (Tagessumme)
     min: 0
     max: 50
     step: 0.5
@@ -65,7 +73,7 @@ input_number:
 
 input_select:
   sim_wetterlage:
-    name: Simulierte Wetterlage
+    name: Simulierte Wetterlage (Regen lässt Programme ausfallen)
     options: [sunny, partlycloudy, cloudy, rainy, pouring, snowy]
     initial: sunny
 
@@ -86,3 +94,18 @@ template:
         device_class: precipitation
         state_class: measurement
         state: "{{ states('input_number.sim_regen') | float }}"
+
+# Der Regen-Regler gilt für „heute“: um Mitternacht zurück auf 0, sonst würde
+# derselbe Regen jeden Tag wieder gezählt.
+automation:
+  - alias: "Simulation: Regen um Mitternacht auf 0"
+    id: sim_regen_mitternacht
+    triggers:
+      - trigger: time
+        at: "00:00:05"
+    actions:
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.sim_regen
+        data:
+          value: 0

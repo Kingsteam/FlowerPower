@@ -133,6 +133,9 @@
     "number": {
       "duration": {
         "name": "Manual watering duration"
+      },
+      "water_saving": {
+        "name": "Water saving"
       }
     },
     "select": {

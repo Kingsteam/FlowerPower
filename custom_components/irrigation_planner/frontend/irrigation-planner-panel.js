@@ -3,18 +3,18 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const ke = globalThis, Be = ke.ShadowRoot && (ke.ShadyCSS === void 0 || ke.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, Re = Symbol(), Ue = /* @__PURE__ */ new WeakMap();
+const ke = globalThis, Be = ke.ShadowRoot && (ke.ShadyCSS === void 0 || ke.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, Ne = Symbol(), Ue = /* @__PURE__ */ new WeakMap();
 let ft = class {
-  constructor(t, n, s) {
-    if (this._$cssResult$ = !0, s !== Re) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
-    this.cssText = t, this.t = n;
+  constructor(t, s, n) {
+    if (this._$cssResult$ = !0, n !== Ne) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
+    this.cssText = t, this.t = s;
   }
   get styleSheet() {
     let t = this.o;
-    const n = this.t;
+    const s = this.t;
     if (Be && t === void 0) {
-      const s = n !== void 0 && n.length === 1;
-      s && (t = Ue.get(n)), t === void 0 && ((this.o = t = new CSSStyleSheet()).replaceSync(this.cssText), s && Ue.set(n, t));
+      const n = s !== void 0 && s.length === 1;
+      n && (t = Ue.get(s)), t === void 0 && ((this.o = t = new CSSStyleSheet()).replaceSync(this.cssText), n && Ue.set(s, t));
     }
     return t;
   }
@@ -22,33 +22,33 @@ let ft = class {
     return this.cssText;
   }
 };
-const Lt = (e) => new ft(typeof e == "string" ? e : e + "", void 0, Re), Bt = (e, ...t) => {
-  const n = e.length === 1 ? e[0] : t.reduce((s, i, a) => s + ((r) => {
+const Lt = (e) => new ft(typeof e == "string" ? e : e + "", void 0, Ne), Bt = (e, ...t) => {
+  const s = e.length === 1 ? e[0] : t.reduce((n, i, a) => n + ((r) => {
     if (r._$cssResult$ === !0) return r.cssText;
     if (typeof r == "number") return r;
     throw Error("Value passed to 'css' function must be a 'css' function result: " + r + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
   })(i) + e[a + 1], e[0]);
-  return new ft(n, e, Re);
-}, Rt = (e, t) => {
-  if (Be) e.adoptedStyleSheets = t.map((n) => n instanceof CSSStyleSheet ? n : n.styleSheet);
-  else for (const n of t) {
-    const s = document.createElement("style"), i = ke.litNonce;
-    i !== void 0 && s.setAttribute("nonce", i), s.textContent = n.cssText, e.appendChild(s);
+  return new ft(s, e, Ne);
+}, Nt = (e, t) => {
+  if (Be) e.adoptedStyleSheets = t.map((s) => s instanceof CSSStyleSheet ? s : s.styleSheet);
+  else for (const s of t) {
+    const n = document.createElement("style"), i = ke.litNonce;
+    i !== void 0 && n.setAttribute("nonce", i), n.textContent = s.cssText, e.appendChild(n);
   }
 }, Ve = Be ? (e) => e : (e) => e instanceof CSSStyleSheet ? ((t) => {
-  let n = "";
-  for (const s of t.cssRules) n += s.cssText;
-  return Lt(n);
+  let s = "";
+  for (const n of t.cssRules) s += n.cssText;
+  return Lt(s);
 })(e) : e;
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const { is: Nt, defineProperty: Ct, getOwnPropertyDescriptor: Zt, getOwnPropertyNames: jt, getOwnPropertySymbols: It, getPrototypeOf: Ft } = Object, Se = globalThis, Ge = Se.trustedTypes, Ht = Ge ? Ge.emptyScript : "", Wt = Se.reactiveElementPolyfillSupport, de = (e, t) => e, we = { toAttribute(e, t) {
+const { is: Rt, defineProperty: Zt, getOwnPropertyDescriptor: Ct, getOwnPropertyNames: jt, getOwnPropertySymbols: It, getPrototypeOf: Wt } = Object, Se = globalThis, Ge = Se.trustedTypes, Ft = Ge ? Ge.emptyScript : "", Ht = Se.reactiveElementPolyfillSupport, he = (e, t) => e, we = { toAttribute(e, t) {
   switch (t) {
     case Boolean:
-      e = e ? Ht : null;
+      e = e ? Ft : null;
       break;
     case Object:
     case Array:
@@ -56,86 +56,86 @@ const { is: Nt, defineProperty: Ct, getOwnPropertyDescriptor: Zt, getOwnProperty
   }
   return e;
 }, fromAttribute(e, t) {
-  let n = e;
+  let s = e;
   switch (t) {
     case Boolean:
-      n = e !== null;
+      s = e !== null;
       break;
     case Number:
-      n = e === null ? null : Number(e);
+      s = e === null ? null : Number(e);
       break;
     case Object:
     case Array:
       try {
-        n = JSON.parse(e);
+        s = JSON.parse(e);
       } catch {
-        n = null;
+        s = null;
       }
   }
-  return n;
-} }, Ne = (e, t) => !Nt(e, t), Ke = { attribute: !0, type: String, converter: we, reflect: !1, useDefault: !1, hasChanged: Ne };
+  return s;
+} }, Re = (e, t) => !Rt(e, t), Ke = { attribute: !0, type: String, converter: we, reflect: !1, useDefault: !1, hasChanged: Re };
 Symbol.metadata ??= Symbol("metadata"), Se.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
-let ie = class extends HTMLElement {
+let ae = class extends HTMLElement {
   static addInitializer(t) {
     this._$Ei(), (this.l ??= []).push(t);
   }
   static get observedAttributes() {
     return this.finalize(), this._$Eh && [...this._$Eh.keys()];
   }
-  static createProperty(t, n = Ke) {
-    if (n.state && (n.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(t) && ((n = Object.create(n)).wrapped = !0), this.elementProperties.set(t, n), !n.noAccessor) {
-      const s = Symbol(), i = this.getPropertyDescriptor(t, s, n);
-      i !== void 0 && Ct(this.prototype, t, i);
+  static createProperty(t, s = Ke) {
+    if (s.state && (s.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(t) && ((s = Object.create(s)).wrapped = !0), this.elementProperties.set(t, s), !s.noAccessor) {
+      const n = Symbol(), i = this.getPropertyDescriptor(t, n, s);
+      i !== void 0 && Zt(this.prototype, t, i);
     }
   }
-  static getPropertyDescriptor(t, n, s) {
-    const { get: i, set: a } = Zt(this.prototype, t) ?? { get() {
-      return this[n];
+  static getPropertyDescriptor(t, s, n) {
+    const { get: i, set: a } = Ct(this.prototype, t) ?? { get() {
+      return this[s];
     }, set(r) {
-      this[n] = r;
+      this[s] = r;
     } };
     return { get: i, set(r) {
       const l = i?.call(this);
-      a?.call(this, r), this.requestUpdate(t, l, s);
+      a?.call(this, r), this.requestUpdate(t, l, n);
     }, configurable: !0, enumerable: !0 };
   }
   static getPropertyOptions(t) {
     return this.elementProperties.get(t) ?? Ke;
   }
   static _$Ei() {
-    if (this.hasOwnProperty(de("elementProperties"))) return;
-    const t = Ft(this);
+    if (this.hasOwnProperty(he("elementProperties"))) return;
+    const t = Wt(this);
     t.finalize(), t.l !== void 0 && (this.l = [...t.l]), this.elementProperties = new Map(t.elementProperties);
   }
   static finalize() {
-    if (this.hasOwnProperty(de("finalized"))) return;
-    if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(de("properties"))) {
-      const n = this.properties, s = [...jt(n), ...It(n)];
-      for (const i of s) this.createProperty(i, n[i]);
+    if (this.hasOwnProperty(he("finalized"))) return;
+    if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(he("properties"))) {
+      const s = this.properties, n = [...jt(s), ...It(s)];
+      for (const i of n) this.createProperty(i, s[i]);
     }
     const t = this[Symbol.metadata];
     if (t !== null) {
-      const n = litPropertyMetadata.get(t);
-      if (n !== void 0) for (const [s, i] of n) this.elementProperties.set(s, i);
+      const s = litPropertyMetadata.get(t);
+      if (s !== void 0) for (const [n, i] of s) this.elementProperties.set(n, i);
     }
     this._$Eh = /* @__PURE__ */ new Map();
-    for (const [n, s] of this.elementProperties) {
-      const i = this._$Eu(n, s);
-      i !== void 0 && this._$Eh.set(i, n);
+    for (const [s, n] of this.elementProperties) {
+      const i = this._$Eu(s, n);
+      i !== void 0 && this._$Eh.set(i, s);
     }
     this.elementStyles = this.finalizeStyles(this.styles);
   }
   static finalizeStyles(t) {
-    const n = [];
+    const s = [];
     if (Array.isArray(t)) {
-      const s = new Set(t.flat(1 / 0).reverse());
-      for (const i of s) n.unshift(Ve(i));
-    } else t !== void 0 && n.push(Ve(t));
-    return n;
+      const n = new Set(t.flat(1 / 0).reverse());
+      for (const i of n) s.unshift(Ve(i));
+    } else t !== void 0 && s.push(Ve(t));
+    return s;
   }
-  static _$Eu(t, n) {
-    const s = n.attribute;
-    return s === !1 ? void 0 : typeof s == "string" ? s : typeof t == "string" ? t.toLowerCase() : void 0;
+  static _$Eu(t, s) {
+    const n = s.attribute;
+    return n === !1 ? void 0 : typeof n == "string" ? n : typeof t == "string" ? t.toLowerCase() : void 0;
   }
   constructor() {
     super(), this._$Ep = void 0, this.isUpdatePending = !1, this.hasUpdated = !1, this._$Em = null, this._$Ev();
@@ -150,13 +150,13 @@ let ie = class extends HTMLElement {
     this._$EO?.delete(t);
   }
   _$E_() {
-    const t = /* @__PURE__ */ new Map(), n = this.constructor.elementProperties;
-    for (const s of n.keys()) this.hasOwnProperty(s) && (t.set(s, this[s]), delete this[s]);
+    const t = /* @__PURE__ */ new Map(), s = this.constructor.elementProperties;
+    for (const n of s.keys()) this.hasOwnProperty(n) && (t.set(n, this[n]), delete this[n]);
     t.size > 0 && (this._$Ep = t);
   }
   createRenderRoot() {
     const t = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
-    return Rt(t, this.constructor.elementStyles), t;
+    return Nt(t, this.constructor.elementStyles), t;
   }
   connectedCallback() {
     this.renderRoot ??= this.createRenderRoot(), this.enableUpdating(!0), this._$EO?.forEach((t) => t.hostConnected?.());
@@ -166,42 +166,42 @@ let ie = class extends HTMLElement {
   disconnectedCallback() {
     this._$EO?.forEach((t) => t.hostDisconnected?.());
   }
-  attributeChangedCallback(t, n, s) {
-    this._$AK(t, s);
+  attributeChangedCallback(t, s, n) {
+    this._$AK(t, n);
   }
-  _$ET(t, n) {
-    const s = this.constructor.elementProperties.get(t), i = this.constructor._$Eu(t, s);
-    if (i !== void 0 && s.reflect === !0) {
-      const a = (s.converter?.toAttribute !== void 0 ? s.converter : we).toAttribute(n, s.type);
+  _$ET(t, s) {
+    const n = this.constructor.elementProperties.get(t), i = this.constructor._$Eu(t, n);
+    if (i !== void 0 && n.reflect === !0) {
+      const a = (n.converter?.toAttribute !== void 0 ? n.converter : we).toAttribute(s, n.type);
       this._$Em = t, a == null ? this.removeAttribute(i) : this.setAttribute(i, a), this._$Em = null;
     }
   }
-  _$AK(t, n) {
-    const s = this.constructor, i = s._$Eh.get(t);
+  _$AK(t, s) {
+    const n = this.constructor, i = n._$Eh.get(t);
     if (i !== void 0 && this._$Em !== i) {
-      const a = s.getPropertyOptions(i), r = typeof a.converter == "function" ? { fromAttribute: a.converter } : a.converter?.fromAttribute !== void 0 ? a.converter : we;
+      const a = n.getPropertyOptions(i), r = typeof a.converter == "function" ? { fromAttribute: a.converter } : a.converter?.fromAttribute !== void 0 ? a.converter : we;
       this._$Em = i;
-      const l = r.fromAttribute(n, a.type);
+      const l = r.fromAttribute(s, a.type);
       this[i] = l ?? this._$Ej?.get(i) ?? l, this._$Em = null;
     }
   }
-  requestUpdate(t, n, s, i = !1, a) {
+  requestUpdate(t, s, n, i = !1, a) {
     if (t !== void 0) {
       const r = this.constructor;
-      if (i === !1 && (a = this[t]), s ??= r.getPropertyOptions(t), !((s.hasChanged ?? Ne)(a, n) || s.useDefault && s.reflect && a === this._$Ej?.get(t) && !this.hasAttribute(r._$Eu(t, s)))) return;
-      this.C(t, n, s);
+      if (i === !1 && (a = this[t]), n ??= r.getPropertyOptions(t), !((n.hasChanged ?? Re)(a, s) || n.useDefault && n.reflect && a === this._$Ej?.get(t) && !this.hasAttribute(r._$Eu(t, n)))) return;
+      this.C(t, s, n);
     }
     this.isUpdatePending === !1 && (this._$ES = this._$EP());
   }
-  C(t, n, { useDefault: s, reflect: i, wrapped: a }, r) {
-    s && !(this._$Ej ??= /* @__PURE__ */ new Map()).has(t) && (this._$Ej.set(t, r ?? n ?? this[t]), a !== !0 || r !== void 0) || (this._$AL.has(t) || (this.hasUpdated || s || (n = void 0), this._$AL.set(t, n)), i === !0 && this._$Em !== t && (this._$Eq ??= /* @__PURE__ */ new Set()).add(t));
+  C(t, s, { useDefault: n, reflect: i, wrapped: a }, r) {
+    n && !(this._$Ej ??= /* @__PURE__ */ new Map()).has(t) && (this._$Ej.set(t, r ?? s ?? this[t]), a !== !0 || r !== void 0) || (this._$AL.has(t) || (this.hasUpdated || n || (s = void 0), this._$AL.set(t, s)), i === !0 && this._$Em !== t && (this._$Eq ??= /* @__PURE__ */ new Set()).add(t));
   }
   async _$EP() {
     this.isUpdatePending = !0;
     try {
       await this._$ES;
-    } catch (n) {
-      Promise.reject(n);
+    } catch (s) {
+      Promise.reject(s);
     }
     const t = this.scheduleUpdate();
     return t != null && await t, !this.isUpdatePending;
@@ -216,25 +216,25 @@ let ie = class extends HTMLElement {
         for (const [i, a] of this._$Ep) this[i] = a;
         this._$Ep = void 0;
       }
-      const s = this.constructor.elementProperties;
-      if (s.size > 0) for (const [i, a] of s) {
+      const n = this.constructor.elementProperties;
+      if (n.size > 0) for (const [i, a] of n) {
         const { wrapped: r } = a, l = this[i];
         r !== !0 || this._$AL.has(i) || l === void 0 || this.C(i, void 0, a, l);
       }
     }
     let t = !1;
-    const n = this._$AL;
+    const s = this._$AL;
     try {
-      t = this.shouldUpdate(n), t ? (this.willUpdate(n), this._$EO?.forEach((s) => s.hostUpdate?.()), this.update(n)) : this._$EM();
-    } catch (s) {
-      throw t = !1, this._$EM(), s;
+      t = this.shouldUpdate(s), t ? (this.willUpdate(s), this._$EO?.forEach((n) => n.hostUpdate?.()), this.update(s)) : this._$EM();
+    } catch (n) {
+      throw t = !1, this._$EM(), n;
     }
-    t && this._$AE(n);
+    t && this._$AE(s);
   }
   willUpdate(t) {
   }
   _$AE(t) {
-    this._$EO?.forEach((n) => n.hostUpdated?.()), this.hasUpdated || (this.hasUpdated = !0, this.firstUpdated(t)), this.updated(t);
+    this._$EO?.forEach((s) => s.hostUpdated?.()), this.hasUpdated || (this.hasUpdated = !0, this.firstUpdated(t)), this.updated(t);
   }
   _$EM() {
     this._$AL = /* @__PURE__ */ new Map(), this.isUpdatePending = !1;
@@ -249,84 +249,84 @@ let ie = class extends HTMLElement {
     return !0;
   }
   update(t) {
-    this._$Eq &&= this._$Eq.forEach((n) => this._$ET(n, this[n])), this._$EM();
+    this._$Eq &&= this._$Eq.forEach((s) => this._$ET(s, this[s])), this._$EM();
   }
   updated(t) {
   }
   firstUpdated(t) {
   }
 };
-ie.elementStyles = [], ie.shadowRootOptions = { mode: "open" }, ie[de("elementProperties")] = /* @__PURE__ */ new Map(), ie[de("finalized")] = /* @__PURE__ */ new Map(), Wt?.({ ReactiveElement: ie }), (Se.reactiveElementVersions ??= []).push("2.1.2");
+ae.elementStyles = [], ae.shadowRootOptions = { mode: "open" }, ae[he("elementProperties")] = /* @__PURE__ */ new Map(), ae[he("finalized")] = /* @__PURE__ */ new Map(), Ht?.({ ReactiveElement: ae }), (Se.reactiveElementVersions ??= []).push("2.1.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const Ce = globalThis, qe = (e) => e, _e = Ce.trustedTypes, Je = _e ? _e.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, bt = "$lit$", V = `lit$${Math.random().toFixed(9).slice(2)}$`, $t = "?" + V, Ut = `<${$t}>`, ee = document, he = () => ee.createComment(""), pe = (e) => e === null || typeof e != "object" && typeof e != "function", Ze = Array.isArray, Vt = (e) => Ze(e) || typeof e?.[Symbol.iterator] == "function", Pe = `[ 	
-\f\r]`, le = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, Xe = /-->/g, Ye = />/g, K = RegExp(`>|${Pe}(?:([^\\s"'>=/]+)(${Pe}*=${Pe}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), Qe = /'/g, et = /"/g, vt = /^(?:script|style|textarea|title)$/i, yt = (e) => (t, ...n) => ({ _$litType$: e, strings: t, values: n }), c = yt(1), f = yt(2), G = Symbol.for("lit-noChange"), p = Symbol.for("lit-nothing"), tt = /* @__PURE__ */ new WeakMap(), X = ee.createTreeWalker(ee, 129);
+const Ze = globalThis, qe = (e) => e, _e = Ze.trustedTypes, Je = _e ? _e.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, $t = "$lit$", G = `lit$${Math.random().toFixed(9).slice(2)}$`, bt = "?" + G, Ut = `<${bt}>`, ee = document, pe = () => ee.createComment(""), ue = (e) => e === null || typeof e != "object" && typeof e != "function", Ce = Array.isArray, Vt = (e) => Ce(e) || typeof e?.[Symbol.iterator] == "function", Me = `[ 	
+\f\r]`, ce = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, Ye = /-->/g, Xe = />/g, q = RegExp(`>|${Me}(?:([^\\s"'>=/]+)(${Me}*=${Me}*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`, "g"), Qe = /'/g, et = /"/g, vt = /^(?:script|style|textarea|title)$/i, yt = (e) => (t, ...s) => ({ _$litType$: e, strings: t, values: s }), c = yt(1), f = yt(2), K = Symbol.for("lit-noChange"), p = Symbol.for("lit-nothing"), tt = /* @__PURE__ */ new WeakMap(), Y = ee.createTreeWalker(ee, 129);
 function xt(e, t) {
-  if (!Ze(e) || !e.hasOwnProperty("raw")) throw Error("invalid template strings array");
+  if (!Ce(e) || !e.hasOwnProperty("raw")) throw Error("invalid template strings array");
   return Je !== void 0 ? Je.createHTML(t) : t;
 }
 const Gt = (e, t) => {
-  const n = e.length - 1, s = [];
-  let i, a = t === 2 ? "<svg>" : t === 3 ? "<math>" : "", r = le;
-  for (let l = 0; l < n; l++) {
+  const s = e.length - 1, n = [];
+  let i, a = t === 2 ? "<svg>" : t === 3 ? "<math>" : "", r = ce;
+  for (let l = 0; l < s; l++) {
     const o = e[l];
-    let h, m, u = -1, b = 0;
-    for (; b < o.length && (r.lastIndex = b, m = r.exec(o), m !== null); ) b = r.lastIndex, r === le ? m[1] === "!--" ? r = Xe : m[1] !== void 0 ? r = Ye : m[2] !== void 0 ? (vt.test(m[2]) && (i = RegExp("</" + m[2], "g")), r = K) : m[3] !== void 0 && (r = K) : r === K ? m[0] === ">" ? (r = i ?? le, u = -1) : m[1] === void 0 ? u = -2 : (u = r.lastIndex - m[2].length, h = m[1], r = m[3] === void 0 ? K : m[3] === '"' ? et : Qe) : r === et || r === Qe ? r = K : r === Xe || r === Ye ? r = le : (r = K, i = void 0);
-    const w = r === K && e[l + 1].startsWith("/>") ? " " : "";
-    a += r === le ? o + Ut : u >= 0 ? (s.push(h), o.slice(0, u) + bt + o.slice(u) + V + w) : o + V + (u === -2 ? l : w);
+    let d, m, u = -1, $ = 0;
+    for (; $ < o.length && (r.lastIndex = $, m = r.exec(o), m !== null); ) $ = r.lastIndex, r === ce ? m[1] === "!--" ? r = Ye : m[1] !== void 0 ? r = Xe : m[2] !== void 0 ? (vt.test(m[2]) && (i = RegExp("</" + m[2], "g")), r = q) : m[3] !== void 0 && (r = q) : r === q ? m[0] === ">" ? (r = i ?? ce, u = -1) : m[1] === void 0 ? u = -2 : (u = r.lastIndex - m[2].length, d = m[1], r = m[3] === void 0 ? q : m[3] === '"' ? et : Qe) : r === et || r === Qe ? r = q : r === Ye || r === Xe ? r = ce : (r = q, i = void 0);
+    const x = r === q && e[l + 1].startsWith("/>") ? " " : "";
+    a += r === ce ? o + Ut : u >= 0 ? (n.push(d), o.slice(0, u) + $t + o.slice(u) + G + x) : o + G + (u === -2 ? l : x);
   }
-  return [xt(e, a + (e[n] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), s];
+  return [xt(e, a + (e[s] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), n];
 };
-class ue {
-  constructor({ strings: t, _$litType$: n }, s) {
+class me {
+  constructor({ strings: t, _$litType$: s }, n) {
     let i;
     this.parts = [];
     let a = 0, r = 0;
-    const l = t.length - 1, o = this.parts, [h, m] = Gt(t, n);
-    if (this.el = ue.createElement(h, s), X.currentNode = this.el.content, n === 2 || n === 3) {
+    const l = t.length - 1, o = this.parts, [d, m] = Gt(t, s);
+    if (this.el = me.createElement(d, n), Y.currentNode = this.el.content, s === 2 || s === 3) {
       const u = this.el.content.firstChild;
       u.replaceWith(...u.childNodes);
     }
-    for (; (i = X.nextNode()) !== null && o.length < l; ) {
+    for (; (i = Y.nextNode()) !== null && o.length < l; ) {
       if (i.nodeType === 1) {
-        if (i.hasAttributes()) for (const u of i.getAttributeNames()) if (u.endsWith(bt)) {
-          const b = m[r++], w = i.getAttribute(u).split(V), d = /([.?@])?(.*)/.exec(b);
-          o.push({ type: 1, index: a, name: d[2], strings: w, ctor: d[1] === "." ? qt : d[1] === "?" ? Jt : d[1] === "@" ? Xt : Me }), i.removeAttribute(u);
-        } else u.startsWith(V) && (o.push({ type: 6, index: a }), i.removeAttribute(u));
+        if (i.hasAttributes()) for (const u of i.getAttributeNames()) if (u.endsWith($t)) {
+          const $ = m[r++], x = i.getAttribute(u).split(G), h = /([.?@])?(.*)/.exec($);
+          o.push({ type: 1, index: a, name: h[2], strings: x, ctor: h[1] === "." ? qt : h[1] === "?" ? Jt : h[1] === "@" ? Yt : Pe }), i.removeAttribute(u);
+        } else u.startsWith(G) && (o.push({ type: 6, index: a }), i.removeAttribute(u));
         if (vt.test(i.tagName)) {
-          const u = i.textContent.split(V), b = u.length - 1;
-          if (b > 0) {
+          const u = i.textContent.split(G), $ = u.length - 1;
+          if ($ > 0) {
             i.textContent = _e ? _e.emptyScript : "";
-            for (let w = 0; w < b; w++) i.append(u[w], he()), X.nextNode(), o.push({ type: 2, index: ++a });
-            i.append(u[b], he());
+            for (let x = 0; x < $; x++) i.append(u[x], pe()), Y.nextNode(), o.push({ type: 2, index: ++a });
+            i.append(u[$], pe());
           }
         }
-      } else if (i.nodeType === 8) if (i.data === $t) o.push({ type: 2, index: a });
+      } else if (i.nodeType === 8) if (i.data === bt) o.push({ type: 2, index: a });
       else {
         let u = -1;
-        for (; (u = i.data.indexOf(V, u + 1)) !== -1; ) o.push({ type: 7, index: a }), u += V.length - 1;
+        for (; (u = i.data.indexOf(G, u + 1)) !== -1; ) o.push({ type: 7, index: a }), u += G.length - 1;
       }
       a++;
     }
   }
-  static createElement(t, n) {
-    const s = ee.createElement("template");
-    return s.innerHTML = t, s;
+  static createElement(t, s) {
+    const n = ee.createElement("template");
+    return n.innerHTML = t, n;
   }
 }
-function re(e, t, n = e, s) {
-  if (t === G) return t;
-  let i = s !== void 0 ? n._$Co?.[s] : n._$Cl;
-  const a = pe(t) ? void 0 : t._$litDirective$;
-  return i?.constructor !== a && (i?._$AO?.(!1), a === void 0 ? i = void 0 : (i = new a(e), i._$AT(e, n, s)), s !== void 0 ? (n._$Co ??= [])[s] = i : n._$Cl = i), i !== void 0 && (t = re(e, i._$AS(e, t.values), i, s)), t;
+function oe(e, t, s = e, n) {
+  if (t === K) return t;
+  let i = n !== void 0 ? s._$Co?.[n] : s._$Cl;
+  const a = ue(t) ? void 0 : t._$litDirective$;
+  return i?.constructor !== a && (i?._$AO?.(!1), a === void 0 ? i = void 0 : (i = new a(e), i._$AT(e, s, n)), n !== void 0 ? (s._$Co ??= [])[n] = i : s._$Cl = i), i !== void 0 && (t = oe(e, i._$AS(e, t.values), i, n)), t;
 }
 class Kt {
-  constructor(t, n) {
-    this._$AV = [], this._$AN = void 0, this._$AD = t, this._$AM = n;
+  constructor(t, s) {
+    this._$AV = [], this._$AN = void 0, this._$AD = t, this._$AM = s;
   }
   get parentNode() {
     return this._$AM.parentNode;
@@ -335,34 +335,34 @@ class Kt {
     return this._$AM._$AU;
   }
   u(t) {
-    const { el: { content: n }, parts: s } = this._$AD, i = (t?.creationScope ?? ee).importNode(n, !0);
-    X.currentNode = i;
-    let a = X.nextNode(), r = 0, l = 0, o = s[0];
+    const { el: { content: s }, parts: n } = this._$AD, i = (t?.creationScope ?? ee).importNode(s, !0);
+    Y.currentNode = i;
+    let a = Y.nextNode(), r = 0, l = 0, o = n[0];
     for (; o !== void 0; ) {
       if (r === o.index) {
-        let h;
-        o.type === 2 ? h = new fe(a, a.nextSibling, this, t) : o.type === 1 ? h = new o.ctor(a, o.name, o.strings, this, t) : o.type === 6 && (h = new Yt(a, this, t)), this._$AV.push(h), o = s[++l];
+        let d;
+        o.type === 2 ? d = new $e(a, a.nextSibling, this, t) : o.type === 1 ? d = new o.ctor(a, o.name, o.strings, this, t) : o.type === 6 && (d = new Xt(a, this, t)), this._$AV.push(d), o = n[++l];
       }
-      r !== o?.index && (a = X.nextNode(), r++);
+      r !== o?.index && (a = Y.nextNode(), r++);
     }
-    return X.currentNode = ee, i;
+    return Y.currentNode = ee, i;
   }
   p(t) {
-    let n = 0;
-    for (const s of this._$AV) s !== void 0 && (s.strings !== void 0 ? (s._$AI(t, s, n), n += s.strings.length - 2) : s._$AI(t[n])), n++;
+    let s = 0;
+    for (const n of this._$AV) n !== void 0 && (n.strings !== void 0 ? (n._$AI(t, n, s), s += n.strings.length - 2) : n._$AI(t[s])), s++;
   }
 }
-class fe {
+class $e {
   get _$AU() {
     return this._$AM?._$AU ?? this._$Cv;
   }
-  constructor(t, n, s, i) {
-    this.type = 2, this._$AH = p, this._$AN = void 0, this._$AA = t, this._$AB = n, this._$AM = s, this.options = i, this._$Cv = i?.isConnected ?? !0;
+  constructor(t, s, n, i) {
+    this.type = 2, this._$AH = p, this._$AN = void 0, this._$AA = t, this._$AB = s, this._$AM = n, this.options = i, this._$Cv = i?.isConnected ?? !0;
   }
   get parentNode() {
     let t = this._$AA.parentNode;
-    const n = this._$AM;
-    return n !== void 0 && t?.nodeType === 11 && (t = n.parentNode), t;
+    const s = this._$AM;
+    return s !== void 0 && t?.nodeType === 11 && (t = s.parentNode), t;
   }
   get startNode() {
     return this._$AA;
@@ -370,8 +370,8 @@ class fe {
   get endNode() {
     return this._$AB;
   }
-  _$AI(t, n = this) {
-    t = re(this, t, n), pe(t) ? t === p || t == null || t === "" ? (this._$AH !== p && this._$AR(), this._$AH = p) : t !== this._$AH && t !== G && this._(t) : t._$litType$ !== void 0 ? this.$(t) : t.nodeType !== void 0 ? this.T(t) : Vt(t) ? this.k(t) : this._(t);
+  _$AI(t, s = this) {
+    t = oe(this, t, s), ue(t) ? t === p || t == null || t === "" ? (this._$AH !== p && this._$AR(), this._$AH = p) : t !== this._$AH && t !== K && this._(t) : t._$litType$ !== void 0 ? this.$(t) : t.nodeType !== void 0 ? this.T(t) : Vt(t) ? this.k(t) : this._(t);
   }
   O(t) {
     return this._$AA.parentNode.insertBefore(t, this._$AB);
@@ -380,55 +380,55 @@ class fe {
     this._$AH !== t && (this._$AR(), this._$AH = this.O(t));
   }
   _(t) {
-    this._$AH !== p && pe(this._$AH) ? this._$AA.nextSibling.data = t : this.T(ee.createTextNode(t)), this._$AH = t;
+    this._$AH !== p && ue(this._$AH) ? this._$AA.nextSibling.data = t : this.T(ee.createTextNode(t)), this._$AH = t;
   }
   $(t) {
-    const { values: n, _$litType$: s } = t, i = typeof s == "number" ? this._$AC(t) : (s.el === void 0 && (s.el = ue.createElement(xt(s.h, s.h[0]), this.options)), s);
-    if (this._$AH?._$AD === i) this._$AH.p(n);
+    const { values: s, _$litType$: n } = t, i = typeof n == "number" ? this._$AC(t) : (n.el === void 0 && (n.el = me.createElement(xt(n.h, n.h[0]), this.options)), n);
+    if (this._$AH?._$AD === i) this._$AH.p(s);
     else {
       const a = new Kt(i, this), r = a.u(this.options);
-      a.p(n), this.T(r), this._$AH = a;
+      a.p(s), this.T(r), this._$AH = a;
     }
   }
   _$AC(t) {
-    let n = tt.get(t.strings);
-    return n === void 0 && tt.set(t.strings, n = new ue(t)), n;
+    let s = tt.get(t.strings);
+    return s === void 0 && tt.set(t.strings, s = new me(t)), s;
   }
   k(t) {
-    Ze(this._$AH) || (this._$AH = [], this._$AR());
-    const n = this._$AH;
-    let s, i = 0;
-    for (const a of t) i === n.length ? n.push(s = new fe(this.O(he()), this.O(he()), this, this.options)) : s = n[i], s._$AI(a), i++;
-    i < n.length && (this._$AR(s && s._$AB.nextSibling, i), n.length = i);
+    Ce(this._$AH) || (this._$AH = [], this._$AR());
+    const s = this._$AH;
+    let n, i = 0;
+    for (const a of t) i === s.length ? s.push(n = new $e(this.O(pe()), this.O(pe()), this, this.options)) : n = s[i], n._$AI(a), i++;
+    i < s.length && (this._$AR(n && n._$AB.nextSibling, i), s.length = i);
   }
-  _$AR(t = this._$AA.nextSibling, n) {
-    for (this._$AP?.(!1, !0, n); t !== this._$AB; ) {
-      const s = qe(t).nextSibling;
-      qe(t).remove(), t = s;
+  _$AR(t = this._$AA.nextSibling, s) {
+    for (this._$AP?.(!1, !0, s); t !== this._$AB; ) {
+      const n = qe(t).nextSibling;
+      qe(t).remove(), t = n;
     }
   }
   setConnected(t) {
     this._$AM === void 0 && (this._$Cv = t, this._$AP?.(t));
   }
 }
-class Me {
+class Pe {
   get tagName() {
     return this.element.tagName;
   }
   get _$AU() {
     return this._$AM._$AU;
   }
-  constructor(t, n, s, i, a) {
-    this.type = 1, this._$AH = p, this._$AN = void 0, this.element = t, this.name = n, this._$AM = i, this.options = a, s.length > 2 || s[0] !== "" || s[1] !== "" ? (this._$AH = Array(s.length - 1).fill(new String()), this.strings = s) : this._$AH = p;
+  constructor(t, s, n, i, a) {
+    this.type = 1, this._$AH = p, this._$AN = void 0, this.element = t, this.name = s, this._$AM = i, this.options = a, n.length > 2 || n[0] !== "" || n[1] !== "" ? (this._$AH = Array(n.length - 1).fill(new String()), this.strings = n) : this._$AH = p;
   }
-  _$AI(t, n = this, s, i) {
+  _$AI(t, s = this, n, i) {
     const a = this.strings;
     let r = !1;
-    if (a === void 0) t = re(this, t, n, 0), r = !pe(t) || t !== this._$AH && t !== G, r && (this._$AH = t);
+    if (a === void 0) t = oe(this, t, s, 0), r = !ue(t) || t !== this._$AH && t !== K, r && (this._$AH = t);
     else {
       const l = t;
-      let o, h;
-      for (t = a[0], o = 0; o < a.length - 1; o++) h = re(this, l[s + o], n, o), h === G && (h = this._$AH[o]), r ||= !pe(h) || h !== this._$AH[o], h === p ? t = p : t !== p && (t += (h ?? "") + a[o + 1]), this._$AH[o] = h;
+      let o, d;
+      for (t = a[0], o = 0; o < a.length - 1; o++) d = oe(this, l[n + o], s, o), d === K && (d = this._$AH[o]), r ||= !ue(d) || d !== this._$AH[o], d === p ? t = p : t !== p && (t += (d ?? "") + a[o + 1]), this._$AH[o] = d;
     }
     r && !i && this.j(t);
   }
@@ -436,7 +436,7 @@ class Me {
     t === p ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t ?? "");
   }
 }
-class qt extends Me {
+class qt extends Pe {
   constructor() {
     super(...arguments), this.type = 3;
   }
@@ -444,7 +444,7 @@ class qt extends Me {
     this.element[this.name] = t === p ? void 0 : t;
   }
 }
-class Jt extends Me {
+class Jt extends Pe {
   constructor() {
     super(...arguments), this.type = 4;
   }
@@ -452,38 +452,38 @@ class Jt extends Me {
     this.element.toggleAttribute(this.name, !!t && t !== p);
   }
 }
-class Xt extends Me {
-  constructor(t, n, s, i, a) {
-    super(t, n, s, i, a), this.type = 5;
+class Yt extends Pe {
+  constructor(t, s, n, i, a) {
+    super(t, s, n, i, a), this.type = 5;
   }
-  _$AI(t, n = this) {
-    if ((t = re(this, t, n, 0) ?? p) === G) return;
-    const s = this._$AH, i = t === p && s !== p || t.capture !== s.capture || t.once !== s.once || t.passive !== s.passive, a = t !== p && (s === p || i);
-    i && this.element.removeEventListener(this.name, this, s), a && this.element.addEventListener(this.name, this, t), this._$AH = t;
+  _$AI(t, s = this) {
+    if ((t = oe(this, t, s, 0) ?? p) === K) return;
+    const n = this._$AH, i = t === p && n !== p || t.capture !== n.capture || t.once !== n.once || t.passive !== n.passive, a = t !== p && (n === p || i);
+    i && this.element.removeEventListener(this.name, this, n), a && this.element.addEventListener(this.name, this, t), this._$AH = t;
   }
   handleEvent(t) {
     typeof this._$AH == "function" ? this._$AH.call(this.options?.host ?? this.element, t) : this._$AH.handleEvent(t);
   }
 }
-class Yt {
-  constructor(t, n, s) {
-    this.element = t, this.type = 6, this._$AN = void 0, this._$AM = n, this.options = s;
+class Xt {
+  constructor(t, s, n) {
+    this.element = t, this.type = 6, this._$AN = void 0, this._$AM = s, this.options = n;
   }
   get _$AU() {
     return this._$AM._$AU;
   }
   _$AI(t) {
-    re(this, t);
+    oe(this, t);
   }
 }
-const Qt = Ce.litHtmlPolyfillSupport;
-Qt?.(ue, fe), (Ce.litHtmlVersions ??= []).push("3.3.3");
-const en = (e, t, n) => {
-  const s = n?.renderBefore ?? t;
-  let i = s._$litPart$;
+const Qt = Ze.litHtmlPolyfillSupport;
+Qt?.(me, $e), (Ze.litHtmlVersions ??= []).push("3.3.3");
+const en = (e, t, s) => {
+  const n = s?.renderBefore ?? t;
+  let i = n._$litPart$;
   if (i === void 0) {
-    const a = n?.renderBefore ?? null;
-    s._$litPart$ = i = new fe(t.insertBefore(he(), a), a, void 0, n ?? {});
+    const a = s?.renderBefore ?? null;
+    n._$litPart$ = i = new $e(t.insertBefore(pe(), a), a, void 0, s ?? {});
   }
   return i._$AI(e), i;
 };
@@ -493,7 +493,7 @@ const en = (e, t, n) => {
  * SPDX-License-Identifier: BSD-3-Clause
  */
 const je = globalThis;
-let Q = class extends ie {
+let Q = class extends ae {
   constructor() {
     super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
   }
@@ -502,8 +502,8 @@ let Q = class extends ie {
     return this.renderOptions.renderBefore ??= t.firstChild, t;
   }
   update(t) {
-    const n = this.render();
-    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(t), this._$Do = en(n, this.renderRoot, this.renderOptions);
+    const s = this.render();
+    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(t), this._$Do = en(s, this.renderRoot, this.renderOptions);
   }
   connectedCallback() {
     super.connectedCallback(), this._$Do?.setConnected(!0);
@@ -512,7 +512,7 @@ let Q = class extends ie {
     super.disconnectedCallback(), this._$Do?.setConnected(!1);
   }
   render() {
-    return G;
+    return K;
   }
 };
 Q._$litElement$ = !0, Q.finalized = !0, je.litElementHydrateSupport?.({ LitElement: Q });
@@ -524,8 +524,8 @@ tn?.({ LitElement: Q });
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const Ie = (e) => (t, n) => {
-  n !== void 0 ? n.addInitializer(() => {
+const Ie = (e) => (t, s) => {
+  s !== void 0 ? s.addInitializer(() => {
     customElements.define(e, t);
   }) : customElements.define(e, t);
 };
@@ -534,11 +534,11 @@ const Ie = (e) => (t, n) => {
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const nn = { attribute: !0, type: String, converter: we, reflect: !1, hasChanged: Ne }, sn = (e = nn, t, n) => {
-  const { kind: s, metadata: i } = n;
+const nn = { attribute: !0, type: String, converter: we, reflect: !1, hasChanged: Re }, sn = (e = nn, t, s) => {
+  const { kind: n, metadata: i } = s;
   let a = globalThis.litPropertyMetadata.get(i);
-  if (a === void 0 && globalThis.litPropertyMetadata.set(i, a = /* @__PURE__ */ new Map()), s === "setter" && ((e = Object.create(e)).wrapped = !0), a.set(n.name, e), s === "accessor") {
-    const { name: r } = n;
+  if (a === void 0 && globalThis.litPropertyMetadata.set(i, a = /* @__PURE__ */ new Map()), n === "setter" && ((e = Object.create(e)).wrapped = !0), a.set(s.name, e), n === "accessor") {
+    const { name: r } = s;
     return { set(l) {
       const o = t.get.call(this);
       t.set.call(this, l), this.requestUpdate(r, o, e, !0, l);
@@ -546,233 +546,233 @@ const nn = { attribute: !0, type: String, converter: we, reflect: !1, hasChanged
       return l !== void 0 && this.C(r, void 0, e, l), l;
     } };
   }
-  if (s === "setter") {
-    const { name: r } = n;
+  if (n === "setter") {
+    const { name: r } = s;
     return function(l) {
       const o = this[r];
       t.call(this, l), this.requestUpdate(r, o, e, !0, l);
     };
   }
-  throw Error("Unsupported decorator location: " + s);
+  throw Error("Unsupported decorator location: " + n);
 };
 function be(e) {
-  return (t, n) => typeof n == "object" ? sn(e, t, n) : ((s, i, a) => {
+  return (t, s) => typeof s == "object" ? sn(e, t, s) : ((n, i, a) => {
     const r = i.hasOwnProperty(a);
-    return i.constructor.createProperty(a, s), r ? Object.getOwnPropertyDescriptor(i, a) : void 0;
-  })(e, t, n);
+    return i.constructor.createProperty(a, n), r ? Object.getOwnPropertyDescriptor(i, a) : void 0;
+  })(e, t, s);
 }
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-function $(e) {
+function b(e) {
   return be({ ...e, state: !0, attribute: !1 });
 }
-const j = 6378137, kt = 256, ce = Math.PI * j;
+const I = 6378137, kt = 256, de = Math.PI * I;
 function wt(e, t) {
-  const n = Math.max(0, Math.min(360, t));
-  return Math.PI * e * e * n / 360;
+  const s = Math.max(0, Math.min(360, t));
+  return Math.PI * e * e * s / 360;
 }
-function Y(e) {
+function X(e) {
   if (e.length < 3) return 0;
   let t = 0;
-  for (let n = 0; n < e.length; n++) {
-    const [s, i] = e[n], [a, r] = e[(n + 1) % e.length];
-    t += s * r - a * i;
+  for (let s = 0; s < e.length; s++) {
+    const [n, i] = e[s], [a, r] = e[(s + 1) % e.length];
+    t += n * r - a * i;
   }
   return Math.abs(t) / 2;
 }
-function N(e, t, n) {
-  const s = n * Math.PI / 180;
-  return [e[0] + Math.sin(s) * t, e[1] - Math.cos(s) * t];
+function Z(e, t, s) {
+  const n = s * Math.PI / 180;
+  return [e[0] + Math.sin(n) * t, e[1] - Math.cos(n) * t];
 }
-function me(e, t) {
+function ge(e, t) {
   return (Math.atan2(t[0] - e[0], -(t[1] - e[1])) * 180 / Math.PI + 360) % 360;
 }
-function P(e, t) {
+function M(e, t) {
   return Math.hypot(e[0] - t[0], e[1] - t[1]);
 }
-function nt(e, t, n, s) {
+function nt(e, t, s, n) {
   const [i, a] = e;
-  if (s >= 360)
+  if (n >= 360)
     return `M ${i - t} ${a} a ${t} ${t} 0 1 0 ${2 * t} 0 a ${t} ${t} 0 1 0 ${-2 * t} 0 Z`;
-  const [r, l] = N(e, t, n), [o, h] = N(e, t, n + s), m = s > 180 ? 1 : 0;
-  return `M ${i} ${a} L ${r} ${l} A ${t} ${t} 0 ${m} 1 ${o} ${h} Z`;
+  const [r, l] = Z(e, t, s), [o, d] = Z(e, t, s + n), m = n > 180 ? 1 : 0;
+  return `M ${i} ${a} L ${r} ${l} A ${t} ${t} 0 ${m} 1 ${o} ${d} Z`;
 }
-function ve(e) {
+function ye(e) {
   const t = e.length || 1;
-  return [e.reduce((n, s) => n + s[0], 0) / t, e.reduce((n, s) => n + s[1], 0) / t];
+  return [e.reduce((s, n) => s + n[0], 0) / t, e.reduce((s, n) => s + n[1], 0) / t];
 }
 function Ae(e, t) {
-  return 2 * Math.PI * j * Math.cos(e * Math.PI / 180) / (kt * 2 ** t);
+  return 2 * Math.PI * I * Math.cos(e * Math.PI / 180) / (kt * 2 ** t);
 }
 function st(e, t) {
   return Math.log2(
-    2 * Math.PI * j * Math.cos(e * Math.PI / 180) * t / kt
+    2 * Math.PI * I * Math.cos(e * Math.PI / 180) * t / kt
   );
 }
-function it(e, t, n) {
-  const [s, i] = n, a = Math.PI / 180;
+function it(e, t, s) {
+  const [n, i] = s, a = Math.PI / 180;
   return [
-    (t - i) * a * j * Math.cos(s * a),
-    -(e - s) * a * j
+    (t - i) * a * I * Math.cos(n * a),
+    -(e - n) * a * I
   ];
 }
 function an(e, t) {
-  const [n, s] = t, i = 180 / Math.PI;
+  const [s, n] = t, i = 180 / Math.PI;
   return [
-    n - e[1] / j * i,
-    s + e[0] / (j * Math.cos(n / i)) * i
+    s - e[1] / I * i,
+    n + e[0] / (I * Math.cos(s / i)) * i
   ];
 }
-function at(e, t, n, s, i = 200) {
-  const [a, r] = t, l = Math.PI / 180, o = 1 / Math.cos(a * l), h = j * r * l, m = j * Math.log(Math.tan(Math.PI / 4 + a * l / 2)), u = 2 ** s, b = 2 * ce / u, w = (A) => (h + A * o + ce) / b, d = (A) => (ce - (m - A * o)) / b, g = Math.max(0, Math.floor(w(n.x0))), v = Math.min(u - 1, Math.floor(w(n.x1))), S = Math.max(0, Math.floor(d(n.y0))), M = Math.min(u - 1, Math.floor(d(n.y1))), k = [];
-  if ((v - g + 1) * (M - S + 1) > i) return k;
-  for (let A = S; A <= M; A++)
+function at(e, t, s, n, i = 200) {
+  const [a, r] = t, l = Math.PI / 180, o = 1 / Math.cos(a * l), d = I * r * l, m = I * Math.log(Math.tan(Math.PI / 4 + a * l / 2)), u = 2 ** n, $ = 2 * de / u, x = (A) => (d + A * o + de) / $, h = (A) => (de - (m - A * o)) / $, g = Math.max(0, Math.floor(x(s.x0))), v = Math.min(u - 1, Math.floor(x(s.x1))), S = Math.max(0, Math.floor(h(s.y0))), P = Math.min(u - 1, Math.floor(h(s.y1))), w = [];
+  if ((v - g + 1) * (P - S + 1) > i) return w;
+  for (let A = S; A <= P; A++)
     for (let z = g; z <= v; z++) {
-      const O = z * b - ce, H = ce - A * b;
-      k.push({
-        url: e.replace("{z}", String(s)).replace("{x}", String(z)).replace("{y}", String(A)),
-        key: `${s}/${z}/${A}`,
-        x: (O - h) / o,
+      const O = z * $ - de, H = de - A * $;
+      w.push({
+        url: e.replace("{z}", String(n)).replace("{x}", String(z)).replace("{y}", String(A)),
+        key: `${n}/${z}/${A}`,
+        x: (O - d) / o,
         y: (m - H) / o,
-        size: b / o
+        size: $ / o
       });
     }
-  return k;
+  return w;
 }
-function rn(e, t, n) {
-  let s = null, i = n;
+function rn(e, t, s) {
+  let n = null, i = s;
   for (const a of t) {
-    const r = P(e, a);
-    r <= i && (s = a, i = r);
+    const r = M(e, a);
+    r <= i && (n = a, i = r);
   }
-  return s;
+  return n;
 }
-function ae(e, t = !1) {
-  let n = 0;
-  for (let s = 1; s < e.length; s++) n += P(e[s - 1], e[s]);
-  return t && e.length > 2 && (n += P(e[e.length - 1], e[0])), n;
+function re(e, t = !1) {
+  let s = 0;
+  for (let n = 1; n < e.length; n++) s += M(e[n - 1], e[n]);
+  return t && e.length > 2 && (s += M(e[e.length - 1], e[0])), s;
 }
 function on(e, t) {
-  const n = t ? e.length : e.length - 1, s = [];
-  for (let i = 0; i < n; i++) s.push(P(e[i], e[(i + 1) % e.length]));
-  return s;
+  const s = t ? e.length : e.length - 1, n = [];
+  for (let i = 0; i < s; i++) n.push(M(e[i], e[(i + 1) % e.length]));
+  return n;
 }
-function ln(e, t, n) {
-  const s = (t + 1) % e.length, i = e[t], a = e[s], r = P(i, a);
-  if (!(n > 0) || r === 0) return e;
-  const l = n / r, o = [i[0] + (a[0] - i[0]) * l, i[1] + (a[1] - i[1]) * l];
-  return e.map((h, m) => m === s ? o : h);
+function ln(e, t, s) {
+  const n = (t + 1) % e.length, i = e[t], a = e[n], r = M(i, a);
+  if (!(s > 0) || r === 0) return e;
+  const l = s / r, o = [i[0] + (a[0] - i[0]) * l, i[1] + (a[1] - i[1]) * l];
+  return e.map((d, m) => m === n ? o : d);
 }
 function _t(e, t) {
-  return e.length < 2 || t <= 0 ? 0 : ae(e) * 2 * t + Math.PI * t * t;
+  return e.length < 2 || t <= 0 ? 0 : re(e) * 2 * t + Math.PI * t * t;
 }
 function cn(e, t) {
-  let n = ae(e) * Math.max(0, Math.min(1, t));
-  for (let s = 1; s < e.length; s++) {
-    const i = P(e[s - 1], e[s]);
-    if (n <= i && i > 0) {
-      const a = n / i;
+  let s = re(e) * Math.max(0, Math.min(1, t));
+  for (let n = 1; n < e.length; n++) {
+    const i = M(e[n - 1], e[n]);
+    if (s <= i && i > 0) {
+      const a = s / i;
       return [
-        e[s - 1][0] + (e[s][0] - e[s - 1][0]) * a,
-        e[s - 1][1] + (e[s][1] - e[s - 1][1]) * a
+        e[n - 1][0] + (e[n][0] - e[n - 1][0]) * a,
+        e[n - 1][1] + (e[n][1] - e[n - 1][1]) * a
       ];
     }
-    n -= i;
+    s -= i;
   }
   return e[e.length - 1];
 }
 function dn(e, t) {
-  let n = Number.POSITIVE_INFINITY;
-  for (let s = 1; s < t.length; s++) {
-    const [i, a] = [t[s - 1], t[s]], r = a[0] - i[0], l = a[1] - i[1], o = r * r + l * l, h = o === 0 ? 0 : Math.max(0, Math.min(1, ((e[0] - i[0]) * r + (e[1] - i[1]) * l) / o));
-    n = Math.min(n, Math.hypot(e[0] - (i[0] + h * r), e[1] - (i[1] + h * l)));
+  let s = Number.POSITIVE_INFINITY;
+  for (let n = 1; n < t.length; n++) {
+    const [i, a] = [t[n - 1], t[n]], r = a[0] - i[0], l = a[1] - i[1], o = r * r + l * l, d = o === 0 ? 0 : Math.max(0, Math.min(1, ((e[0] - i[0]) * r + (e[1] - i[1]) * l) / o));
+    s = Math.min(s, Math.hypot(e[0] - (i[0] + d * r), e[1] - (i[1] + d * l)));
   }
-  return n;
+  return s;
 }
 function rt(e, t) {
-  let n = 1;
+  let s = 1;
   for (let r = 2; r < e.length; r++)
-    P(e[r - 1], e[r]) > P(e[n - 1], e[n]) && (n = r);
-  const [s, i] = [e[n - 1], e[n]], a = P(s, i) || 1;
-  return [(s[0] + i[0]) / 2 + (i[1] - s[1]) / a * t, (s[1] + i[1]) / 2 - (i[0] - s[0]) / a * t];
+    M(e[r - 1], e[r]) > M(e[s - 1], e[s]) && (s = r);
+  const [n, i] = [e[s - 1], e[s]], a = M(n, i) || 1;
+  return [(n[0] + i[0]) / 2 + (i[1] - n[1]) / a * t, (n[1] + i[1]) / 2 - (i[0] - n[0]) / a * t];
 }
 function ot(e, t) {
   if (e.length < 2) return "";
-  const n = (a) => Math.round(a * 1e3) / 1e3;
-  let s = `M${n(e[0][0])} ${n(e[0][1])}`;
+  const s = (a) => Math.round(a * 1e3) / 1e3;
+  let n = `M${s(e[0][0])} ${s(e[0][1])}`;
   for (let a = 1; a < e.length - 1; a++) {
-    const [r, l, o] = [e[a - 1], e[a], e[a + 1]], h = P(r, l), m = P(l, o), u = Math.min(t, h / 2, m / 2);
+    const [r, l, o] = [e[a - 1], e[a], e[a + 1]], d = M(r, l), m = M(l, o), u = Math.min(t, d / 2, m / 2);
     if (u <= 0) {
-      s += ` L${n(l[0])} ${n(l[1])}`;
+      n += ` L${s(l[0])} ${s(l[1])}`;
       continue;
     }
-    const b = [l[0] + (r[0] - l[0]) / h * u, l[1] + (r[1] - l[1]) / h * u], w = [l[0] + (o[0] - l[0]) / m * u, l[1] + (o[1] - l[1]) / m * u];
-    s += ` L${n(b[0])} ${n(b[1])} Q${n(l[0])} ${n(l[1])} ${n(w[0])} ${n(w[1])}`;
+    const $ = [l[0] + (r[0] - l[0]) / d * u, l[1] + (r[1] - l[1]) / d * u], x = [l[0] + (o[0] - l[0]) / m * u, l[1] + (o[1] - l[1]) / m * u];
+    n += ` L${s($[0])} ${s($[1])} Q${s(l[0])} ${s(l[1])} ${s(x[0])} ${s(x[1])}`;
   }
   const i = e[e.length - 1];
-  return `${s} L${n(i[0])} ${n(i[1])}`;
+  return `${n} L${s(i[0])} ${s(i[1])}`;
 }
-function St(e, t, n) {
-  const s = n[0] - t[0], i = n[1] - t[1], a = s * s + i * i, r = a === 0 ? 0 : Math.max(0, Math.min(1, ((e[0] - t[0]) * s + (e[1] - t[1]) * i) / a));
-  return [t[0] + r * s, t[1] + r * i];
+function St(e, t, s) {
+  const n = s[0] - t[0], i = s[1] - t[1], a = n * n + i * i, r = a === 0 ? 0 : Math.max(0, Math.min(1, ((e[0] - t[0]) * n + (e[1] - t[1]) * i) / a));
+  return [t[0] + r * n, t[1] + r * i];
 }
-function Mt(e, t, n) {
-  let s = null, i = n;
+function Pt(e, t, s) {
+  let n = null, i = s;
   for (const a of t)
     for (let r = 1; r < a.length; r++) {
-      const l = St(e, a[r - 1], a[r]), o = P(e, l);
-      o <= i && (i = o, s = l);
+      const l = St(e, a[r - 1], a[r]), o = M(e, l);
+      o <= i && (i = o, n = l);
     }
-  return s;
+  return n;
 }
 function hn(e, t = 0.05) {
-  const n = [];
-  return e.forEach((s, i) => {
-    for (const a of [s[0], s[s.length - 1]]) {
+  const s = [];
+  return e.forEach((n, i) => {
+    for (const a of [n[0], n[n.length - 1]]) {
       if (!a) continue;
-      const r = e.filter((o, h) => h !== i);
-      Mt(a, r, t) && !n.some((o) => P(o, a) < t) && n.push(a);
+      const r = e.filter((o, d) => d !== i);
+      Pt(a, r, t) && !s.some((o) => M(o, a) < t) && s.push(a);
     }
-  }), n;
+  }), s;
 }
-function pn(e, t, n, s = 0.3) {
+function pn(e, t, s, n = 0.3) {
   const i = (g) => `${g[0].toFixed(2)},${g[1].toFixed(2)}`, a = e.flatMap((g) => [g[0], g[g.length - 1]]), r = e.map((g) => {
     const v = [g[0]];
     for (let S = 1; S < g.length; S++) {
-      const [M, k] = [g[S - 1], g[S]], A = a.filter((z) => P(St(z, M, k), z) < 0.05 && P(z, M) > 0.05 && P(z, k) > 0.05).sort((z, O) => P(M, z) - P(M, O));
-      v.push(...A, k);
+      const [P, w] = [g[S - 1], g[S]], A = a.filter((z) => M(St(z, P, w), z) < 0.05 && M(z, P) > 0.05 && M(z, w) > 0.05).sort((z, O) => M(P, z) - M(P, O));
+      v.push(...A, w);
     }
     return v;
-  }), l = /* @__PURE__ */ new Map(), o = /* @__PURE__ */ new Map(), h = (g, v) => {
-    const [S, M] = [i(g), i(v)];
-    l.set(S, g), l.set(M, v), o.has(S) || o.set(S, /* @__PURE__ */ new Set()), o.has(M) || o.set(M, /* @__PURE__ */ new Set()), o.get(S).add(M), o.get(M).add(S);
+  }), l = /* @__PURE__ */ new Map(), o = /* @__PURE__ */ new Map(), d = (g, v) => {
+    const [S, P] = [i(g), i(v)];
+    l.set(S, g), l.set(P, v), o.has(S) || o.set(S, /* @__PURE__ */ new Set()), o.has(P) || o.set(P, /* @__PURE__ */ new Set()), o.get(S).add(P), o.get(P).add(S);
   };
-  for (const g of r) for (let v = 1; v < g.length; v++) h(g[v - 1], g[v]);
-  const m = (g) => [...l.entries()].filter(([, v]) => P(v, g) <= s).map(([v]) => v), u = new Set(m(n));
+  for (const g of r) for (let v = 1; v < g.length; v++) d(g[v - 1], g[v]);
+  const m = (g) => [...l.entries()].filter(([, v]) => M(v, g) <= n).map(([v]) => v), u = new Set(m(s));
   if (!u.size) return [];
-  const b = t.flatMap(m), w = /* @__PURE__ */ new Map(), d = [];
-  for (const g of b)
-    w.has(g) || (w.set(g, null), d.push(g));
-  for (; d.length; ) {
-    const g = d.shift();
+  const $ = t.flatMap(m), x = /* @__PURE__ */ new Map(), h = [];
+  for (const g of $)
+    x.has(g) || (x.set(g, null), h.push(g));
+  for (; h.length; ) {
+    const g = h.shift();
     if (u.has(g)) {
       const v = [];
       let S = g;
-      for (; S && w.get(S); ) {
-        const M = w.get(S);
-        v.unshift([l.get(M), l.get(S)]), S = M;
+      for (; S && x.get(S); ) {
+        const P = x.get(S);
+        v.unshift([l.get(P), l.get(S)]), S = P;
       }
       return v;
     }
     for (const v of o.get(g) ?? [])
-      w.has(v) || (w.set(v, g), d.push(v));
+      x.has(v) || (x.set(v, g), h.push(v));
   }
   return [];
 }
-const U = {
+const V = {
   building: { label: "Gebäude", icon: "mdi:home-outline", family: "area" },
   paving: { label: "Terrasse / Weg", icon: "mdi:texture-box", family: "area" },
   water: { label: "Teich / Pool", icon: "mdi:waves", family: "area" },
@@ -786,17 +786,17 @@ const U = {
   label: { label: "Beschriftung", icon: "mdi:format-text", family: "point" },
   tap: { label: "Wasserhahn", icon: "mdi:water-pump", family: "point" }
 }, un = 60;
-function q(e) {
-  return U[e]?.family ?? "area";
+function j(e) {
+  return V[e]?.family ?? "area";
 }
-function W(e) {
-  return e.kind === "label" && e.label ? e.label : e.label || U[e.kind]?.label || e.kind;
+function U(e) {
+  return e.kind === "label" && e.label ? e.label : e.label || V[e.kind]?.label || e.kind;
 }
 function mn(e) {
-  const t = new Set(e.map((s) => s.id));
-  let n = e.length + 1;
-  for (; t.has(`f${n}`); ) n++;
-  return `f${n}`;
+  const t = new Set(e.map((n) => n.id));
+  let s = e.length + 1;
+  for (; t.has(`f${s}`); ) s++;
+  return `f${s}`;
 }
 const Ee = {
   sand: "#e9d8a6",
@@ -808,19 +808,19 @@ const Ee = {
   clay: "#6f5443"
 };
 function gn(e) {
-  const t = e.filter((n) => n.kind === "boundary" && n.points.length >= 3);
-  return t.length ? t.reduce((n, s) => n + Y(s.points), 0) : null;
+  const t = e.filter((s) => s.kind === "boundary" && s.points.length >= 3);
+  return t.length ? t.reduce((s, n) => s + X(n.points), 0) : null;
 }
 const fn = "Suche: © OpenStreetMap-Mitwirkende";
-async function bn(e, t, n = "de") {
+async function $n(e, t, s = "de") {
   if (t.trim().length < 3) throw new Error("Bitte mindestens 3 Zeichen eingeben");
   return (await e({
     type: "irrigation_planner/geocode",
     query: t.trim(),
-    language: n
+    language: s
   })).places ?? [];
 }
-const Fe = Bt`
+const We = Bt`
   :host {
     display: flex;
     flex-direction: column;
@@ -2233,6 +2233,36 @@ const Fe = Bt`
   .flow {
     pointer-events: none;
   }
+  .marker.valve .bowtie {
+    fill: #fff;
+  }
+  .marker.valve .handle-bar {
+    stroke: #fff;
+    stroke-width: 2;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .marker.valve.open rect {
+    fill: #0288d1;
+  }
+  .feature.tap.open circle {
+    fill: #0288d1;
+  }
+  .feature.tap .drip {
+    fill: #29b6f6;
+    animation: drip 1s ease-in infinite;
+    transform-box: fill-box;
+  }
+  @keyframes drip {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(80%);
+      opacity: 0;
+    }
+  }
   .flow .pipe-active {
     stroke: #0288d1;
     stroke-width: 6;
@@ -2692,6 +2722,22 @@ const Fe = Bt`
   }
 
   /* Betrieb */
+  .saving {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .saving input {
+    width: 110px;
+  }
+  .saving strong {
+    min-width: 44px;
+    font-variant-numeric: tabular-nums;
+  }
+  td.actions-cell {
+    white-space: nowrap;
+  }
   .operation .card h2 {
     font-size: 16px;
     font-weight: 500;
@@ -2874,23 +2920,23 @@ const Fe = Bt`
     grid-column: 2;
   }
 `;
-var $n = Object.defineProperty, vn = Object.getOwnPropertyDescriptor, I = (e, t, n, s) => {
-  for (var i = s > 1 ? void 0 : s ? vn(t, n) : t, a = e.length - 1, r; a >= 0; a--)
-    (r = e[a]) && (i = (s ? r(t, n, i) : r(i)) || i);
-  return s && i && $n(t, n, i), i;
+var bn = Object.defineProperty, vn = Object.getOwnPropertyDescriptor, W = (e, t, s, n) => {
+  for (var i = n > 1 ? void 0 : n ? vn(t, s) : t, a = e.length - 1, r; a >= 0; a--)
+    (r = e[a]) && (i = (n ? r(t, s, i) : r(i)) || i);
+  return n && i && bn(t, s, i), i;
 };
-const ye = "irrigation_planner", lt = "#eb6834", ct = "#2a78d6";
+const ne = "irrigation_planner", lt = "#eb6834", ct = "#2a78d6";
 function C(e) {
   if (e = Math.max(0, Math.round(e)), e < 60) return `${e} s`;
-  const t = Math.floor(e / 60), n = e % 60;
-  return t >= 60 ? `${Math.floor(t / 60)} h ${t % 60} min` : n && t < 10 ? `${t}:${String(n).padStart(2, "0")} min` : `${Math.round(e / 60)} min`;
+  const t = Math.floor(e / 60), s = e % 60;
+  return t >= 60 ? `${Math.floor(t / 60)} h ${t % 60} min` : s && t < 10 ? `${t}:${String(s).padStart(2, "0")} min` : `${Math.round(e / 60)} min`;
 }
 function E(e, t = 1) {
   return e == null ? "–" : e.toLocaleString("de-DE", { maximumFractionDigits: t });
 }
 function yn(e, t) {
   if (!e.started_at || !e.ends_at) return { left: e.duration_s, done: 0 };
-  const n = Date.parse(e.started_at), s = Date.parse(e.ends_at), i = Math.max(0, (s - t) / 1e3), a = s > n ? Math.min(1, Math.max(0, (t - n) / (s - n))) : 0;
+  const s = Date.parse(e.started_at), n = Date.parse(e.ends_at), i = Math.max(0, (n - t) / 1e3), a = n > s ? Math.min(1, Math.max(0, (t - s) / (n - s))) : 0;
   return { left: i, done: a };
 }
 const Le = {
@@ -2908,8 +2954,8 @@ function xn(e) {
   if (e.kind === "run") {
     const t = [`${C(e.seconds ?? 0)} von ${C(e.planned_s ?? 0)}`];
     e.liters != null && t.push(`${E(e.liters)} L${e.measured ? " (gemessen)" : " (geschätzt)"}`), e.mm != null && t.push(`${E(e.mm)} mm`), e.source_text && t.push(e.source_text);
-    const n = e.state === "done" ? "ok" : e.state === "failed" ? "bad" : "warn";
-    return { title: `${e.zone_name}: ${Le[e.state ?? ""] ?? e.state}${e.error ? ` (${e.error})` : ""}`, detail: t.join(" · "), tone: n, icon: "mdi:water" };
+    const s = e.state === "done" ? "ok" : e.state === "failed" ? "bad" : "warn";
+    return { title: `${e.zone_name}: ${Le[e.state ?? ""] ?? e.state}${e.error ? ` (${e.error})` : ""}`, detail: t.join(" · "), tone: s, icon: "mdi:water" };
   }
   if (e.kind === "cancelled")
     return {
@@ -2958,7 +3004,7 @@ let B = class extends Q {
             const t = `${e.history_count}|${e.history_last}`;
             t !== this.historyKey && (this.historyKey = t, this.loadHistory());
           },
-          { type: `${ye}/operation/subscribe` }
+          { type: `${ne}/operation/subscribe` }
         );
       } catch (e) {
         this.error = this.message(e);
@@ -2967,7 +3013,7 @@ let B = class extends Q {
   async loadHistory() {
     try {
       const e = await this.hass.callWS({
-        type: `${ye}/history/get`,
+        type: `${ne}/history/get`,
         limit: 150,
         ...this.historyZone ? { zone_id: this.historyZone } : {}
       });
@@ -2985,9 +3031,9 @@ let B = class extends Q {
   async cancel(e, t) {
     this.busy = JSON.stringify(e);
     try {
-      await this.hass.callWS({ type: `${ye}/queue/cancel`, ...e }), this.toast(t);
-    } catch (n) {
-      this.toast(this.message(n), !0);
+      await this.hass.callWS({ type: `${ne}/queue/cancel`, ...e }), this.toast(t);
+    } catch (s) {
+      this.toast(this.message(s), !0);
     } finally {
       this.busy = "";
     }
@@ -2998,16 +3044,44 @@ let B = class extends Q {
       return;
     }
     try {
-      await this.hass.callService(ye, "run_zone", { zone_id: e.id, duration: e.planned_s }), this.toast(`${e.name}: ${C(e.planned_s)} eingereiht`);
+      await this.hass.callService(ne, "run_zone", { zone_id: e.id, duration: e.planned_s }), this.toast(`${e.name}: ${C(e.planned_s)} eingereiht`);
+    } catch (t) {
+      this.toast(this.message(t), !0);
+    }
+  }
+  /** „Jetzt gießen“ oder, wenn die Zone gießt bzw. wartet, „Abbrechen“. */
+  renderWaterButton(e, t) {
+    const s = t.queue.find((n) => n.zone_id === e.id);
+    return s ? c`<button class="text danger" ?disabled=${!!this.busy}
+        title=${s.active ? "Gießen abbrechen, das Ventil schließt" : "Aus der Warteschlange nehmen"}
+        @click=${() => this.cancel({ zone_id: e.id }, s.active ? `${e.name}: abgebrochen` : `${e.name}: herausgenommen`)}>
+        <ha-icon icon="mdi:stop"></ha-icon>${s.active ? "Abbrechen" : "Herausnehmen"}
+      </button>` : c`<button class="text" ?disabled=${!e.enabled || t.winter_mode || !!e.locked} title="In die Warteschlange einreihen"
+      @click=${() => this.waterNow(e)}>
+      <ha-icon icon="mdi:watering-can"></ha-icon>Jetzt gießen
+    </button>`;
+  }
+  async resetBalance(e) {
+    const t = e ? `das Wasserkonto von „${e.name}“` : "die Wasserkonten aller Zonen";
+    if (confirm(`${t[0].toUpperCase()}${t.slice(1)} auf „voll“ setzen? Der berechnete Bedarf ist danach 0.`))
+      try {
+        await this.hass.callWS({ type: `${ne}/balance/reset`, ...e ? { zone_id: e.id } : {} }), this.toast(e ? `${e.name}: Wasserkonto voll` : "Alle Wasserkonten voll");
+      } catch (s) {
+        this.toast(this.message(s), !0);
+      }
+  }
+  async setWaterSaving(e) {
+    try {
+      await this.hass.callWS({ type: `${ne}/settings/water_saving`, percent: e }), this.toast(e ? `Wassersparen: ${e} % weniger` : "Wassersparen aus");
     } catch (t) {
       this.toast(this.message(t), !0);
     }
   }
   when(e, t = !0) {
-    const n = new Date(e), s = { timeZone: this.tz, hour: "2-digit", minute: "2-digit" };
-    if (!t) return n.toLocaleTimeString("de-DE", s);
-    const i = new Date(this.now).toLocaleDateString("de-DE", { timeZone: this.tz }), a = new Date(this.now + 864e5).toLocaleDateString("de-DE", { timeZone: this.tz }), r = new Date(this.now - 864e5).toLocaleDateString("de-DE", { timeZone: this.tz }), l = n.toLocaleDateString("de-DE", { timeZone: this.tz });
-    return `${l === i ? "heute" : l === a ? "morgen" : l === r ? "gestern" : n.toLocaleDateString("de-DE", { timeZone: this.tz, weekday: "short", day: "numeric", month: "numeric" })} ${n.toLocaleTimeString("de-DE", s)}`;
+    const s = new Date(e), n = { timeZone: this.tz, hour: "2-digit", minute: "2-digit" };
+    if (!t) return s.toLocaleTimeString("de-DE", n);
+    const i = new Date(this.now).toLocaleDateString("de-DE", { timeZone: this.tz }), a = new Date(this.now + 864e5).toLocaleDateString("de-DE", { timeZone: this.tz }), r = new Date(this.now - 864e5).toLocaleDateString("de-DE", { timeZone: this.tz }), l = s.toLocaleDateString("de-DE", { timeZone: this.tz });
+    return `${l === i ? "heute" : l === a ? "morgen" : l === r ? "gestern" : s.toLocaleDateString("de-DE", { timeZone: this.tz, weekday: "short", day: "numeric", month: "numeric" })} ${s.toLocaleTimeString("de-DE", n)}`;
   }
   render() {
     if (this.error)
@@ -3019,7 +3093,7 @@ let B = class extends Q {
   }
   // Kacheln ------------------------------------------------------------------------
   renderTiles(e) {
-    const t = e.days[e.days.length - 1], n = e.programs.filter((i) => i.next).sort((i, a) => i.next < a.next ? -1 : 1)[0], s = e.weather_today;
+    const t = e.days[e.days.length - 1], s = e.programs.filter((i) => i.next).sort((i, a) => i.next < a.next ? -1 : 1)[0], n = e.weather_today;
     return c`<div class="tiles">
       <div class="tile ${e.problems.length ? "warn" : ""}">
         <span>Zustand</span>
@@ -3033,31 +3107,31 @@ let B = class extends Q {
       </div>
       <div class="tile">
         <span>Nächster Start</span>
-        <strong>${n ? this.when(n.next) : "–"}</strong>
-        <small>${n ? n.name : e.automatic ? "kein Programm geplant" : "Automatik ist aus"}</small>
+        <strong>${s ? this.when(s.next) : "–"}</strong>
+        <small>${s ? s.name : e.automatic ? "kein Programm geplant" : "Automatik ist aus"}</small>
       </div>
       <div class="tile">
         <span>Wetter heute</span>
-        <strong>${s && s.t_max != null ? `${E(s.t_min, 0)}–${E(s.t_max, 0)} °C` : "–"}</strong>
-        <small>${s ? [
-      s.rain_mm != null ? `Regen ${E(s.rain_mm)} mm` : "",
-      s.wind_ms != null ? `Wind ${E(s.wind_ms * 3.6, 0)} km/h` : "",
-      s.rh_mean != null ? `Luftfeuchte ${E(s.rh_mean, 0)} %` : ""
+        <strong>${n && n.t_max != null ? `${E(n.t_min, 0)}–${E(n.t_max, 0)} °C` : "–"}</strong>
+        <small>${n ? [
+      n.rain_mm != null ? `Regen ${E(n.rain_mm)} mm` : "",
+      n.wind_ms != null ? `Wind ${E(n.wind_ms * 3.6, 0)} km/h` : "",
+      n.rh_mean != null ? `Luftfeuchte ${E(n.rh_mean, 0)} %` : ""
     ].filter(Boolean).join(" · ") : e.weather_entity ? "noch keine Messwerte" : "keine Wetterquelle eingerichtet"}</small>
       </div>
     </div>`;
   }
   // Jetzt ----------------------------------------------------------------------------
   renderNow(e) {
-    const t = [...new Set(e.queue.map((s) => s.program_id).filter((s) => !!s))], n = (s) => e.programs.find((i) => i.id === s)?.name ?? s;
+    const t = [...new Set(e.queue.map((n) => n.program_id).filter((n) => !!n))], s = (n) => e.programs.find((i) => i.id === n)?.name ?? n;
     return c`<section class="card now">
       <div class="card-head">
         <h2>Jetzt</h2>
         <span class="spacer"></span>
         ${t.map(
-      (s) => c`<button class="text" ?disabled=${!!this.busy}
-            @click=${() => this.cancel({ program_id: s }, `Programm ${n(s)} abgebrochen`)}>
-            <ha-icon icon="mdi:stop-circle-outline"></ha-icon>${n(s)} abbrechen
+      (n) => c`<button class="text" ?disabled=${!!this.busy}
+            @click=${() => this.cancel({ program_id: n }, `Programm ${s(n)} abgebrochen`)}>
+            <ha-icon icon="mdi:stop-circle-outline"></ha-icon>${s(n)} abbrechen
           </button>`
     )}
         ${e.queue.length ? c`<button class="text danger" ?disabled=${!!this.busy}
@@ -3065,30 +3139,42 @@ let B = class extends Q {
               <ha-icon icon="mdi:stop"></ha-icon>Alles stoppen
             </button>` : p}
       </div>
-      ${e.queue.length ? c`<ul class="queue">${e.queue.map((s) => this.renderQueueItem(s))}</ul>` : c`<p class="hint">Gerade läuft nichts.</p>`}
+      ${e.queue.length ? c`<ul class="queue">${e.queue.map((n) => this.renderQueueItem(n))}</ul>` : c`<p class="hint">Gerade läuft nichts.</p>`}
     </section>`;
   }
   renderQueueItem(e) {
-    const { left: t, done: n } = yn(e, this.now), s = e.active, i = s ? e.state === "running" ? `noch ${C(t)} von ${C(e.duration_s)}` : Le[e.state] ?? e.state : `wartet · ${C(e.duration_s)}`;
-    return c`<li class="${s ? "running" : "waiting"}">
-      <ha-icon icon=${s ? "mdi:water" : "mdi:timer-sand"}></ha-icon>
+    const { left: t, done: s } = yn(e, this.now), n = e.active, i = n ? e.state === "running" ? `noch ${C(t)} von ${C(e.duration_s)}` : Le[e.state] ?? e.state : `wartet · ${C(e.duration_s)}`;
+    return c`<li class="${n ? "running" : "waiting"}">
+      <ha-icon icon=${n ? "mdi:water" : "mdi:timer-sand"}></ha-icon>
       <div class="what">
         <strong>${e.zone_name}</strong>
         <small>${e.source_text}${e.supply ? ` · ${e.supply}` : ""}</small>
-        ${s && e.state === "running" ? c`<div class="bar" role="progressbar" aria-valuenow=${Math.round(n * 100)}><div style="width:${n * 100}%"></div></div>` : p}
+        ${n && e.state === "running" ? c`<div class="bar" role="progressbar" aria-valuenow=${Math.round(s * 100)}><div style="width:${s * 100}%"></div></div>` : p}
       </div>
       <span class="left">${i}</span>
       <button class="text" ?disabled=${!!this.busy}
-        title=${s ? "Diese Zone jetzt schließen, dann mit der nächsten weitermachen" : "Diese Zone nicht gießen"}
-        @click=${() => this.cancel({ zone_id: e.zone_id }, s ? `${e.zone_name} übersprungen` : `${e.zone_name} herausgenommen`)}>
-        <ha-icon icon=${s ? "mdi:skip-next" : "mdi:close"}></ha-icon>${s ? "Überspringen" : "Herausnehmen"}
+        title=${n ? "Diese Zone jetzt schließen, dann mit der nächsten weitermachen" : "Diese Zone nicht gießen"}
+        @click=${() => this.cancel({ zone_id: e.zone_id }, n ? `${e.zone_name} übersprungen` : `${e.zone_name} herausgenommen`)}>
+        <ha-icon icon=${n ? "mdi:skip-next" : "mdi:close"}></ha-icon>${n ? "Überspringen" : "Herausnehmen"}
       </button>
     </li>`;
   }
   // Zonen ----------------------------------------------------------------------------
   renderZones(e) {
     return c`<section class="card">
-      <h2>Zonen</h2>
+      <div class="card-head">
+        <h2>Zonen</h2>
+        <span class="spacer"></span>
+        <label class="saving" title="Geplante Gießdauer aller Zonen kürzen, z. B. bei Hitze oder Wasserknappheit">
+          <ha-icon icon="mdi:water-minus"></ha-icon>Wassersparen
+          <input type="range" min="0" max="50" step="5" .value=${String(e.water_saving_pct)}
+            @change=${(t) => this.setWaterSaving(Number(t.target.value))} />
+          <strong>${e.water_saving_pct ? `−${e.water_saving_pct} %` : "aus"}</strong>
+        </label>
+        <button class="text small" title="Wasserkonten aller Zonen auf „voll“ setzen" @click=${() => this.resetBalance()}>
+          <ha-icon icon="mdi:restore"></ha-icon>Alle Konten voll
+        </button>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -3103,22 +3189,22 @@ let B = class extends Q {
           </thead>
           <tbody>
             ${e.zones.map((t) => {
-      const n = t.last, s = t.capacity_mm > 0 ? Math.min(1, t.need_mm / t.capacity_mm) : 0;
+      const s = t.last, n = t.capacity_mm > 0 ? Math.min(1, t.need_mm / t.capacity_mm) : 0;
       return c`<tr class=${t.enabled ? "" : "off"}>
                 <td>
                   <strong>${t.name}</strong>
                   ${t.locked ? c`<br /><small class="bad">gesperrt: ${t.locked}</small>` : p}
                 </td>
                 <td>
-                  ${n ? c`${this.when(n.at)}<br /><small>${C(n.seconds ?? 0)}${n.state !== "done" ? ` · ${Le[n.state ?? ""] ?? n.state}` : ""}</small>` : c`<small>noch nie</small>`}
+                  ${s ? c`${this.when(s.at)}<br /><small>${C(s.seconds ?? 0)}${s.state !== "done" ? ` · ${Le[s.state ?? ""] ?? s.state}` : ""}</small>` : c`<small>noch nie</small>`}
                 </td>
                 <td class="n">
-                  ${n?.liters != null ? c`${E(n.liters)} L` : "–"}
-                  ${n?.mm != null ? c`<br /><small>${E(n.mm)} mm</small>` : p}
+                  ${s?.liters != null ? c`${E(s.liters)} L` : "–"}
+                  ${s?.mm != null ? c`<br /><small>${E(s.mm)} mm</small>` : p}
                 </td>
                 <td>
                   ${t.duration_mode === "calculated" ? c`<div class="need" title=${`${E(t.need_mm)} von ${E(t.capacity_mm)} mm nutzbarem Wasser fehlen`}>
-                        <div class="bar small"><div style="width:${s * 100}%"></div></div>
+                        <div class="bar small"><div style="width:${n * 100}%"></div></div>
                         <small>${E(t.need_mm)} mm fehlen${t.measured ? " (Sensor)" : ""}</small>
                       </div>` : c`<small>${t.duration_mode === "entity" ? "aus Entität" : "Dauer von Hand"}</small>`}
                 </td>
@@ -3126,11 +3212,10 @@ let B = class extends Q {
                   ${t.next ? c`${this.when(t.next.at)}<br /><small>${t.next.program}</small>` : c`<small>nicht geplant</small>`}
                   <br /><small>${t.planned_s ? `${C(t.planned_s)}${t.planned_liters != null ? `, ca. ${E(t.planned_liters, 0)} L` : ""}` : t.reason}</small>
                 </td>
-                <td class="n">
-                  <button class="text" ?disabled=${!t.enabled || e.winter_mode || !!t.locked} title="In die Warteschlange einreihen"
-                    @click=${() => this.waterNow(t)}>
-                    <ha-icon icon="mdi:watering-can"></ha-icon>Jetzt gießen
-                  </button>
+                <td class="n actions-cell">
+                  ${this.renderWaterButton(t, e)}
+                  ${t.duration_mode === "calculated" && t.need_mm > 0 ? c`<button class="text small" title="Wasserkonto auf „voll“ setzen (z. B. nach Gießen von Hand)"
+                        @click=${() => this.resetBalance(t)}><ha-icon icon="mdi:restore"></ha-icon>Konto voll</button>` : p}
                 </td>
               </tr>`;
     })}
@@ -3141,10 +3226,10 @@ let B = class extends Q {
   }
   // Wetter -----------------------------------------------------------------------------
   renderWeather(e) {
-    const n = this.getBoundingClientRect().width < 640 && !this.showTable ? e.days.slice(-7) : e.days, s = n.flatMap((d) => [d.et0_mm ?? 0, d.rain_mm ?? 0]), i = Math.max(4, ...s), a = 1e3, r = 190, l = 10, o = r - 24, h = a / n.length, m = Math.min(14, h / 3), u = (d) => o - d / i * (o - l), b = [0, i / 2, i].map((d) => Math.round(d * 10) / 10), w = n.some((d) => d.et0_mm != null);
+    const s = this.getBoundingClientRect().width < 640 && !this.showTable ? e.days.slice(-7) : e.days, n = s.flatMap((h) => [h.et0_mm ?? 0, h.rain_mm ?? 0]), i = Math.max(4, ...n), a = 1e3, r = 190, l = 10, o = r - 24, d = a / s.length, m = Math.min(14, d / 3), u = (h) => o - h / i * (o - l), $ = [0, i / 2, i].map((h) => Math.round(h * 10) / 10), x = s.some((h) => h.et0_mm != null);
     return c`<section class="card">
       <div class="card-head">
-        <h2>Wetter und Wasserhaushalt (${n.length} Tage)</h2>
+        <h2>Wetter und Wasserhaushalt (${s.length} Tage)</h2>
         <span class="spacer"></span>
         <button class="text" @click=${() => this.showTable = !this.showTable}>
           <ha-icon icon=${this.showTable ? "mdi:chart-bar" : "mdi:table"}></ha-icon>${this.showTable ? "Als Grafik" : "Als Tabelle"}
@@ -3156,31 +3241,31 @@ let B = class extends Q {
       </div>
       ${this.showTable ? c`<div class="table-wrap"><table>
             <thead><tr><th>Tag</th><th class="n">Verdunstung</th><th class="n">Regen</th><th class="n">Gegossen</th></tr></thead>
-            <tbody>${[...n].reverse().map(
-      (d) => c`<tr><td>${this.dayLabel(d.day)}</td><td class="n">${E(d.et0_mm)} mm</td>
-                <td class="n">${E(d.rain_mm)} mm</td><td class="n">${E(d.liters, 0)} L</td></tr>`
+            <tbody>${[...s].reverse().map(
+      (h) => c`<tr><td>${this.dayLabel(h.day)}</td><td class="n">${E(h.et0_mm)} mm</td>
+                <td class="n">${E(h.rain_mm)} mm</td><td class="n">${E(h.liters, 0)} L</td></tr>`
     )}</tbody>
           </table></div>` : c`<svg class="chart" viewBox="0 0 ${a} ${r + 18}" role="img" aria-label="Verdunstung und Regen je Tag">
-            ${b.map(
-      (d) => f`<line class="grid" x1="0" x2=${a} y1=${u(d)} y2=${u(d)}></line>
-                <text class="tick" x="2" y=${u(d) - 3}>${E(d)} mm</text>`
+            ${$.map(
+      (h) => f`<line class="grid" x1="0" x2=${a} y1=${u(h)} y2=${u(h)}></line>
+                <text class="tick" x="2" y=${u(h) - 3}>${E(h)} mm</text>`
     )}
-            ${n.map((d, g) => {
-      const v = g * h + h / 2, S = (M, k, A, z) => M == null ? p : f`<path d=${kn(v + k, u(M), m, o - u(M))} fill=${A}>
-                      <title>${this.dayLabel(d.day)}: ${z} ${E(M)} mm</title></path>`;
+            ${s.map((h, g) => {
+      const v = g * d + d / 2, S = (P, w, A, z) => P == null ? p : f`<path d=${kn(v + w, u(P), m, o - u(P))} fill=${A}>
+                      <title>${this.dayLabel(h.day)}: ${z} ${E(P)} mm</title></path>`;
       return f`<g>
-                <rect class="hit" x=${g * h} y=${l} width=${h} height=${o - l}>
-                  <title>${this.dayLabel(d.day)}: Verdunstung ${E(d.et0_mm)} mm, Regen ${E(d.rain_mm)} mm, gegossen ${E(d.liters, 0)} L</title>
+                <rect class="hit" x=${g * d} y=${l} width=${d} height=${o - l}>
+                  <title>${this.dayLabel(h.day)}: Verdunstung ${E(h.et0_mm)} mm, Regen ${E(h.rain_mm)} mm, gegossen ${E(h.liters, 0)} L</title>
                 </rect>
-                ${S(d.et0_mm, -m - 1, lt, "Verdunstung")} ${S(d.rain_mm, 1, ct, "Regen")}
-                <text class="day" x=${v} y=${o + 14}>${this.dayLabel(d.day, !0)}</text>
-                ${d.liters ? f`<text class="liters" x=${v} y=${o + 28}>${E(d.liters, 0)} L</text>` : p}
+                ${S(h.et0_mm, -m - 1, lt, "Verdunstung")} ${S(h.rain_mm, 1, ct, "Regen")}
+                <text class="day" x=${v} y=${o + 14}>${this.dayLabel(h.day, !0)}</text>
+                ${h.liters ? f`<text class="liters" x=${v} y=${o + 28}>${E(h.liters, 0)} L</text>` : p}
               </g>`;
     })}
             <line class="axis" x1="0" x2=${a} y1=${o} y2=${o}></line>
           </svg>`}
       <p class="hint small">
-        ${w ? p : c`<strong>Noch keine abgeschlossenen Wettertage. </strong>`}
+        ${x ? p : c`<strong>Noch keine abgeschlossenen Wettertage. </strong>`}
         So rechnet die Planung (bei Zonen mit berechneter Dauer): Aus Temperatur, Luftfeuchte und Wind ergibt sich jeden
         Tag die Verdunstung. Mal Pflanzenfaktor ist das der Wasserverbrauch der Zone. Wirksamer Regen und gegossenes Wasser
         werden abgezogen. Was fehlt, ist der Bedarf („Bedarf jetzt“); daraus folgen Liter und Gießdauer.
@@ -3189,8 +3274,8 @@ let B = class extends Q {
     </section>`;
   }
   dayLabel(e, t = !1) {
-    const n = /* @__PURE__ */ new Date(`${e}T12:00:00Z`);
-    return t ? n.toLocaleDateString("de-DE", { timeZone: "UTC", day: "numeric", month: "numeric" }) : n.toLocaleDateString("de-DE", { timeZone: "UTC", weekday: "short", day: "numeric", month: "numeric" });
+    const s = /* @__PURE__ */ new Date(`${e}T12:00:00Z`);
+    return t ? s.toLocaleDateString("de-DE", { timeZone: "UTC", day: "numeric", month: "numeric" }) : s.toLocaleDateString("de-DE", { timeZone: "UTC", weekday: "short", day: "numeric", month: "numeric" });
   }
   // Verlauf ----------------------------------------------------------------------------
   renderHistory(e) {
@@ -3208,56 +3293,56 @@ let B = class extends Q {
       </div>
       ${this.history.length ? c`<ul class="history">
             ${this.history.map((t) => {
-      const n = xn(t);
-      return c`<li class=${n.tone}>
-                <ha-icon icon=${n.icon}></ha-icon>
+      const s = xn(t);
+      return c`<li class=${s.tone}>
+                <ha-icon icon=${s.icon}></ha-icon>
                 <span class="time">${this.when(t.at)}</span>
-                <div><strong>${n.title}</strong>${n.detail ? c`<small>${n.detail}</small>` : p}</div>
+                <div><strong>${s.title}</strong>${s.detail ? c`<small>${s.detail}</small>` : p}</div>
               </li>`;
     })}
           </ul>` : c`<p class="hint">Noch nichts aufgezeichnet. Ab jetzt wird jeder Lauf mitgeschrieben.</p>`}
     </section>`;
   }
 };
-B.styles = Fe;
-I([
+B.styles = We;
+W([
   be({ attribute: !1 })
 ], B.prototype, "hass", 2);
-I([
-  $()
+W([
+  b()
 ], B.prototype, "data", 2);
-I([
-  $()
+W([
+  b()
 ], B.prototype, "history", 2);
-I([
-  $()
+W([
+  b()
 ], B.prototype, "historyZone", 2);
-I([
-  $()
+W([
+  b()
 ], B.prototype, "error", 2);
-I([
-  $()
+W([
+  b()
 ], B.prototype, "now", 2);
-I([
-  $()
+W([
+  b()
 ], B.prototype, "busy", 2);
-I([
-  $()
+W([
+  b()
 ], B.prototype, "showTable", 2);
-B = I([
+B = W([
   Ie("ip-operation")
 ], B);
-function kn(e, t, n, s) {
-  if (s <= 0) return "";
-  const i = Math.min(4, n / 2, s);
-  return `M${e} ${t + s}V${t + i}Q${e} ${t} ${e + i} ${t}H${e + n - i}Q${e + n} ${t} ${e + n} ${t + i}V${t + s}Z`;
+function kn(e, t, s, n) {
+  if (n <= 0) return "";
+  const i = Math.min(4, s / 2, n);
+  return `M${e} ${t + n}V${t + i}Q${e} ${t} ${e + i} ${t}H${e + s - i}Q${e + s} ${t} ${e + s} ${t + i}V${t + n}Z`;
 }
-var wn = Object.defineProperty, _n = Object.getOwnPropertyDescriptor, F = (e, t, n, s) => {
-  for (var i = s > 1 ? void 0 : s ? _n(t, n) : t, a = e.length - 1, r; a >= 0; a--)
-    (r = e[a]) && (i = (s ? r(t, n, i) : r(i)) || i);
-  return s && i && wn(t, n, i), i;
+var wn = Object.defineProperty, _n = Object.getOwnPropertyDescriptor, F = (e, t, s, n) => {
+  for (var i = n > 1 ? void 0 : n ? _n(t, s) : t, a = e.length - 1, r; a >= 0; a--)
+    (r = e[a]) && (i = (n ? r(t, s, i) : r(i)) || i);
+  return n && i && wn(t, s, i), i;
 };
-const ne = "irrigation_planner", Pt = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"], xe = ["#1565c0", "#2e7d32", "#ef6c00", "#6a1b9a", "#00838f", "#c62828"], dt = {
+const se = "irrigation_planner", Mt = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"], xe = ["#1565c0", "#2e7d32", "#ef6c00", "#6a1b9a", "#00838f", "#c62828"], dt = {
   sequence: "Nacheinander",
   cycle_soak: "Abwechselnd (mit Einziehzeit)",
   priority: "Nach Bedarf (größter zuerst)"
@@ -3266,14 +3351,14 @@ function At(e) {
   return e.start_time === "sunrise" || e.start_time === "sunset" ? "start_sun" : e.finish_by === "sunrise" || e.finish_by === "sunset" ? "finish_sun" : e.start_time ? "start_time" : e.finish_by ? "finish_by" : "window";
 }
 function Sn(e, t) {
-  const n = (l) => l === "sunset" ? "Sonnenuntergang" : "Sonnenaufgang", s = (l) => l === 0 ? "" : `${Math.abs(l) >= 60 && Math.abs(l) % 60 === 0 ? `${Math.abs(l) / 60} h` : `${Math.abs(l)} min`} ${l < 0 ? "vor" : "nach"} `, i = (l) => (l ?? "").slice(0, 5);
+  const s = (l) => l === "sunset" ? "Sonnenuntergang" : "Sonnenaufgang", n = (l) => l === 0 ? "" : `${Math.abs(l) >= 60 && Math.abs(l) % 60 === 0 ? `${Math.abs(l) / 60} h` : `${Math.abs(l)} min`} ${l < 0 ? "vor" : "nach"} `, i = (l) => (l ?? "").slice(0, 5);
   let a = "";
   switch (At(e)) {
     case "start_sun":
-      a = e.sun_offset_min ? `Start ${s(e.sun_offset_min)}${n(e.start_time)}` : `Start bei ${n(e.start_time)}`;
+      a = e.sun_offset_min ? `Start ${n(e.sun_offset_min)}${s(e.start_time)}` : `Start bei ${s(e.start_time)}`;
       break;
     case "finish_sun":
-      a = e.sun_offset_min ? `fertig ${s(e.sun_offset_min)}${n(e.finish_by)}` : `fertig bei ${n(e.finish_by)}`;
+      a = e.sun_offset_min ? `fertig ${n(e.sun_offset_min)}${s(e.finish_by)}` : `fertig bei ${s(e.finish_by)}`;
       break;
     case "start_time":
       a = `Start ${i(e.start_time)} Uhr`;
@@ -3284,7 +3369,7 @@ function Sn(e, t) {
     default:
       a = t ? `fertig bis Ende des Zeitfensters (${i(t)} Uhr)` : "fertig bis Ende des Zeitfensters";
   }
-  const r = e.interval_days ? `alle ${e.interval_days} Tage` : e.weekdays.length && e.weekdays.length < 7 ? e.weekdays.map((l) => Pt[l]).join(" ") : "täglich";
+  const r = e.interval_days ? `alle ${e.interval_days} Tage` : e.weekdays.length && e.weekdays.length < 7 ? e.weekdays.map((l) => Mt[l]).join(" ") : "täglich";
   return `${a}, ${r}`;
 }
 function ze(e) {
@@ -3293,7 +3378,7 @@ function ze(e) {
   return t >= 60 ? `${Math.floor(t / 60)} h ${t % 60} min` : `${t} min`;
 }
 function ht(e, t) {
-  const n = typeof e == "string" ? new Date(e) : e, s = Object.fromEntries(
+  const s = typeof e == "string" ? new Date(e) : e, n = Object.fromEntries(
     new Intl.DateTimeFormat("de-DE", {
       timeZone: t,
       year: "numeric",
@@ -3302,15 +3387,15 @@ function ht(e, t) {
       hour: "2-digit",
       minute: "2-digit",
       hourCycle: "h23"
-    }).formatToParts(n).map((i) => [i.type, i.value])
+    }).formatToParts(s).map((i) => [i.type, i.value])
   );
   return {
-    day: `${s.year}-${s.month}-${s.day}`,
-    minutes: Number(s.hour) * 60 + Number(s.minute),
-    time: `${s.hour}:${s.minute}`
+    day: `${n.year}-${n.month}-${n.day}`,
+    minutes: Number(n.hour) * 60 + Number(n.minute),
+    time: `${n.hour}:${n.minute}`
   };
 }
-let R = class extends Q {
+let N = class extends Q {
   constructor() {
     super(...arguments), this.zones = [], this.error = "", this.editing = null, this.draft = null, this.newName = "", this.busy = !1;
   }
@@ -3338,7 +3423,7 @@ let R = class extends Q {
   }
   async load() {
     try {
-      this.data = await this.hass.callWS({ type: `${ne}/programs/get` }), this.error = "";
+      this.data = await this.hass.callWS({ type: `${se}/programs/get` }), this.error = "";
     } catch (e) {
       this.error = this.message(e);
     }
@@ -3351,7 +3436,7 @@ let R = class extends Q {
     this.busy = !0;
     try {
       this.data = await this.hass.callWS({
-        type: `${ne}/programs/save`,
+        type: `${se}/programs/save`,
         program_id: e.id,
         name: e.name,
         zone_ids: e.zone_ids,
@@ -3378,7 +3463,7 @@ let R = class extends Q {
   async toggle(e) {
     try {
       this.data = await this.hass.callWS({
-        type: `${ne}/programs/save`,
+        type: `${se}/programs/save`,
         program_id: e.id,
         enabled: !e.enabled
       });
@@ -3386,25 +3471,25 @@ let R = class extends Q {
       this.toast(this.message(t), !0);
     }
   }
-  async service(e, t, n) {
+  async service(e, t, s) {
     try {
-      await this.hass.callService(ne, e, { program_id: t.id }), this.toast(n), await this.load();
-    } catch (s) {
-      this.toast(this.message(s), !0);
+      await this.hass.callService(se, e, { program_id: t.id }), this.toast(s), await this.load();
+    } catch (n) {
+      this.toast(this.message(n), !0);
     }
   }
   async create() {
     const e = this.newName.trim();
     if (e)
       try {
-        await this.hass.callWS({ type: `${ne}/programs/create`, name: e }), this.newName = "", this.toast(`„${e}“ angelegt, wird geladen …`), setTimeout(() => void this.load(), 4e3);
+        await this.hass.callWS({ type: `${se}/programs/create`, name: e }), this.newName = "", this.toast(`„${e}“ angelegt, wird geladen …`), setTimeout(() => void this.load(), 4e3);
       } catch (t) {
         this.toast(this.message(t), !0);
       }
   }
   async deleteProgram(e) {
     try {
-      await this.hass.callWS({ type: `${ne}/programs/delete`, program_id: e.id }), this.editing = null, this.toast(`„${e.name}“ gelöscht, wird geladen …`), setTimeout(() => void this.load(), 4e3);
+      await this.hass.callWS({ type: `${se}/programs/delete`, program_id: e.id }), this.editing = null, this.toast(`„${e.name}“ gelöscht, wird geladen …`), setTimeout(() => void this.load(), 4e3);
     } catch (t) {
       this.toast(this.message(t), !0);
     }
@@ -3419,7 +3504,7 @@ let R = class extends Q {
         ${e.winter_mode ? c`<p class="note warn">Winterpause: Es startet kein Programm automatisch.</p>` : e.automatic ? p : c`<p class="note warn">Automatik ist aus: Programme starten nur von Hand oder per Automation.</p>`}
         ${this.renderWeek()}
         <section class="programs">
-          ${e.programs.map((t, n) => this.renderProgram(t, n))}
+          ${e.programs.map((t, s) => this.renderProgram(t, s))}
           <div class="card new-program">
             <h3>Neues Programm</h3>
             <div class="actions">
@@ -3437,27 +3522,27 @@ let R = class extends Q {
   }
   /** Woche: je Tag eine Zeile, jeder Start als Balken in seiner Länge. */
   renderWeek() {
-    const e = this.data, t = ht(/* @__PURE__ */ new Date(), this.tz), n = Array.from({ length: 7 }, (i, a) => {
+    const e = this.data, t = ht(/* @__PURE__ */ new Date(), this.tz), s = Array.from({ length: 7 }, (i, a) => {
       const r = /* @__PURE__ */ new Date(`${t.day}T12:00:00Z`);
       return r.setUTCDate(r.getUTCDate() + a), r;
-    }), s = t.minutes / 1440 * 100;
+    }), n = t.minutes / 1440 * 100;
     return c`
       <section class="card week">
         <h3>Die nächsten 7 Tage</h3>
         <div class="week-grid">
           <div class="hours">${[0, 3, 6, 9, 12, 15, 18, 21].map((i) => c`<span style="left:${i / 24 * 100}%">${i}</span>`)}</div>
-          ${n.map((i, a) => {
+          ${s.map((i, a) => {
       const r = i.toISOString().slice(0, 10), l = a === 0 ? "Heute" : i.toLocaleDateString("de-DE", { timeZone: "UTC", weekday: "short", day: "numeric" }), o = e.programs.flatMap(
-        (h, m) => h.upcoming.map((u) => ht(u, this.tz)).filter((u) => u.day === r).map((u) => {
-          const b = u.minutes / 1440 * 100, w = Math.max(0.6, h.total_s / 86400 * 100);
-          return c`<div class="block ${h.enabled ? "" : "off"}" title=${`${h.name}: ${u.time} Uhr, ${ze(h.total_s)}`}
-                    style="left:${b}%; width:${w}%; --c:${xe[m % xe.length]}">
-                    <span>${u.time} ${h.name}</span>
+        (d, m) => d.upcoming.map((u) => ht(u, this.tz)).filter((u) => u.day === r).map((u) => {
+          const $ = u.minutes / 1440 * 100, x = Math.max(0.6, d.total_s / 86400 * 100);
+          return c`<div class="block ${d.enabled ? "" : "off"}" title=${`${d.name}: ${u.time} Uhr, ${ze(d.total_s)}`}
+                    style="left:${$}%; width:${x}%; --c:${xe[m % xe.length]}">
+                    <span>${u.time} ${d.name}</span>
                   </div>`;
         })
       );
       return c`<div class="day"><span class="day-label">${l}</span>
-              <div class="track">${o}${a === 0 ? c`<div class="now" style="left:${s}%"></div>` : p}</div></div>`;
+              <div class="track">${o}${a === 0 ? c`<div class="now" style="left:${n}%"></div>` : p}</div></div>`;
     })}
         </div>
         <p class="hint small">Nur Programme, die automatisch starten (aktiv, Automatik an, keine Winterpause). Wetter kann einen Start noch überspringen.</p>
@@ -3465,7 +3550,7 @@ let R = class extends Q {
     `;
   }
   renderProgram(e, t) {
-    const n = this.editing === e.id;
+    const s = this.editing === e.id;
     return c`
       <div class="card program" style="--c:${xe[t % xe.length]}">
         <div class="program-head">
@@ -3483,12 +3568,12 @@ let R = class extends Q {
           <dt>Ablauf</dt>
           <dd>${dt[e.mode] ?? e.mode}, ${ze(e.total_s)} gesamt</dd>
           <dt>Zonen</dt>
-          <dd>${e.steps.length ? c`<ol class="steps">${e.steps.map((s) => c`<li>${s.zone_name} <small>${ze(s.duration_s)}</small></li>`)}</ol>` : c`<em>keine Zone mit Bedarf oder Dauer</em>`}</dd>
+          <dd>${e.steps.length ? c`<ol class="steps">${e.steps.map((n) => c`<li>${n.zone_name} <small>${ze(n.duration_s)}</small></li>`)}</ol>` : c`<em>keine Zone mit Bedarf oder Dauer</em>`}</dd>
           ${e.last_result ? c`<dt>Zuletzt</dt><dd>${this.fmtWhen(e.last_result.at)}: ${e.last_result.started ? "gestartet" : `übersprungen (${e.last_result.reason})`}</dd>` : p}
         </dl>
         <div class="actions">
-          <button class="text" @click=${() => n ? this.editing = null : this.edit(e)}>
-            <ha-icon icon="mdi:pencil"></ha-icon>${n ? "Schließen" : "Bearbeiten"}
+          <button class="text" @click=${() => s ? this.editing = null : this.edit(e)}>
+            <ha-icon icon="mdi:pencil"></ha-icon>${s ? "Schließen" : "Bearbeiten"}
           </button>
           <span class="spacer"></span>
           <button class="text" ?disabled=${!e.next_start || e.skip_next} @click=${() => this.service("skip_next", e, `${e.name}: nächster Start wird übersprungen`)}>
@@ -3498,51 +3583,51 @@ let R = class extends Q {
             <ha-icon icon="mdi:play"></ha-icon>Jetzt starten
           </button>
         </div>
-        ${n && this.draft ? this.renderEditor(this.draft) : p}
+        ${s && this.draft ? this.renderEditor(this.draft) : p}
       </div>
     `;
   }
   renderEditor(e) {
-    const t = At(e), n = () => this.draft = { ...e }, s = (a) => {
+    const t = At(e), s = () => this.draft = { ...e }, n = (a) => {
       const r = e.start_time === "sunset" || e.finish_by === "sunset" ? "sunset" : "sunrise";
-      e.start_time = a === "start_time" ? "06:00" : a === "start_sun" ? r : null, e.finish_by = a === "finish_by" ? "07:00" : a === "finish_sun" ? r : null, a !== "start_sun" && a !== "finish_sun" && (e.sun_offset_min = 0), n();
+      e.start_time = a === "start_time" ? "06:00" : a === "start_sun" ? r : null, e.finish_by = a === "finish_by" ? "07:00" : a === "finish_sun" ? r : null, a !== "start_sun" && a !== "finish_sun" && (e.sun_offset_min = 0), s();
     }, i = e.start_time === "sunset" || e.finish_by === "sunset" ? "sunset" : "sunrise";
     return c`
       <div class="editor">
         <label class="field wide"><span>Name</span>
-          <input type="text" .value=${e.name} @change=${(a) => (e.name = a.target.value, n())} />
+          <input type="text" .value=${e.name} @change=${(a) => (e.name = a.target.value, s())} />
         </label>
         <div class="field wide"><span>Zonen (Reihenfolge = Ablauf)</span>
           <div class="zone-pick">
             ${this.zones.map((a) => {
       const r = e.zone_ids.indexOf(a.id);
       return c`<button class=${r >= 0 ? "active" : ""} @click=${() => {
-        e.zone_ids = r >= 0 ? e.zone_ids.filter((l) => l !== a.id) : [...e.zone_ids, a.id], n();
+        e.zone_ids = r >= 0 ? e.zone_ids.filter((l) => l !== a.id) : [...e.zone_ids, a.id], s();
       }}>${r >= 0 ? c`<b>${r + 1}</b>` : p}${a.name}</button>`;
     })}
           </div>
         </div>
         <label class="field wide"><span>Ablauf</span>
-          <select @change=${(a) => (e.mode = a.target.value, n())}>
+          <select @change=${(a) => (e.mode = a.target.value, s())}>
             ${Object.entries(dt).map(([a, r]) => c`<option value=${a} ?selected=${a === e.mode}>${r}</option>`)}
           </select>
         </label>
         <div class="fields">
           <label class="field"><span>Pause zwischen Zonen</span>
             <input type="number" min="0" .value=${String(e.pause_between_s)}
-              @change=${(a) => (e.pause_between_s = Number(a.target.value) || 0, n())} />
+              @change=${(a) => (e.pause_between_s = Number(a.target.value) || 0, s())} />
             <span class="unit">s</span></label>
           ${e.mode === "cycle_soak" ? c`<label class="field"><span>Gießphase</span>
                 <input type="number" min="1" .value=${String(Math.round((e.cycle_s ?? 300) / 60))}
-                  @change=${(a) => (e.cycle_s = Math.max(1, Number(a.target.value)) * 60, n())} />
+                  @change=${(a) => (e.cycle_s = Math.max(1, Number(a.target.value)) * 60, s())} />
                 <span class="unit">min</span></label>
               <label class="field"><span>Einziehzeit</span>
                 <input type="number" min="0" .value=${String(Math.round((e.soak_s ?? 0) / 60))}
-                  @change=${(a) => (e.soak_s = Number(a.target.value) * 60 || null, n())} />
+                  @change=${(a) => (e.soak_s = Number(a.target.value) * 60 || null, s())} />
                 <span class="unit">min</span></label>` : p}
         </div>
         <label class="field wide"><span>Wann?</span>
-          <select @change=${(a) => s(a.target.value)}>
+          <select @change=${(a) => n(a.target.value)}>
             <option value="finish_sun" ?selected=${t === "finish_sun"}>Fertig bis Sonnenaufgang/-untergang</option>
             <option value="start_sun" ?selected=${t === "start_sun"}>Start bei Sonnenaufgang/-untergang</option>
             <option value="finish_by" ?selected=${t === "finish_by"}>Fertig bis Uhrzeit</option>
@@ -3554,36 +3639,36 @@ let R = class extends Q {
               <input type="time" .value=${((t === "start_time" ? e.start_time : e.finish_by) ?? "").slice(0, 5)}
                 @change=${(a) => {
       const r = a.target.value;
-      t === "start_time" ? e.start_time = r : e.finish_by = r, n();
+      t === "start_time" ? e.start_time = r : e.finish_by = r, s();
     }} /></label>` : p}
         ${t === "start_sun" || t === "finish_sun" ? c`<div class="fields">
               <label class="field"><span>Sonne</span>
                 <select @change=${(a) => {
       const r = a.target.value;
-      t === "start_sun" ? e.start_time = r : e.finish_by = r, n();
+      t === "start_sun" ? e.start_time = r : e.finish_by = r, s();
     }}>
                   <option value="sunrise" ?selected=${i === "sunrise"}>Sonnenaufgang</option>
                   <option value="sunset" ?selected=${i === "sunset"}>Sonnenuntergang</option>
                 </select></label>
               <label class="field"><span>Versatz (− = vorher)</span>
                 <input type="number" step="5" min="-360" max="360" .value=${String(e.sun_offset_min)}
-                  @change=${(a) => (e.sun_offset_min = Math.round(Number(a.target.value) || 0), n())} />
+                  @change=${(a) => (e.sun_offset_min = Math.round(Number(a.target.value) || 0), s())} />
                 <span class="unit">min</span></label>
             </div>` : p}
         <div class="field wide"><span>Tage</span>
           <div class="levels">
-            ${Pt.map((a, r) => c`<button class=${e.weekdays.includes(r) ? "active" : ""} ?disabled=${!!e.interval_days}
-              @click=${() => (e.weekdays = e.weekdays.includes(r) ? e.weekdays.filter((l) => l !== r) : [...e.weekdays, r].sort(), n())}>${a}</button>`)}
+            ${Mt.map((a, r) => c`<button class=${e.weekdays.includes(r) ? "active" : ""} ?disabled=${!!e.interval_days}
+              @click=${() => (e.weekdays = e.weekdays.includes(r) ? e.weekdays.filter((l) => l !== r) : [...e.weekdays, r].sort(), s())}>${a}</button>`)}
           </div>
           <small class="hint">Keiner gewählt = jeden Tag.</small>
         </div>
         <label class="field wide"><span>Oder alle N Tage (0 = aus)</span>
           <input type="number" min="0" max="60" .value=${String(e.interval_days ?? 0)}
-            @change=${(a) => (e.interval_days = Number(a.target.value) || null, n())} /></label>
+            @change=${(a) => (e.interval_days = Number(a.target.value) || null, s())} /></label>
         <div class="checks">
           ${["skip_on_rain", "skip_on_frost", "skip_on_wind"].map(
       (a) => c`<label class="check"><input type="checkbox" .checked=${e[a]}
-              @change=${(r) => (e[a] = r.target.checked, n())} />
+              @change=${(r) => (e[a] = r.target.checked, s())} />
               ${{ skip_on_rain: "Bei Regen überspringen", skip_on_frost: "Bei Frost überspringen", skip_on_wind: "Bei starkem Wind überspringen" }[a]}</label>`
     )}
         </div>
@@ -3605,7 +3690,7 @@ actions:
     data:
       message: >-
         {{ trigger.event.data.zone_name }} fertig
-        ({{ (trigger.event.data.seconds_open / 60) | round }} min)`, n = e.programs[0]?.id ?? "morgens";
+        ({{ (trigger.event.data.seconds_open / 60) | round }} min)`, s = e.programs[0]?.id ?? "morgens";
     return c`
       <section class="card">
         <h3>Für eigene Automationen</h3>
@@ -3620,10 +3705,10 @@ actions:
             <thead><tr><th>Programm</th><th>Starten (Dienst)</th><th>Entitäten</th></tr></thead>
             <tbody>
               ${e.programs.map(
-      (s) => c`<tr>
-                  <td>${s.name}</td>
-                  <td><code>irrigation_planner.run_program</code><br /><small>program_id: <code>${s.id}</code></small></td>
-                  <td>${Object.values(s.entities).map((i) => c`<code>${i}</code><br />`)}</td>
+      (n) => c`<tr>
+                  <td>${n.name}</td>
+                  <td><code>irrigation_planner.run_program</code><br /><small>program_id: <code>${n.id}</code></small></td>
+                  <td>${Object.values(n.entities).map((i) => c`<code>${i}</code><br />`)}</td>
                 </tr>`
     )}
             </tbody>
@@ -3631,7 +3716,7 @@ actions:
         </div>
         <h3>Ereignisse</h3>
         <ul class="events">
-          ${e.events.map((s) => c`<li><code>${s.type}</code> – ${s.description}</li>`)}
+          ${e.events.map((n) => c`<li><code>${n.type}</code> – ${n.description}</li>`)}
         </ul>
         <h3>Beispiele</h3>
         <p class="hint small">Benachrichtigung, wenn eine Zone fertig ist:</p>
@@ -3640,97 +3725,97 @@ actions:
         <pre>actions:
   - action: irrigation_planner.run_program
     data:
-      program_id: ${n}</pre>
+      program_id: ${s}</pre>
         <p class="hint small">Weitere Dienste: <code>run_zone</code> (Zone mit Dauer einreihen), <code>stop_all</code>, <code>skip_next</code>, <code>release_zone</code>.</p>
       </section>
     `;
   }
 };
-R.styles = Fe;
+N.styles = We;
 F([
   be({ attribute: !1 })
-], R.prototype, "hass", 2);
+], N.prototype, "hass", 2);
 F([
   be({ attribute: !1 })
-], R.prototype, "zones", 2);
+], N.prototype, "zones", 2);
 F([
-  $()
-], R.prototype, "data", 2);
+  b()
+], N.prototype, "data", 2);
 F([
-  $()
-], R.prototype, "error", 2);
+  b()
+], N.prototype, "error", 2);
 F([
-  $()
-], R.prototype, "editing", 2);
+  b()
+], N.prototype, "editing", 2);
 F([
-  $()
-], R.prototype, "draft", 2);
+  b()
+], N.prototype, "draft", 2);
 F([
-  $()
-], R.prototype, "newName", 2);
+  b()
+], N.prototype, "newName", 2);
 F([
-  $()
-], R.prototype, "busy", 2);
-R = F([
+  b()
+], N.prototype, "busy", 2);
+N = F([
   Ie("ip-schedule")
-], R);
-function Mn(e, t) {
+], N);
+function Pn(e, t) {
   return t ? e ? null : "Orten geht nur, wenn Home Assistant über https geöffnet ist (z. B. in der App oder über Nabu Casa)." : "Dieser Browser kann nicht orten.";
 }
-function Pn(e) {
+function Mn(e) {
   return e === 1 ? "Orten nicht erlaubt. Bitte in den Browser-Einstellungen den Standort erlauben." : e === 3 ? "Kein Standort gefunden (Zeit abgelaufen). Am besten im Freien noch einmal versuchen." : "Standort nicht verfügbar.";
 }
 function Te(e) {
   return e >= 1e3 ? `± ${(e / 1e3).toFixed(1).replace(".", ",")} km` : `± ${Math.round(e)} m`;
 }
-function An(e, t, n, s, i) {
-  return P(e, t) > n ? !1 : i >= 360 ? !0 : ((me(t, e) - s) % 360 + 360) % 360 <= i;
+function An(e, t, s, n, i) {
+  return M(e, t) > s ? !1 : i >= 360 ? !0 : ((ge(t, e) - n) % 360 + 360) % 360 <= i;
 }
-function He(e, t) {
-  let n = !1;
-  for (let s = 0, i = t.length - 1; s < t.length; i = s++) {
-    const [a, r] = t[s], [l, o] = t[i];
-    r > e[1] != o > e[1] && e[0] < (l - a) * (e[1] - r) / (o - r) + a && (n = !n);
+function Fe(e, t) {
+  let s = !1;
+  for (let n = 0, i = t.length - 1; n < t.length; i = n++) {
+    const [a, r] = t[n], [l, o] = t[i];
+    r > e[1] != o > e[1] && e[0] < (l - a) * (e[1] - r) / (o - r) + a && (s = !s);
   }
-  return n;
+  return s;
 }
-function Et(e, t, n) {
-  const s = n[0] - t[0], i = n[1] - t[1], a = s * s + i * i, r = a === 0 ? 0 : Math.max(0, Math.min(1, ((e[0] - t[0]) * s + (e[1] - t[1]) * i) / a));
-  return Math.hypot(e[0] - (t[0] + r * s), e[1] - (t[1] + r * i));
+function Et(e, t, s) {
+  const n = s[0] - t[0], i = s[1] - t[1], a = n * n + i * i, r = a === 0 ? 0 : Math.max(0, Math.min(1, ((e[0] - t[0]) * n + (e[1] - t[1]) * i) / a));
+  return Math.hypot(e[0] - (t[0] + r * n), e[1] - (t[1] + r * i));
 }
 function En(e, t) {
   if (e.type === "sprinkler")
     return !!(e.center && e.radius_m) && An(t, e.center, e.radius_m, e.start_angle_deg, e.arc_deg);
   if (e.type === "hose") {
-    const n = e.radius_m ?? 0;
-    for (let s = 1; s < e.polygon.length; s++)
-      if (Et(t, e.polygon[s - 1], e.polygon[s]) <= n) return !0;
+    const s = e.radius_m ?? 0;
+    for (let n = 1; n < e.polygon.length; n++)
+      if (Et(t, e.polygon[n - 1], e.polygon[n]) <= s) return !0;
     return !1;
   }
-  return e.polygon.length >= 3 && He(t, e.polygon);
+  return e.polygon.length >= 3 && Fe(t, e.polygon);
 }
-function ge(e) {
-  return e.type === "sprinkler" ? e.center && e.radius_m ? wt(e.radius_m, e.arc_deg) : null : e.type === "hose" ? e.polygon.length >= 2 && e.radius_m ? _t(e.polygon, e.radius_m) : null : e.polygon.length >= 3 ? Y(e.polygon) : null;
+function fe(e) {
+  return e.type === "sprinkler" ? e.center && e.radius_m ? wt(e.radius_m, e.arc_deg) : null : e.type === "hose" ? e.polygon.length >= 2 && e.radius_m ? _t(e.polygon, e.radius_m) : null : e.polygon.length >= 3 ? X(e.polygon) : null;
 }
-function zn(e, t, n) {
-  const s = P(t, e);
-  for (const i of n) {
-    const a = i.points[0], r = (i.trunk_m ?? 0) / 2, l = P(t, a);
-    if (r <= 0 || l <= r || s <= l) continue;
+function zn(e, t, s) {
+  const n = M(t, e);
+  for (const i of s) {
+    const a = i.points[0], r = (i.trunk_m ?? 0) / 2, l = M(t, a);
+    if (r <= 0 || l <= r || n <= l) continue;
     const o = Math.asin(Math.min(1, r / l)) * 180 / Math.PI;
-    if (Math.abs((me(t, e) - me(t, a) + 540) % 360 - 180) <= o) return !0;
+    if (Math.abs((ge(t, e) - ge(t, a) + 540) % 360 - 180) <= o) return !0;
   }
   return !1;
 }
-function We(e, t) {
+function He(e, t) {
   return t?.zones[e.id]?.planned_s ?? e.duration_s ?? 0;
 }
-function zt(e, t, n) {
-  const s = t.find((r) => r.id === e.valve_id)?.learned_flow_l_min, i = ge(e) ?? e.area_m2, a = We(e, n);
-  return !s || !i ? null : a ? a / 60 * s / i : n?.zones[e.id]?.planned_s === 0 ? 0 : null;
+function zt(e, t, s) {
+  const n = t.find((r) => r.id === e.valve_id)?.learned_flow_l_min, i = fe(e) ?? e.area_m2, a = He(e, s);
+  return !n || !i ? null : a ? a / 60 * n / i : s?.zones[e.id]?.planned_s === 0 ? 0 : null;
 }
-function pt(e, t, n) {
-  return e.valve_id ? t.find((s) => s.id === e.valve_id)?.learned_flow_l_min ? ge(e) ?? e.area_m2 ? !We(e, n) && n?.zones[e.id]?.planned_s === void 0 ? "keine Gießdauer" : null : "keine Fläche" : "Durchfluss unbekannt" : "kein Ventil";
+function pt(e, t, s) {
+  return e.valve_id ? t.find((n) => n.id === e.valve_id)?.learned_flow_l_min ? fe(e) ?? e.area_m2 ? !He(e, s) && s?.zones[e.id]?.planned_s === void 0 ? "keine Gießdauer" : null : "keine Fläche" : "Durchfluss unbekannt" : "kein Ventil";
 }
 const L = [
   [0, [120, 200, 250]],
@@ -3743,62 +3828,62 @@ const L = [
 function Tn(e) {
   if (e <= L[0][0]) return L[0][1];
   for (let t = 1; t < L.length; t++) {
-    const [n, s] = L[t], [i, a] = L[t - 1];
-    if (e <= n) {
-      const r = (e - i) / (n - i);
-      return [0, 1, 2].map((l) => Math.round(a[l] + (s[l] - a[l]) * r));
+    const [s, n] = L[t], [i, a] = L[t - 1];
+    if (e <= s) {
+      const r = (e - i) / (s - i);
+      return [0, 1, 2].map((l) => Math.round(a[l] + (n[l] - a[l]) * r));
     }
   }
   return L[L.length - 1][1];
 }
-function Dn(e, t, n) {
-  for (const s of [0.25, 0.5, 1, 2, 5, 10, 20])
-    if (Math.ceil(e / s) * Math.ceil(t / s) <= n) return s;
+function Dn(e, t, s) {
+  for (const n of [0.25, 0.5, 1, 2, 5, 10, 20])
+    if (Math.ceil(e / n) * Math.ceil(t / n) <= s) return n;
   return 50;
 }
 function On(e, t) {
-  const n = t?.zones[e.id];
-  return !n || !n.capacity_mm ? null : Math.max(0, 1 - n.need_mm / n.capacity_mm);
+  const s = t?.zones[e.id];
+  return !s || !s.capacity_mm ? null : Math.max(0, 1 - s.need_mm / s.capacity_mm);
 }
-function Ln(e, t, n, s, i, a, r = 6e3) {
-  const l = i.filter((k) => k.kind === "boundary" && k.points.length >= 3);
-  let [o, h, m, u] = a;
+function Ln(e, t, s, n, i, a, r = 15e3) {
+  const l = i.filter((w) => w.kind === "boundary" && w.points.length >= 3);
+  let [o, d, m, u] = a;
   if (l.length) {
-    const k = l.flatMap((A) => A.points);
-    o = Math.min(...k.map((A) => A[0])), h = Math.min(...k.map((A) => A[1])), m = Math.max(...k.map((A) => A[0])), u = Math.max(...k.map((A) => A[1]));
+    const w = l.flatMap((A) => A.points);
+    o = Math.min(...w.map((A) => A[0])), d = Math.min(...w.map((A) => A[1])), m = Math.max(...w.map((A) => A[0])), u = Math.max(...w.map((A) => A[1]));
   }
-  const b = Dn(m - o, u - h, r), w = Math.floor(o / b) * b, d = Math.floor(h / b) * b, g = i.filter((k) => k.kind === "tree" && (k.trunk_m ?? 0) > 0), v = t.filter((k) => k.enabled && ge(k) !== null).map((k) => ({
-    zone: k,
-    mm: zt(k, n, s),
-    fill: On(k, s),
-    cap: s?.zones[k.id]?.capacity_mm ?? null,
+  const $ = Dn(m - o, u - d, r), x = Math.floor(o / $) * $, h = Math.floor(d / $) * $, g = i.filter((w) => w.kind === "tree" && (w.trunk_m ?? 0) > 0), v = t.filter((w) => w.enabled && fe(w) !== null).map((w) => ({
+    zone: w,
+    mm: zt(w, s, n),
+    fill: On(w, n),
+    cap: n?.zones[w.id]?.capacity_mm ?? null,
     // Anteil, der im Boden ankommt (Sprinkler verlieren mehr durch Verdunstung)
-    eff: s?.zones[k.id]?.efficiency ?? (k.type === "sprinkler" ? 0.75 : 0.9)
+    eff: n?.zones[w.id]?.efficiency ?? (w.type === "sprinkler" ? 0.75 : 0.9)
   })), S = [];
-  let M = 0;
-  for (let k = d; k < u; k += b)
-    for (let A = w; A < m; A += b) {
-      const z = [A + b / 2, k + b / 2];
-      if (l.length && !l.some((D) => He(z, D.points))) continue;
+  let P = 0;
+  for (let w = h; w < u; w += $)
+    for (let A = x; A < m; A += $) {
+      const z = [A + $ / 2, w + $ / 2];
+      if (l.length && !l.some((D) => Fe(z, D.points))) continue;
       const O = v.filter(
         ({ zone: D }) => En(D, z) && !(D.type === "sprinkler" && D.center && zn(z, D.center, g))
       );
       if (!O.length) {
-        l.length && S.push({ x: A, y: k, kind: "none", v: 0 });
+        l.length && S.push({ x: A, y: w, kind: "none", v: 0 });
         continue;
       }
       let H = null;
       if (e === "planned")
-        H = O.some((D) => D.mm === null) ? null : O.reduce((D, $e) => D + ($e.mm ?? 0), 0);
+        H = O.some((D) => D.mm === null) ? null : O.reduce((D, ve) => D + (ve.mm ?? 0), 0);
       else if (O.some((D) => D.fill === null || e === "after" && D.mm === null))
         H = null;
       else {
-        const D = O.reduce((oe, te) => oe + (te.fill ?? 0), 0) / O.length, $e = O.reduce((oe, te) => oe + (te.cap ?? 0), 0) / O.length, Ot = e === "after" ? O.reduce((oe, te) => oe + (te.mm ?? 0) * te.eff, 0) : 0;
-        H = D + ($e > 0 ? Ot / $e : 0);
+        const D = O.reduce((le, te) => le + (te.fill ?? 0), 0) / O.length, ve = O.reduce((le, te) => le + (te.cap ?? 0), 0) / O.length, Ot = e === "after" ? O.reduce((le, te) => le + (te.mm ?? 0) * te.eff, 0) : 0;
+        H = D + (ve > 0 ? Ot / ve : 0);
       }
-      H === null ? S.push({ x: A, y: k, kind: "unknown", v: 0 }) : (S.push({ x: A, y: k, kind: "value", v: H }), M = Math.max(M, H));
+      H === null ? S.push({ x: A, y: w, kind: "unknown", v: 0 }) : (S.push({ x: A, y: w, kind: "value", v: H }), P = Math.max(P, H));
     }
-  return { step: b, cells: S, max: M };
+  return { step: $, cells: S, max: P };
 }
 const Tt = [
   [0, [166, 97, 26]],
@@ -3808,16 +3893,16 @@ const Tt = [
 ];
 function Bn(e, t) {
   if (t <= e[0][0]) return e[0][1];
-  for (let n = 1; n < e.length; n++) {
-    const [s, i] = e[n], [a, r] = e[n - 1];
-    if (t <= s) {
-      const l = (t - a) / (s - a);
+  for (let s = 1; s < e.length; s++) {
+    const [n, i] = e[s], [a, r] = e[s - 1];
+    if (t <= n) {
+      const l = (t - a) / (n - a);
       return [0, 1, 2].map((o) => Math.round(r[o] + (i[o] - r[o]) * l));
     }
   }
   return e[e.length - 1][1];
 }
-function Rn(e) {
+function Nn(e) {
   return Bn(Tt, e);
 }
 /**
@@ -3825,21 +3910,21 @@ function Rn(e) {
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const Nn = (e) => (...t) => ({ _$litDirective$: e, values: t });
-let Cn = class {
+const Rn = (e) => (...t) => ({ _$litDirective$: e, values: t });
+let Zn = class {
   constructor(t) {
   }
   get _$AU() {
     return this._$AM._$AU;
   }
-  _$AT(t, n, s) {
-    this._$Ct = t, this._$AM = n, this._$Ci = s;
+  _$AT(t, s, n) {
+    this._$Ct = t, this._$AM = s, this._$Ci = n;
   }
-  _$AS(t, n) {
-    return this.update(t, n);
+  _$AS(t, s) {
+    return this.update(t, s);
   }
-  update(t, n) {
-    return this.render(...n);
+  update(t, s) {
+    return this.render(...s);
   }
 };
 /**
@@ -3847,26 +3932,26 @@ let Cn = class {
  * Copyright 2018 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const Zn = {}, jn = Nn(class extends Cn {
+const Cn = {}, jn = Rn(class extends Zn {
   constructor() {
-    super(...arguments), this.ot = Zn;
+    super(...arguments), this.ot = Cn;
   }
   render(e, t) {
     return t();
   }
-  update(e, [t, n]) {
+  update(e, [t, s]) {
     if (Array.isArray(t)) {
-      if (Array.isArray(this.ot) && this.ot.length === t.length && t.every((s, i) => s === this.ot[i])) return G;
-    } else if (this.ot === t) return G;
-    return this.ot = Array.isArray(t) ? Array.from(t) : t, this.render(t, n);
+      if (Array.isArray(this.ot) && this.ot.length === t.length && t.every((n, i) => n === this.ot[i])) return K;
+    } else if (this.ot === t) return K;
+    return this.ot = Array.isArray(t) ? Array.from(t) : t, this.render(t, s);
   }
 });
-var In = Object.defineProperty, Fn = Object.getOwnPropertyDescriptor, _ = (e, t, n, s) => {
-  for (var i = s > 1 ? void 0 : s ? Fn(t, n) : t, a = e.length - 1, r; a >= 0; a--)
-    (r = e[a]) && (i = (s ? r(t, n, i) : r(i)) || i);
-  return s && i && In(t, n, i), i;
+var In = Object.defineProperty, Wn = Object.getOwnPropertyDescriptor, _ = (e, t, s, n) => {
+  for (var i = n > 1 ? void 0 : n ? Wn(t, s) : t, a = e.length - 1, r; a >= 0; a--)
+    (r = e[a]) && (i = (n ? r(t, s, i) : r(i)) || i);
+  return n && i && In(t, s, i), i;
 };
-const Z = "irrigation_planner", ut = [
+const R = "irrigation_planner", ut = [
   "#2e7d32",
   "#1565c0",
   "#ef6c00",
@@ -3882,7 +3967,7 @@ const Z = "irrigation_planner", ut = [
   rain_mm: "R",
   rain_binary: "R",
   water_meter: "W"
-}, Hn = {
+}, Fn = {
   soil_moisture: "Bodenfeuchte",
   rain_mm: "Regenmenge",
   rain_binary: "Regensensor",
@@ -3892,65 +3977,65 @@ const Z = "irrigation_planner", ut = [
   running: "läuft",
   queued: "wartet",
   locked: "gesperrt"
-}, Wn = 0.05, Un = 10;
-let x = class extends Q {
+}, Hn = 0.05, Un = 10;
+let k = class extends Q {
   constructor() {
     super(...arguments), this.narrow = !1, this.error = "", this.toast = "", this.tab = "zones", this.featureKind = "building", this.measurePts = [], this.snapOn = !0, this.snapHint = null, this.tool = "select", this.toolTarget = "", this.selected = null, this.draft = [], this.scaleDraft = [], this.scaleInput = "", this.view = { cx: 0, cy: 0, scale: 25 }, this.size = { w: 800, h: 600 }, this.imageUrl = "", this.imageSize = null, this.saving = !1, this.dirty = !1, this.searchOpen = !1, this.searchQuery = "", this.searchResults = null, this.searching = !1, this.searchError = "", this.searchPin = null, this.locating = !1, this.hoseRadius = 0.5, this.flowEdited = /* @__PURE__ */ new Set(), this.savedJson = "", this.history = [], this.drag = null, this.toastUndo = !1, this.layersOpen = !1, this.page = "plan", this.raster = "", this.rasterMenu = !1, this.soilOn = !1, this.rasterCache = null, this.menuOpen = !1, this.pendingImport = null, this.autoFit = !0, this.loadedImage = "", this.onWheel = (e) => {
       e.preventDefault();
-      const n = e.currentTarget.getBoundingClientRect(), s = Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 15e-4));
-      this.zoomBy(s, this.toPlan(e), [e.clientX - n.left, e.clientY - n.top]);
+      const s = e.currentTarget.getBoundingClientRect(), n = Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 15e-4));
+      this.zoomBy(n, this.toPlan(e), [e.clientX - s.left, e.clientY - s.top]);
     }, this.onKey = (e) => {
       const t = e.composedPath()[0];
       t && ["INPUT", "SELECT", "TEXTAREA"].includes(t.tagName) || (e.key === "Escape" && this.cancelTool(), e.key === "Enter" && this.tool === "bed" && this.finishBed(), e.key === "Enter" && this.tool === "feature" && this.finishFeature(), e.key === "Enter" && this.tool === "hose" && this.finishHose(), (e.ctrlKey || e.metaKey) && e.key === "z" && (e.preventDefault(), this.undo()), e.key === "Delete" && this.selected?.kind === "zone" && this.clearGeometry(this.selected.id), e.key === "Delete" && this.selected?.kind === "feature" && this.deleteFeature(this.selected.id));
     }, this.onPointerDown = (e) => {
       if (e.button !== 0) return;
-      const t = e.currentTarget, n = this.toPlan(e);
+      const t = e.currentTarget, s = this.toPlan(e);
       if (this.tool === "feature") {
-        const s = this.featureKind, i = this.snap(n, e), a = q(s);
+        const n = this.featureKind, i = this.snap(s, e), a = j(n);
         if (a === "point") {
           const l = [y(i[0]), y(i[1])];
-          if (s === "tree") {
-            const o = this.addFeature({ kind: s, points: [l], radius_m: 0 });
+          if (n === "tree") {
+            const o = this.addFeature({ kind: n, points: [l], radius_m: 0 });
             this.drag = { type: "new-tree", id: o.id }, t.setPointerCapture(e.pointerId);
           } else
-            this.addFeature({ kind: s, points: [l], label: s === "label" ? "Beschriftung" : null }), this.cancelTool(), s === "label" && this.updateComplete.then(
+            this.addFeature({ kind: n, points: [l], label: n === "label" ? "Beschriftung" : null }), this.cancelTool(), n === "label" && this.updateComplete.then(
               () => this.renderRoot.querySelector("#feature-label")?.select()
             );
           return;
         }
-        const r = (l) => P(i, l) * this.view.scale < 12;
+        const r = (l) => M(i, l) * this.view.scale < 12;
         a === "area" && this.draft.length >= 3 && r(this.draft[0]) ? this.finishFeature() : a === "line" && this.draft.length >= 2 && r(this.draft[this.draft.length - 1]) ? this.finishFeature() : this.draft = [...this.draft, i];
         return;
       }
       if (this.tool === "measure") {
-        this.measurePts = [...this.measurePts, this.snap(n, e)];
+        this.measurePts = [...this.measurePts, this.snap(s, e)];
         return;
       }
       if (this.tool === "hose") {
-        const s = this.snap(n, e), i = this.draft[this.draft.length - 1];
-        this.draft.length >= 2 && P(s, i) * this.view.scale < 12 ? this.finishHose() : this.draft = [...this.draft, s];
+        const n = this.snap(s, e), i = this.draft[this.draft.length - 1];
+        this.draft.length >= 2 && M(n, i) * this.view.scale < 12 ? this.finishHose() : this.draft = [...this.draft, n];
         return;
       }
       if (this.tool === "sprinkler") {
         this.remember();
-        const s = this.zone(this.toolTarget), i = this.snap(n, e);
-        n[0] = i[0], n[1] = i[1], s.center = [y(n[0]), y(n[1])], s.radius_m = 0, this.drag = { type: "new-sprinkler", id: s.id }, t.setPointerCapture(e.pointerId), this.changed();
+        const n = this.zone(this.toolTarget), i = this.snap(s, e);
+        s[0] = i[0], s[1] = i[1], n.center = [y(s[0]), y(s[1])], n.radius_m = 0, this.drag = { type: "new-sprinkler", id: n.id }, t.setPointerCapture(e.pointerId), this.changed();
         return;
       }
       if (this.tool === "bed") {
-        const s = this.snap(n, e);
-        this.draft.length >= 3 && P(s, this.draft[0]) * this.view.scale < 12 ? this.finishBed() : this.draft = [...this.draft, s];
+        const n = this.snap(s, e);
+        this.draft.length >= 3 && M(n, this.draft[0]) * this.view.scale < 12 ? this.finishBed() : this.draft = [...this.draft, n];
         return;
       }
       if (this.tool === "place") {
-        const [s, i] = this.toolTarget.split(":");
+        const [n, i] = this.toolTarget.split(":");
         this.remember();
-        const a = this.marker(s, i);
-        a.position = [y(n[0]), y(n[1])], this.selected = { kind: s, id: i }, this.changed(), this.cancelTool();
+        const a = this.marker(n, i);
+        a.position = [y(s[0]), y(s[1])], this.selected = { kind: n, id: i }, this.changed(), this.cancelTool();
         return;
       }
       if (this.tool === "scale") {
-        const s = this.imageMpp(), i = [...this.scaleDraft, [n[0] / s, n[1] / s]];
+        const n = this.imageMpp(), i = [...this.scaleDraft, [s[0] / n, s[1] / n]];
         this.scaleDraft = i.slice(-2);
         return;
       }
@@ -3968,9 +4053,9 @@ let x = class extends Q {
         ["bed", "hose", "feature", "measure", "sprinkler"].includes(this.tool) && (this.hover = this.snap(this.toPlan(e), e));
         return;
       }
-      const n = this.toPlan(e);
+      const s = this.toPlan(e);
       if (t.type.startsWith("f-") || t.type === "new-tree") {
-        this.moveFeature(t, n, e);
+        this.moveFeature(t, s, e);
         return;
       }
       if (t.type === "pan") {
@@ -3983,45 +4068,46 @@ let x = class extends Q {
         return;
       }
       if (t.type === "marker") {
-        this.marker(t.kind, t.id).position = [y(n[0]), y(n[1])], this.changed();
+        const i = this.marker(t.kind, t.id), a = i.position;
+        i.position = [y(s[0]), y(s[1])], a && t.kind === "valve" && this.movePipeEnds(a, i.position), this.changed();
         return;
       }
-      const s = this.zone(t.id);
+      const n = this.zone(t.id);
       switch (t.type) {
         case "new-sprinkler":
         case "radius":
-          s.radius_m = y(Math.max(0.1, P(s.center, n)));
+          n.radius_m = y(Math.max(0.1, M(n.center, s)));
           break;
         case "hose-radius":
-          s.radius_m = y(Math.min(20, Math.max(0.05, dn(n, s.polygon))));
+          n.radius_m = y(Math.min(20, Math.max(0.05, dn(s, n.polygon))));
           break;
         case "center":
-          s.center = [y(n[0]), y(n[1])];
+          n.center = [y(s[0]), y(s[1])];
           break;
         case "start": {
-          const i = s.start_angle_deg + s.arc_deg, a = gt(me(s.center, n));
+          const i = n.start_angle_deg + n.arc_deg, a = gt(ge(n.center, s));
           let r = ((i - a) % 360 + 360) % 360;
-          r < 5 && (r = 360), s.start_angle_deg = a, s.arc_deg = r;
+          r < 5 && (r = 360), n.start_angle_deg = a, n.arc_deg = r;
           break;
         }
         case "end": {
-          let a = ((gt(me(s.center, n)) - s.start_angle_deg) % 360 + 360) % 360;
-          a < 5 && (a = 360), s.arc_deg = a;
+          let a = ((gt(ge(n.center, s)) - n.start_angle_deg) % 360 + 360) % 360;
+          a < 5 && (a = 360), n.arc_deg = a;
           break;
         }
         case "route": {
-          const i = s.valve_route ?? [], a = this.snap(n, e, i[t.index]);
-          i[t.index] = [y(a[0]), y(a[1])], s.valve_route = i;
+          const i = n.valve_route ?? [], a = this.snap(s, e, i[t.index]);
+          i[t.index] = [y(a[0]), y(a[1])], n.valve_route = i;
           break;
         }
         case "vertex": {
-          const i = this.snap(n, e, s.polygon[t.index]);
-          s.polygon[t.index] = [y(i[0]), y(i[1])];
+          const i = this.snap(s, e, n.polygon[t.index]);
+          n.polygon[t.index] = [y(i[0]), y(i[1])];
           break;
         }
         case "move-zone": {
-          const i = n[0] - t.start[0], a = n[1] - t.start[1];
-          s.type === "sprinkler" && t.orig.center ? s.center = [y(t.orig.center[0] + i), y(t.orig.center[1] + a)] : s.polygon = t.orig.polygon.map((r) => [y(r[0] + i), y(r[1] + a)]);
+          const i = s[0] - t.start[0], a = s[1] - t.start[1];
+          n.type === "sprinkler" && t.orig.center ? n.center = [y(t.orig.center[0] + i), y(t.orig.center[1] + a)] : n.polygon = t.orig.polygon.map((r) => [y(r[0] + i), y(r[1] + a)]);
           break;
         }
       }
@@ -4073,8 +4159,8 @@ let x = class extends Q {
   measure() {
     const e = this.renderRoot.querySelector(".stage");
     if (!e) return;
-    const { width: t, height: n } = e.getBoundingClientRect();
-    t && n && (t !== this.size.w || n !== this.size.h) && (this.size = { w: t, h: n }, this.autoFit && this.plan && this.initialView());
+    const { width: t, height: s } = e.getBoundingClientRect();
+    t && s && (t !== this.size.w || s !== this.size.h) && (this.size = { w: t, h: s }, this.autoFit && this.plan && this.initialView());
   }
   /** Erste Ansicht: das Grundstück (oder alles) bildschirmfüllend mit etwas Rand. */
   initialView() {
@@ -4083,7 +4169,7 @@ let x = class extends Q {
   // Daten ----------------------------------------------------------------------
   async load() {
     try {
-      const e = await this._hass.callWS({ type: `${Z}/plan/get` });
+      const e = await this._hass.callWS({ type: `${R}/plan/get` });
       this.setPlan(e, !0), await this.subscribe();
     } catch (e) {
       this.error = this.message(e);
@@ -4092,12 +4178,12 @@ let x = class extends Q {
   async subscribe() {
     this.unsub || !this._hass || (this.unsub = await this._hass.connection.subscribeMessage(
       (e) => this.status = e,
-      { type: `${Z}/plan/subscribe` }
+      { type: `${R}/plan/subscribe` }
     ));
   }
   /** Neuer Stand vom Server. Nach dem Speichern bleibt „Rückgängig“ möglich. */
-  setPlan(e, t, n = !1) {
-    this.plan = e, this.flowEdited.clear(), this.savedJson = JSON.stringify(this.editable()), this.dirty = !1, n || (this.history = []), this.loadImage(), t && this.initialView();
+  setPlan(e, t, s = !1) {
+    this.plan = e, this.flowEdited.clear(), this.savedJson = JSON.stringify(this.editable()), this.dirty = !1, s || (this.history = []), this.loadImage(), t && this.initialView();
   }
   editable() {
     const e = this.plan;
@@ -4121,34 +4207,34 @@ let x = class extends Q {
     const e = this.plan, t = { ...e.garden };
     t.background === "map" && t.latitude != null && (t.map_zoom = Math.round(st(t.latitude, this.view.scale) * 100) / 100), this.saving = !0;
     try {
-      const n = await this._hass.callWS({
-        type: `${Z}/plan/save`,
+      const s = await this._hass.callWS({
+        type: `${R}/plan/save`,
         garden: t,
-        zones: e.zones.map((s) => ({
-          id: s.id,
-          type: s.type,
-          center: s.center,
-          radius_m: s.radius_m,
-          start_angle_deg: s.start_angle_deg,
-          arc_deg: s.arc_deg,
-          polygon: s.polygon,
-          valve_route: s.valve_route ?? [],
-          valve_id: s.valve_id,
-          plant_type: s.plant_type,
-          kc: s.kc,
-          soil_type: s.soil_type,
-          root_depth_m: s.root_depth_m
+        zones: e.zones.map((n) => ({
+          id: n.id,
+          type: n.type,
+          center: n.center,
+          radius_m: n.radius_m,
+          start_angle_deg: n.start_angle_deg,
+          arc_deg: n.arc_deg,
+          polygon: n.polygon,
+          valve_route: n.valve_route ?? [],
+          valve_id: n.valve_id,
+          plant_type: n.plant_type,
+          kc: n.kc,
+          soil_type: n.soil_type,
+          root_depth_m: n.root_depth_m
         })),
         // Durchfluss nur mitschicken, wenn er hier geändert wurde (sonst
         // würde ein inzwischen neu gelernter Wert überschrieben).
         valves: e.valves.map(
-          (s) => this.flowEdited.has(s.id) ? { id: s.id, position: s.position, learned_flow_l_min: s.learned_flow_l_min } : { id: s.id, position: s.position }
+          (n) => this.flowEdited.has(n.id) ? { id: n.id, position: n.position, learned_flow_l_min: n.learned_flow_l_min } : { id: n.id, position: n.position }
         ),
-        sensors: e.sensors.map((s) => ({ id: s.id, position: s.position }))
+        sensors: e.sensors.map((n) => ({ id: n.id, position: n.position }))
       });
-      this.setPlan(n, !1, !0), this.showToast("Plan gespeichert");
-    } catch (n) {
-      this.showToast(`Nicht gespeichert: ${this.message(n)}`, !0);
+      this.setPlan(s, !1, !0), this.showToast("Plan gespeichert");
+    } catch (s) {
+      this.showToast(`Nicht gespeichert: ${this.message(s)}`, !0);
     } finally {
       this.saving = !1;
     }
@@ -4156,12 +4242,12 @@ let x = class extends Q {
   message(e) {
     return e && typeof e == "object" && "message" in e ? String(e.message) : String(e);
   }
-  showToast(e, t = !1, n = !1) {
-    this.toast = (t ? "⚠ " : "") + e, this.toastUndo = n, window.clearTimeout(this.toastTimer), this.toastTimer = window.setTimeout(
+  showToast(e, t = !1, s = !1) {
+    this.toast = (t ? "⚠ " : "") + e, this.toastUndo = s, window.clearTimeout(this.toastTimer), this.toastTimer = window.setTimeout(
       () => {
         this.toast = "", this.toastUndo = !1;
       },
-      t || n ? 8e3 : 3e3
+      t || s ? 8e3 : 3e3
     );
   }
   /** Entfernen mit Hinweis und „Rückgängig“-Knopf. */
@@ -4172,23 +4258,23 @@ let x = class extends Q {
     const e = this.plan?.garden.background_image;
     if (!(!e || e === this.loadedImage))
       try {
-        const t = await this._hass.fetchWithAuth(`/api/${Z}/image/${e}`);
+        const t = await this._hass.fetchWithAuth(`/api/${R}/image/${e}`);
         if (!t.ok) throw new Error(`Bild nicht gefunden (${t.status})`);
-        const n = URL.createObjectURL(await t.blob()), s = new Image();
-        s.src = n, await s.decode(), this.imageUrl && URL.revokeObjectURL(this.imageUrl), this.imageUrl = n, this.imageSize = [s.naturalWidth, s.naturalHeight], this.loadedImage = e;
+        const s = URL.createObjectURL(await t.blob()), n = new Image();
+        n.src = s, await n.decode(), this.imageUrl && URL.revokeObjectURL(this.imageUrl), this.imageUrl = s, this.imageSize = [n.naturalWidth, n.naturalHeight], this.loadedImage = e;
       } catch (t) {
         this.showToast(this.message(t), !0);
       }
   }
   async upload(e) {
-    const t = e.target, n = t.files?.[0];
-    if (t.value = "", !n) return;
-    const s = new FormData();
-    s.append("file", n);
+    const t = e.target, s = t.files?.[0];
+    if (t.value = "", !s) return;
+    const n = new FormData();
+    n.append("file", s);
     try {
-      const i = await this._hass.fetchWithAuth(`/api/${Z}/image`, {
+      const i = await this._hass.fetchWithAuth(`/api/${R}/image`, {
         method: "POST",
-        body: s
+        body: n
       }), a = await i.json();
       if (!i.ok) throw new Error(a.message ?? i.statusText);
       this.remember(), Object.assign(this.plan.garden, {
@@ -4205,21 +4291,21 @@ let x = class extends Q {
   imageMpp() {
     const e = this.plan.garden;
     if (e.scale_points && e.scale_distance_m) {
-      const t = P(e.scale_points[0], e.scale_points[1]);
+      const t = M(e.scale_points[0], e.scale_points[1]);
       if (t > 0) return e.scale_distance_m / t;
     }
-    return Wn;
+    return Hn;
   }
   // Ansicht --------------------------------------------------------------------
   toScreen(e) {
-    const { cx: t, cy: n, scale: s } = this.view;
-    return [(e[0] - t) * s + this.size.w / 2, (e[1] - n) * s + this.size.h / 2];
+    const { cx: t, cy: s, scale: n } = this.view;
+    return [(e[0] - t) * n + this.size.w / 2, (e[1] - s) * n + this.size.h / 2];
   }
   toPlan(e) {
-    const n = this.renderRoot.querySelector("svg.plan").getBoundingClientRect(), { cx: s, cy: i, scale: a } = this.view;
+    const s = this.renderRoot.querySelector("svg.plan").getBoundingClientRect(), { cx: n, cy: i, scale: a } = this.view;
     return [
-      (e.clientX - n.left - this.size.w / 2) / a + s,
-      (e.clientY - n.top - this.size.h / 2) / a + i
+      (e.clientX - s.left - this.size.w / 2) / a + n,
+      (e.clientY - s.top - this.size.h / 2) / a + i
     ];
   }
   bounds() {
@@ -4239,42 +4325,42 @@ let x = class extends Q {
       e.push([0, 0], [this.imageSize[0] * i, this.imageSize[1] * i]);
     }
     if (!e.length) return null;
-    const n = e.map((i) => i[0]), s = e.map((i) => i[1]);
-    return [Math.min(...n), Math.min(...s), Math.max(...n), Math.max(...s)];
+    const s = e.map((i) => i[0]), n = e.map((i) => i[1]);
+    return [Math.min(...s), Math.min(...n), Math.max(...s), Math.max(...n)];
   }
   /** Umriss der Grundstücksgrenze(n), falls gezeichnet. */
   plotBounds() {
     if (!this.plan) return null;
-    const e = this.features.filter((s) => s.kind === "boundary" && s.points.length >= 2).flatMap((s) => s.points);
+    const e = this.features.filter((n) => n.kind === "boundary" && n.points.length >= 2).flatMap((n) => n.points);
     if (!e.length) return null;
-    const t = e.map((s) => s[0]), n = e.map((s) => s[1]);
-    return [Math.min(...t), Math.min(...n), Math.max(...t), Math.max(...n)];
+    const t = e.map((n) => n[0]), s = e.map((n) => n[1]);
+    return [Math.min(...t), Math.min(...s), Math.max(...t), Math.max(...s)];
   }
   /** Einpassen: das Grundstück, wenn es eine Grenze gibt, sonst alles Gezeichnete. */
   fitView() {
     const e = this.plan?.garden, t = this.plotBounds() ?? this.bounds();
     if (e?.background === "map" && e.latitude != null && !t) {
-      const h = e.map_zoom ?? 19;
-      this.view = { cx: 0, cy: 0, scale: 1 / Ae(e.latitude, h) };
+      const d = e.map_zoom ?? 19;
+      this.view = { cx: 0, cy: 0, scale: 1 / Ae(e.latitude, d) };
       return;
     }
     if (!t) {
       this.view = { cx: 0, cy: 0, scale: 25 };
       return;
     }
-    const [n, s, i, a] = t, r = Math.max(i - n, 4), l = Math.max(a - s, 4), o = Math.min(this.size.w / (r * 1.1), this.size.h / (l * 1.1), 200);
-    this.view = { cx: (n + i) / 2, cy: (s + a) / 2, scale: Math.max(o, 0.5) };
+    const [s, n, i, a] = t, r = Math.max(i - s, 4), l = Math.max(a - n, 4), o = Math.min(this.size.w / (r * 1.1), this.size.h / (l * 1.1), 200);
+    this.view = { cx: (s + i) / 2, cy: (n + a) / 2, scale: Math.max(o, 0.5) };
   }
-  zoomBy(e, t, n) {
+  zoomBy(e, t, s) {
     this.autoFit = !1;
-    const { cx: s, cy: i, scale: a } = this.view, r = Math.min(Math.max(a * e, 0.5), 400);
-    if (!t || !n) {
-      this.view = { cx: s, cy: i, scale: r };
+    const { cx: n, cy: i, scale: a } = this.view, r = Math.min(Math.max(a * e, 0.5), 400);
+    if (!t || !s) {
+      this.view = { cx: n, cy: i, scale: r };
       return;
     }
     this.view = {
-      cx: t[0] - (n[0] - this.size.w / 2) / r,
-      cy: t[1] - (n[1] - this.size.h / 2) / r,
+      cx: t[0] - (s[0] - this.size.w / 2) / r,
+      cy: t[1] - (s[1] - this.size.h / 2) / r,
       scale: r
     };
   }
@@ -4292,32 +4378,41 @@ let x = class extends Q {
   /** Alle Ecken und Mittelpunkte, an denen neue Punkte einrasten. */
   snapCandidates(e) {
     const t = [];
-    for (const n of this.features) t.push(...n.points);
-    for (const n of this.plan.zones)
-      t.push(...n.polygon), n.center && t.push(n.center);
-    for (const n of [...this.plan.valves, ...this.plan.sensors]) n.position && t.push(n.position);
-    return t.push(...this.draft, ...this.measurePts), e ? t.filter((n) => n !== e) : t;
+    for (const s of this.features) t.push(...s.points);
+    for (const s of this.plan.zones)
+      t.push(...s.polygon), s.center && t.push(s.center);
+    for (const s of [...this.plan.valves, ...this.plan.sensors]) s.position && t.push(s.position);
+    return t.push(...this.draft, ...this.measurePts), e ? t.filter((s) => s !== e) : t;
   }
   /** Punkt fangen (Alt-Taste: frei). Merkt den Fangpunkt für die Anzeige. */
-  snap(e, t, n) {
+  snap(e, t, s) {
     if (!this.snapOn || t?.altKey)
       return this.snapHint = null, e;
-    const s = Un / this.view.scale;
-    let i = rn(e, this.snapCandidates(n), s);
-    return !i && this.tool === "feature" && this.featureKind === "pipe" && (i = Mt(e, this.pipeLines(), s)), this.snapHint = i, i ? [i[0], i[1]] : e;
+    const n = Un / this.view.scale;
+    let i = rn(e, this.snapCandidates(s), n);
+    return !i && this.tool === "feature" && this.featureKind === "pipe" && (i = Pt(e, this.pipeLines(), n)), this.snapHint = i, i ? [i[0], i[1]] : e;
+  }
+  /**
+   * Zuleitungs-Punkte, die genau bei `old` liegen (am Hahn, am Ventil oder an
+   * einem Abzweig), nach `now` mitnehmen. So bleiben Leitungen angehängt.
+   */
+  movePipeEnds(e, t, s) {
+    if (!(e[0] === t[0] && e[1] === t[1]))
+      for (const n of this.features)
+        n.kind !== "pipe" || n.id === s || n.locked || (n.points = n.points.map((i) => M(i, e) < 0.06 ? [t[0], t[1]] : i));
   }
   pipeLines() {
     return this.features.filter((e) => e.kind === "pipe" && e.points.length >= 2).map((e) => e.points);
   }
   finishFeature() {
-    const e = this.featureKind, t = q(e) === "area" ? 3 : 2;
+    const e = this.featureKind, t = j(e) === "area" ? 3 : 2;
     if (this.draft.length < t) {
-      this.showToast(`${U[e].label}: mindestens ${t} Punkte`, !0);
+      this.showToast(`${V[e].label}: mindestens ${t} Punkte`, !0);
       return;
     }
     this.addFeature({
       kind: e,
-      points: this.draft.map((n) => [y(n[0]), y(n[1])]),
+      points: this.draft.map((s) => [y(s[0]), y(s[1])]),
       soil_type: e === "soil" ? "loam" : null
     }), this.cancelTool();
   }
@@ -4333,7 +4428,7 @@ let x = class extends Q {
   }
   deleteFeature(e) {
     const t = this.feature(e);
-    this.remember(), this.plan.garden.features = this.features.filter((n) => n.id !== e), this.selected?.kind === "feature" && this.selected.id === e && (this.selected = null), this.changed(), this.removed(`${W(t)} entfernt`);
+    this.remember(), this.plan.garden.features = this.features.filter((s) => s.id !== e), this.selected?.kind === "feature" && this.selected.id === e && (this.selected = null), this.changed(), this.removed(`${U(t)} entfernt`);
   }
   cancelTool() {
     this.startTool("select");
@@ -4359,27 +4454,27 @@ let x = class extends Q {
   }
   async toggleAutomatic(e) {
     try {
-      await this._hass.callWS({ type: `${Z}/settings/automatic`, on: e }), this.showToast(e ? "Automatik an: Programme starten nach Zeitplan" : "Automatik aus: keine Starts nach Zeitplan");
+      await this._hass.callWS({ type: `${R}/settings/automatic`, on: e }), this.showToast(e ? "Automatik an: Programme starten nach Zeitplan" : "Automatik aus: keine Starts nach Zeitplan");
     } catch (t) {
       this.showToast(this.message(t), !0);
     }
   }
   setLocked(e, t) {
     this.remember();
-    for (const n of e) n.locked = t;
+    for (const s of e) s.locked = t;
     this.changed(), this.showToast(
-      e.length > 1 ? t ? "Alle Grundriss-Formen gesperrt" : "Alle Grundriss-Formen entsperrt" : t ? `${W(e[0])} gesperrt` : `${W(e[0])} entsperrt`
+      e.length > 1 ? t ? "Alle Grundriss-Formen gesperrt" : "Alle Grundriss-Formen entsperrt" : t ? `${U(e[0])} gesperrt` : `${U(e[0])} entsperrt`
     );
   }
   /** Durchfluss des Ventils (gelernt oder von Hand), für Liter und Nässekarte. */
   renderValveFlow(e) {
-    const t = this.plan.valves.find((n) => n.id === e.valve_id);
+    const t = this.plan.valves.find((s) => s.id === e.valve_id);
     return t ? c`<label class="field">
         <span>Durchfluss</span>
         <input type="number" min="0.1" max="500" step="0.1" placeholder="unbekannt"
           .value=${t.learned_flow_l_min == null ? "" : String(t.learned_flow_l_min)}
-          @change=${(n) => {
-      const s = n.target.value.trim(), i = s === "" ? null : parseFloat(s.replace(",", "."));
+          @change=${(s) => {
+      const n = s.target.value.trim(), i = n === "" ? null : parseFloat(n.replace(",", "."));
       i !== null && (!Number.isFinite(i) || i <= 0 || i > 500) || (this.remember(), t.learned_flow_l_min = i, this.flowEdited.add(t.id), this.changed());
     }} />
         <span class="unit">L/min</span>
@@ -4393,8 +4488,8 @@ let x = class extends Q {
   setZoneType(e, t) {
     if (e.type === t) return;
     this.remember();
-    const n = e.polygon;
-    e.type = t, t === "sprinkler" ? (e.polygon = [], e.radius_m = null) : (e.center = null, t === "hose" ? e.radius_m = 0.5 : (e.radius_m = null, n.length < 3 && (e.polygon = []))), this.changed(), se(e) === null ? (this.startTool(t === "sprinkler" ? "sprinkler" : t === "hose" ? "hose" : "bed", e.id), this.showToast(`${e.name}: jetzt im Plan zeichnen, dann „Speichern“`)) : this.showToast(`${e.name}: Art geändert. „Speichern“ nicht vergessen.`);
+    const s = e.polygon;
+    e.type = t, t === "sprinkler" ? (e.polygon = [], e.radius_m = null) : (e.center = null, t === "hose" ? e.radius_m = 0.5 : (e.radius_m = null, s.length < 3 && (e.polygon = []))), this.changed(), ie(e) === null ? (this.startTool(t === "sprinkler" ? "sprinkler" : t === "hose" ? "hose" : "bed", e.id), this.showToast(`${e.name}: jetzt im Plan zeichnen, dann „Speichern“`)) : this.showToast(`${e.name}: Art geändert. „Speichern“ nicht vergessen.`);
   }
   clearGeometry(e) {
     const t = this.zone(e);
@@ -4404,46 +4499,47 @@ let x = class extends Q {
     if (this.tool !== "select" || e.button !== 0) return;
     e.stopPropagation(), this.renderRoot.querySelector("svg.plan").setPointerCapture(e.pointerId), this.remember(), this.drag = t;
   }
-  moveFeature(e, t, n) {
+  moveFeature(e, t, s) {
     if (!("id" in e)) return;
-    const s = this.feature(e.id);
-    if (s) {
+    const n = this.feature(e.id);
+    if (n) {
       switch (e.type) {
         case "new-tree":
         case "f-radius":
-          s.radius_m = y(Math.max(0.1, P(s.points[0], t)));
+          n.radius_m = y(Math.max(0.1, M(n.points[0], t)));
           break;
         case "f-vertex": {
-          const i = this.snap(t, n, s.points[e.index]);
-          s.points[e.index] = [y(i[0]), y(i[1])];
+          const i = n.points[e.index], a = this.snap(t, s, i);
+          n.points[e.index] = [y(a[0]), y(a[1])], n.kind === "pipe" && this.movePipeEnds(i, n.points[e.index], n.id);
           break;
         }
         case "f-move": {
-          const i = t[0] - e.start[0], a = t[1] - e.start[1];
-          s.points = e.orig.points.map((r) => [y(r[0] + i), y(r[1] + a)]);
+          const i = t[0] - e.start[0], a = t[1] - e.start[1], r = n.points.map((l) => [l[0], l[1]]);
+          if (n.points = e.orig.points.map((l) => [y(l[0] + i), y(l[1] + a)]), n.kind === "tap" && this.movePipeEnds(r[0], n.points[0], n.id), n.kind === "pipe")
+            for (const [l, o] of r.entries()) this.movePipeEnds(o, n.points[l], n.id);
           break;
         }
       }
       this.changed();
     }
   }
-  insertVertex(e, t, n) {
+  insertVertex(e, t, s) {
     if (this.tool !== "select") return;
     e.stopPropagation(), this.remember();
-    const s = t.polygon[n], i = t.polygon[(n + 1) % t.polygon.length];
-    t.polygon.splice(n + 1, 0, [y((s[0] + i[0]) / 2), y((s[1] + i[1]) / 2)]), this.changed(), this.renderRoot.querySelector("svg.plan").setPointerCapture(e.pointerId), this.drag = { type: "vertex", id: t.id, index: n + 1 };
+    const n = t.polygon[s], i = t.polygon[(s + 1) % t.polygon.length];
+    t.polygon.splice(s + 1, 0, [y((n[0] + i[0]) / 2), y((n[1] + i[1]) / 2)]), this.changed(), this.renderRoot.querySelector("svg.plan").setPointerCapture(e.pointerId), this.drag = { type: "vertex", id: t.id, index: s + 1 };
   }
-  removeVertex(e, t, n) {
+  removeVertex(e, t, s) {
     e.preventDefault(), e.stopPropagation();
-    const s = t.type === "hose" ? 2 : 3;
-    if (t.polygon.length <= s) {
-      this.showToast(`Mindestens ${s} Punkte`, !0);
+    const n = t.type === "hose" ? 2 : 3;
+    if (t.polygon.length <= n) {
+      this.showToast(`Mindestens ${n} Punkte`, !0);
       return;
     }
-    this.remember(), t.polygon.splice(n, 1), this.changed();
+    this.remember(), t.polygon.splice(s, 1), this.changed();
   }
   marker(e, t) {
-    return (e === "valve" ? this.plan.valves : this.plan.sensors).find((s) => s.id === t);
+    return (e === "valve" ? this.plan.valves : this.plan.sensors).find((n) => n.id === t);
   }
   // Hintergrund ----------------------------------------------------------------
   setBackground(e) {
@@ -4460,29 +4556,29 @@ let x = class extends Q {
   recenterMap() {
     const e = this.plan.garden;
     if (e.latitude == null || e.longitude == null) return;
-    const { cx: t, cy: n } = this.view;
-    this.remember(), [e.latitude, e.longitude] = an([t, n], [e.latitude, e.longitude]).map(
+    const { cx: t, cy: s } = this.view;
+    this.remember(), [e.latitude, e.longitude] = an([t, s], [e.latitude, e.longitude]).map(
       (i) => Math.round(i * 1e7) / 1e7
     );
-    const s = (i) => [y(i[0] - t), y(i[1] - n)];
+    const n = (i) => [y(i[0] - t), y(i[1] - s)];
     for (const i of this.plan.zones)
-      i.center && (i.center = s(i.center)), i.polygon = i.polygon.map(s), i.valve_route = (i.valve_route ?? []).map(s);
+      i.center && (i.center = n(i.center)), i.polygon = i.polygon.map(n), i.valve_route = (i.valve_route ?? []).map(n);
     for (const i of [...this.plan.valves, ...this.plan.sensors])
-      i.position && (i.position = s(i.position));
-    for (const i of this.features) i.points = i.points.map(s);
-    this.view = { ...this.view, cx: 0, cy: 0 }, this.searchPin && (this.searchPin = { ...this.searchPin, point: s(this.searchPin.point) }), this.changed(), this.showToast("Kartenmitte gesetzt. Zum Behalten „Speichern“ drücken.");
+      i.position && (i.position = n(i.position));
+    for (const i of this.features) i.points = i.points.map(n);
+    this.view = { ...this.view, cx: 0, cy: 0 }, this.searchPin && (this.searchPin = { ...this.searchPin, point: n(this.searchPin.point) }), this.changed(), this.showToast("Kartenmitte gesetzt. Zum Behalten „Speichern“ drücken.");
   }
   // Orten ---------------------------------------------------------------------------
   /** Standort einmal aus dem Browser holen (kein Dauer-Orten, nichts gespeichert). */
   locateOnce() {
-    const e = Mn(window.isSecureContext, "geolocation" in navigator);
+    const e = Pn(window.isSecureContext, "geolocation" in navigator);
     return e ? (this.showToast(e, !0), Promise.resolve(null)) : (this.locating = !0, new Promise((t) => {
       navigator.geolocation.getCurrentPosition(
-        (n) => {
-          this.locating = !1, t({ latitude: n.coords.latitude, longitude: n.coords.longitude, accuracy: n.coords.accuracy });
+        (s) => {
+          this.locating = !1, t({ latitude: s.coords.latitude, longitude: s.coords.longitude, accuracy: s.coords.accuracy });
         },
-        (n) => {
-          this.locating = !1, this.showToast(Pn(n.code), !0), t(null);
+        (s) => {
+          this.locating = !1, this.showToast(Mn(s.code), !0), t(null);
         },
         { enableHighAccuracy: !0, maximumAge: 0, timeout: 3e4 }
       );
@@ -4497,25 +4593,25 @@ let x = class extends Q {
     if (this.locating) return;
     const e = await this.locateOnce();
     if (!e || !this.plan) return;
-    const t = this.plan.garden, n = Math.max(this.view.scale, 1 / Ae(e.latitude, 20));
+    const t = this.plan.garden, s = Math.max(this.view.scale, 1 / Ae(e.latitude, 20));
     this.autoFit = !1;
-    const s = t.background === "none";
-    if (s && (this.remember(), t.background = "map", t.map_provider ??= "basemap_at", t.map_zoom ??= 19), !this.hasAnyDrawing() && ![...this.plan.valves, ...this.plan.sensors].some((r) => r.position) || t.latitude == null || t.longitude == null) {
-      s || this.remember(), t.latitude = Math.round(e.latitude * 1e7) / 1e7, t.longitude = Math.round(e.longitude * 1e7) / 1e7, this.view = { cx: 0, cy: 0, scale: n }, this.changed(), this.showToast(`Kartenmitte auf deinen Standort gesetzt (${Te(e.accuracy)}).`);
+    const n = t.background === "none";
+    if (n && (this.remember(), t.background = "map", t.map_provider ??= "basemap_at", t.map_zoom ??= 19), !this.hasAnyDrawing() && ![...this.plan.valves, ...this.plan.sensors].some((r) => r.position) || t.latitude == null || t.longitude == null) {
+      n || this.remember(), t.latitude = Math.round(e.latitude * 1e7) / 1e7, t.longitude = Math.round(e.longitude * 1e7) / 1e7, this.view = { cx: 0, cy: 0, scale: s }, this.changed(), this.showToast(`Kartenmitte auf deinen Standort gesetzt (${Te(e.accuracy)}).`);
       return;
     }
     const a = this.geoPoint(e);
-    this.view = { cx: a[0], cy: a[1], scale: n }, s && this.changed(), this.showToast(
+    this.view = { cx: a[0], cy: a[1], scale: s }, n && this.changed(), this.showToast(
       Math.hypot(a[0], a[1]) > 2e3 ? "Du bist weit weg vom Garten. Die Karte zeigt, wo du gerade bist." : `Karte auf deinen Standort gelegt (${Te(e.accuracy)}).`
     );
   }
   /** Ventil oder Sensor, der gerade platziert wird, an den eigenen Standort setzen. */
   async placeAtMe() {
     if (this.tool !== "place" || this.locating) return;
-    const e = this.toolTarget, t = await this.locateOnce(), n = t && this.geoPoint(t);
-    if (!n || this.tool !== "place" || this.toolTarget !== e) return;
-    const [s, i] = e.split(":");
-    this.remember(), this.marker(s, i).position = [y(n[0]), y(n[1])], this.selected = { kind: s, id: i }, this.changed(), this.cancelTool(), this.view = { ...this.view, cx: n[0], cy: n[1] }, this.showToast(`An deinen Standort gesetzt (${Te(t.accuracy)})`);
+    const e = this.toolTarget, t = await this.locateOnce(), s = t && this.geoPoint(t);
+    if (!s || this.tool !== "place" || this.toolTarget !== e) return;
+    const [n, i] = e.split(":");
+    this.remember(), this.marker(n, i).position = [y(s[0]), y(s[1])], this.selected = { kind: n, id: i }, this.changed(), this.cancelTool(), this.view = { ...this.view, cx: s[0], cy: s[1] }, this.showToast(`An deinen Standort gesetzt (${Te(t.accuracy)})`);
   }
   // Adresssuche ------------------------------------------------------------------
   openSearch() {
@@ -4531,7 +4627,7 @@ let x = class extends Q {
       this.searching = !0, this.searchError = "";
       try {
         const e = this._hass?.language ?? "de";
-        this.searchResults = await bn(
+        this.searchResults = await $n(
           (t) => this._hass.callWS(t),
           this.searchQuery,
           e
@@ -4549,12 +4645,12 @@ let x = class extends Q {
    * die Ansicht springt.
    */
   goToPlace(e) {
-    const t = this.plan.garden, n = 1 / Ae(e.latitude, 20.5);
+    const t = this.plan.garden, s = 1 / Ae(e.latitude, 20.5);
     if (this.autoFit = !1, !this.hasAnyDrawing() && ![...this.plan.valves, ...this.plan.sensors].some((i) => i.position) || t.latitude == null || t.longitude == null)
-      this.remember(), t.latitude = Math.round(e.latitude * 1e7) / 1e7, t.longitude = Math.round(e.longitude * 1e7) / 1e7, this.view = { cx: 0, cy: 0, scale: n }, this.searchPin = { point: [0, 0], name: e.name }, this.changed(), this.showToast(`${e.name}: Kartenmitte gesetzt. Fein ausrichten mit „Mitte hier festlegen“.`);
+      this.remember(), t.latitude = Math.round(e.latitude * 1e7) / 1e7, t.longitude = Math.round(e.longitude * 1e7) / 1e7, this.view = { cx: 0, cy: 0, scale: s }, this.searchPin = { point: [0, 0], name: e.name }, this.changed(), this.showToast(`${e.name}: Kartenmitte gesetzt. Fein ausrichten mit „Mitte hier festlegen“.`);
     else {
       const i = it(e.latitude, e.longitude, [t.latitude, t.longitude]);
-      this.view = { cx: i[0], cy: i[1], scale: n }, this.searchPin = { point: i, name: e.name }, this.showToast(`${e.name} angezeigt. „Mitte hier festlegen“ übernimmt die Stelle.`);
+      this.view = { cx: i[0], cy: i[1], scale: s }, this.searchPin = { point: i, name: e.name }, this.showToast(`${e.name} angezeigt. „Mitte hier festlegen“ übernimmt die Stelle.`);
     }
     this.searchResults = null;
   }
@@ -4608,11 +4704,11 @@ let x = class extends Q {
       ["moisture", "Bodenfeuchte jetzt", "mdi:water-percent"],
       ["after", "Bodenfeuchte nach dem Gießen", "mdi:water-check-outline"]
     ].map(
-      ([t, n, s]) => c`<button role="menuitemradio" aria-checked=${this.raster === t ? "true" : "false"}
+      ([t, s, n]) => c`<button role="menuitemradio" aria-checked=${this.raster === t ? "true" : "false"}
             class=${this.raster === t ? "active" : ""}
             @click=${() => {
         this.raster = t, this.rasterMenu = !1;
-      }}><ha-icon icon=${s}></ha-icon>${n}</button>`
+      }}><ha-icon icon=${n}></ha-icon>${s}</button>`
     )}
       </div>
     ` : p;
@@ -4621,20 +4717,20 @@ let x = class extends Q {
     const e = this.plan.garden;
     if (!this.layersOpen || e.background !== "map") return p;
     const t = Object.entries(this.plan.providers).map(
-      ([n, s]) => [n, s.short ?? s.name, s.kind === "map" ? "mdi:map-outline" : "mdi:satellite-variant"]
+      ([s, n]) => [s, n.short ?? n.name, n.kind === "map" ? "mdi:map-outline" : "mdi:satellite-variant"]
     );
     return e.map_url && t.push(["custom", "Eigene Adresse", "mdi:web"]), c`
-      <div class="layers" role="menu" @pointerdown=${(n) => n.stopPropagation()}>
+      <div class="layers" role="menu" @pointerdown=${(s) => s.stopPropagation()}>
         ${t.map(
-      ([n, s, i]) => c`<button
+      ([s, n, i]) => c`<button
             role="menuitemradio"
-            aria-checked=${e.map_provider === n ? "true" : "false"}
-            class=${e.map_provider === n ? "active" : ""}
+            aria-checked=${e.map_provider === s ? "true" : "false"}
+            class=${e.map_provider === s ? "active" : ""}
             @click=${() => {
-        e.map_provider !== n && this.updateGarden({ map_provider: n }), this.layersOpen = !1;
+        e.map_provider !== s && this.updateGarden({ map_provider: s }), this.layersOpen = !1;
       }}
           >
-            <ha-icon icon=${i}></ha-icon>${s}
+            <ha-icon icon=${i}></ha-icon>${n}
           </button>`
     )}
       </div>
@@ -4650,11 +4746,11 @@ let x = class extends Q {
       this.showToast("Zwei Punkte wählen und den echten Abstand in Metern eingeben", !0);
       return;
     }
-    if (P(this.scaleDraft[0], this.scaleDraft[1]) < 2) {
+    if (M(this.scaleDraft[0], this.scaleDraft[1]) < 2) {
       this.showToast("Die beiden Punkte liegen zu nah beieinander", !0);
       return;
     }
-    const t = (n) => [Math.round(n[0] * 10) / 10, Math.round(n[1] * 10) / 10];
+    const t = (s) => [Math.round(s[0] * 10) / 10, Math.round(s[1] * 10) / 10];
     this.updateGarden({
       scale_points: [t(this.scaleDraft[0]), t(this.scaleDraft[1])],
       scale_distance_m: e
@@ -4668,9 +4764,16 @@ let x = class extends Q {
       return;
     }
     try {
-      await this._hass.callService(Z, "run_zone", { zone_id: e.id, duration: t }), this.showToast(`${e.name}: ${Oe(t)} eingereiht`);
-    } catch (n) {
-      this.showToast(this.message(n), !0);
+      await this._hass.callService(R, "run_zone", { zone_id: e.id, duration: t }), this.showToast(`${e.name}: ${Oe(t)} eingereiht`);
+    } catch (s) {
+      this.showToast(this.message(s), !0);
+    }
+  }
+  async cancelZone(e) {
+    try {
+      await this._hass.callWS({ type: `${R}/queue/cancel`, zone_id: e.id }), this.showToast(`${e.name}: abgebrochen`);
+    } catch (t) {
+      this.showToast(this.message(t), !0);
     }
   }
   // Darstellung ----------------------------------------------------------------
@@ -4740,21 +4843,21 @@ let x = class extends Q {
   rasterData() {
     const e = this.plan, t = this.bounds();
     if (!t || !this.raster) return null;
-    const n = JSON.stringify([
+    const s = JSON.stringify([
       this.raster,
       e.zones,
-      e.valves.map((s) => [s.id, s.learned_flow_l_min]),
-      e.garden.features.filter((s) => s.kind === "tree" || s.kind === "boundary"),
-      Object.entries(this.status?.zones ?? {}).map(([s, i]) => [s, i.planned_s, i.need_mm, i.capacity_mm])
+      e.valves.map((n) => [n.id, n.learned_flow_l_min]),
+      e.garden.features.filter((n) => n.kind === "tree" || n.kind === "boundary"),
+      Object.entries(this.status?.zones ?? {}).map(([n, i]) => [n, i.planned_s, i.need_mm, i.capacity_mm])
     ]);
-    if (this.rasterCache?.key !== n) {
-      const s = Ln(this.raster, e.zones, e.valves, this.status, e.garden.features, [
+    if (this.rasterCache?.key !== s) {
+      const n = Ln(this.raster, e.zones, e.valves, this.status, e.garden.features, [
         t[0] - 1,
         t[1] - 1,
         t[2] + 1,
         t[3] + 1
       ]);
-      this.rasterCache = { key: n, raster: s };
+      this.rasterCache = { key: s, raster: n };
     }
     return this.rasterCache.raster;
   }
@@ -4764,32 +4867,32 @@ let x = class extends Q {
     if (!e) return p;
     const t = this.raster;
     return jn([this.rasterCache?.key], () => {
-      const n = e.step, s = n * 0.08;
+      const s = e.step, n = s * 0.08;
       return f`<g class="raster">${e.cells.map((i) => {
         let a;
         if (i.kind === "none") a = "rgba(150,150,150,0.18)";
         else if (i.kind === "unknown") a = "url(#wet-hatch)";
         else {
-          const [r, l, o] = t === "planned" ? Tn(i.v) : Rn(i.v);
+          const [r, l, o] = t === "planned" ? Tn(i.v) : Nn(i.v);
           a = `rgba(${r},${l},${o},0.78)`;
         }
-        return f`<rect x=${i.x + s / 2} y=${i.y + s / 2} width=${n - s} height=${n - s} fill=${a}></rect>`;
+        return f`<rect x=${i.x + n / 2} y=${i.y + n / 2} width=${s - n} height=${s - n} fill=${a}></rect>`;
       })}</g>`;
     });
   }
   /** Messwerte der Sensoren neben dem Symbol (Bodenfeuchte farbig). */
   renderSensorValues(e) {
     const t = this.status?.sensors ?? {};
-    return this.plan.sensors.map((n) => {
-      const s = t[n.id];
-      if (!n.position || !s || typeof s.value != "number") return p;
+    return this.plan.sensors.map((s) => {
+      const n = t[s.id];
+      if (!s.position || !n || typeof n.value != "number") return p;
       let i = "";
-      if (n.kind === "soil_moisture") {
-        const r = s.field_capacity_pct - s.wilting_point_pct, l = r > 0 ? (s.value - s.wilting_point_pct) / r : 0.5;
+      if (s.kind === "soil_moisture") {
+        const r = n.field_capacity_pct - n.wilting_point_pct, l = r > 0 ? (n.value - n.wilting_point_pct) / r : 0.5;
         i = l < 0.35 ? "dry" : l > 0.85 ? "wet" : "ok";
       }
-      const a = `${Math.round(s.value * 10) / 10}${s.unit ? ` ${s.unit}` : ""}`;
-      return f`<text class="sensor-value ${i}" x=${n.position[0]} y=${n.position[1]} dy=${24 * e}
+      const a = `${Math.round(n.value * 10) / 10}${n.unit ? ` ${n.unit}` : ""}`;
+      return f`<text class="sensor-value ${i}" x=${s.position[0]} y=${s.position[1]} dy=${24 * e}
         font-size=${12 * e} stroke-width=${3 * e}>${a}</text>`;
     });
   }
@@ -4799,7 +4902,7 @@ let x = class extends Q {
   /** Bodenart einer Fläche im Grundriss, in der die Zone liegt. */
   soilFromPlan(e) {
     const t = this.zoneAnchor(e);
-    return t ? this.features.find((s) => s.kind === "soil" && s.points.length >= 3 && He(t, s.points))?.soil_type ?? null : null;
+    return t ? this.features.find((n) => n.kind === "soil" && n.points.length >= 3 && Fe(t, n.points))?.soil_type ?? null : null;
   }
   renderSoilLegend() {
     const e = /* @__PURE__ */ new Set([
@@ -4809,15 +4912,15 @@ let x = class extends Q {
     return c`<div class="wet-legend">
       <strong>Bodenart</strong>
       ${Object.entries(this.plan.catalog.soils).filter(([t]) => e.has(t)).map(
-      ([t, n]) => c`<div class="soil-row"><span class="swatch" style="background:${Ee[t]}"></span>${n.name}
-            <small>${n.awc_mm_per_m} mm/m</small></div>`
+      ([t, s]) => c`<div class="soil-row"><span class="swatch" style="background:${Ee[t]}"></span>${s.name}
+            <small>${s.awc_mm_per_m} mm/m</small></div>`
     )}
       <small>Zahl: Wasser, das der Boden je Meter Tiefe speichern kann. Sandiger Boden braucht öfter, aber weniger Wasser.</small>
     </div>`;
   }
   /** Pflanzen, Wasserbedarf und Boden einer Zone. */
   renderPlantSoil(e) {
-    const t = this.plan.catalog, n = e.plant_type ? t.plants[e.plant_type] : void 0, i = ((l) => t.needs.find((o) => l <= Gn(o.key)) ?? t.needs[t.needs.length - 1])(e.kc), a = this.soilFromPlan(e), r = (l) => {
+    const t = this.plan.catalog, s = e.plant_type ? t.plants[e.plant_type] : void 0, i = ((l) => t.needs.find((o) => l <= Gn(o.key)) ?? t.needs[t.needs.length - 1])(e.kc), a = this.soilFromPlan(e), r = (l) => {
       this.remember(), l(), this.changed();
     };
     return c`
@@ -4845,7 +4948,7 @@ let x = class extends Q {
     )}
           </div>
           <small class="hint">
-            Pflanzenfaktor ${e.kc.toLocaleString("de-DE")}${n && n.kc !== e.kc ? c` (für ${n.name} üblich: ${n.kc.toLocaleString("de-DE")})` : p}
+            Pflanzenfaktor ${e.kc.toLocaleString("de-DE")}${s && s.kc !== e.kc ? c` (für ${s.name} üblich: ${s.kc.toLocaleString("de-DE")})` : p}
           </small>
         </div>
         <label class="field wide">
@@ -4868,11 +4971,11 @@ let x = class extends Q {
     `;
   }
   renderWetLegend() {
-    const e = this.raster, t = this.plan.zones.filter((a) => a.enabled && ge(a) !== null).map((a) => ({ z: a, why: pt(a, this.plan.valves, this.status) })).filter((a) => a.why !== null), n = (a) => a.map(([, [r, l, o]], h) => `rgb(${r},${l},${o}) ${h / (a.length - 1) * 100}%`).join(", "), s = e === "planned", i = L[L.length - 1][0];
+    const e = this.raster, t = this.plan.zones.filter((a) => a.enabled && fe(a) !== null).map((a) => ({ z: a, why: pt(a, this.plan.valves, this.status) })).filter((a) => a.why !== null), s = (a) => a.map(([, [r, l, o]], d) => `rgb(${r},${l},${o}) ${d / (a.length - 1) * 100}%`).join(", "), n = e === "planned", i = L[L.length - 1][0];
     return c`<div class="wet-legend">
-      <strong>${s ? "Geplante Gießmenge (nächster Durchgang)" : e === "after" ? "Bodenfeuchte nach dem nächsten Gießen" : "Bodenfeuchte jetzt"}</strong>
-      <div class="bar" style="background: linear-gradient(to right, ${n(s ? L : Tt)})"></div>
-      ${s ? c`<div class="ticks">${L.map(([a]) => c`<span>${a}${a === i ? "+" : ""}</span>`)}<em>mm</em></div>` : c`<div class="ticks"><span>trocken</span><span>halb</span><span>voll</span><span>zu nass</span></div>`}
+      <strong>${n ? "Geplante Gießmenge (nächster Durchgang)" : e === "after" ? "Bodenfeuchte nach dem nächsten Gießen" : "Bodenfeuchte jetzt"}</strong>
+      <div class="bar" style="background: linear-gradient(to right, ${s(n ? L : Tt)})"></div>
+      ${n ? c`<div class="ticks">${L.map(([a]) => c`<span>${a}${a === i ? "+" : ""}</span>`)}<em>mm</em></div>` : c`<div class="ticks"><span>trocken</span><span>halb</span><span>voll</span><span>zu nass</span></div>`}
       <small class="keys"><span class="swatch none"></span>nicht bewässert <span class="hatch"></span>ohne Wert</small>
       ${t.length ? c`<div class="wet-missing">
             <small><strong>Ohne Wert:</strong> ${t.map((a) => `${a.z.name} (${a.why})`).join(", ")}</small>
@@ -4881,7 +4984,7 @@ let x = class extends Q {
           </div>` : p}
       <details class="howto">
         <summary>Wie wird das berechnet?</summary>
-        ${s ? c`<small>Liter = geplante Dauer × Durchfluss des Ventils, verteilt auf die Fläche der Zone (1 L auf 1 m² = 1 mm).
+        ${n ? c`<small>Liter = geplante Dauer × Durchfluss des Ventils, verteilt auf die Fläche der Zone (1 L auf 1 m² = 1 mm).
               Die geplante Dauer kommt aus der Zone: von Hand, aus einer Entität oder berechnet aus dem Bedarf (bei keinem Bedarf 0).
               Wo sich Zonen überschneiden, zählen beide; hinter dicken Baumstämmen bleibt es beim Sprinkler trocken.</small>` : c`<small>Wasserhaushalt nach FAO-56 („Wasserkonto“ je Zone): Jeden Tag wird aus Temperatur, Luftfeuchte und Wind die
               Verdunstung (ET0) berechnet, mal Pflanzenfaktor. Das zieht Wasser vom Konto ab; wirksamer Regen und Gießen füllen es auf.
@@ -4893,23 +4996,23 @@ let x = class extends Q {
   }
   // Übersicht ------------------------------------------------------------------
   renderOverview() {
-    const e = this.plan, t = e.zones, n = (d) => e.valves.find((g) => g.id === d.valve_id), s = t.map((d) => {
-      const g = ge(d), v = g ?? d.area_m2, S = n(d)?.learned_flow_l_min ?? null, M = We(d, this.status), k = S && M ? M / 60 * S : null;
-      return { z: d, drawn: g, area: v, flow: S, seconds: M, liters: k, mm: zt(d, e.valves, this.status) };
-    }), i = s.filter((d) => d.z.enabled), a = i.reduce((d, g) => d + (g.area ?? 0), 0), r = i.reduce((d, g) => d + (g.liters ?? 0), 0), l = t.reduce((d, g) => d + g.overlap_m2, 0) / 2, o = gn(e.garden.features), h = ["sprinkler", "drip", "hose"].map((d) => {
-      const g = i.filter((v) => v.z.type === d);
-      return { type: d, count: g.length, area: g.reduce((v, S) => v + (S.area ?? 0), 0) };
+    const e = this.plan, t = e.zones, s = (h) => e.valves.find((g) => g.id === h.valve_id), n = t.map((h) => {
+      const g = fe(h), v = g ?? h.area_m2, S = s(h)?.learned_flow_l_min ?? null, P = He(h, this.status), w = S && P ? P / 60 * S : null;
+      return { z: h, drawn: g, area: v, flow: S, seconds: P, liters: w, mm: zt(h, e.valves, this.status) };
+    }), i = n.filter((h) => h.z.enabled), a = i.reduce((h, g) => h + (g.area ?? 0), 0), r = i.reduce((h, g) => h + (g.liters ?? 0), 0), l = t.reduce((h, g) => h + g.overlap_m2, 0) / 2, o = gn(e.garden.features), d = ["sprinkler", "drip", "hose"].map((h) => {
+      const g = i.filter((v) => v.z.type === h);
+      return { type: h, count: g.length, area: g.reduce((v, S) => v + (S.area ?? 0), 0) };
     }), m = {
       sprinkler: ["Sprinkler", "mdi:sprinkler-variant"],
       drip: ["Tropfschlauch", "mdi:water-outline"],
       hose: ["Gießschlauch", "mdi:pipe"]
     }, u = [];
-    for (const d of s)
-      d.z.enabled && (d.drawn === null && !d.z.area_m2 ? u.push(`${d.z.name}: weder gezeichnet noch Fläche von Hand`) : d.drawn === null && u.push(`${d.z.name}: noch nicht gezeichnet (Fläche von Hand)`), d.z.valve_id ? d.flow || u.push(`${d.z.name}: Durchfluss noch nicht gelernt (nach dem ersten Lauf)`) : u.push(`${d.z.name}: kein Ventil zugeordnet`));
-    const b = e.valves.map((d) => {
-      const g = i.filter((M) => M.z.valve_id === d.id), v = g.reduce((M, k) => M + (k.area ?? 0), 0), S = d.learned_flow_l_min && v ? d.learned_flow_l_min * 60 / v : null;
-      return { v: d, mine: g, area: v, rate: S };
-    }).filter((d) => d.mine.length), w = (d, g = 0) => d == null ? "–" : d.toLocaleString("de-DE", { maximumFractionDigits: g });
+    for (const h of n)
+      h.z.enabled && (h.drawn === null && !h.z.area_m2 ? u.push(`${h.z.name}: weder gezeichnet noch Fläche von Hand`) : h.drawn === null && u.push(`${h.z.name}: noch nicht gezeichnet (Fläche von Hand)`), h.z.valve_id ? h.flow || u.push(`${h.z.name}: Durchfluss noch nicht gelernt (nach dem ersten Lauf)`) : u.push(`${h.z.name}: kein Ventil zugeordnet`));
+    const $ = e.valves.map((h) => {
+      const g = i.filter((P) => P.z.valve_id === h.id), v = g.reduce((P, w) => P + (w.area ?? 0), 0), S = h.learned_flow_l_min && v ? h.learned_flow_l_min * 60 / v : null;
+      return { v: h, mine: g, area: v, rate: S };
+    }).filter((h) => h.mine.length), x = (h, g = 0) => h == null ? "–" : h.toLocaleString("de-DE", { maximumFractionDigits: g });
     return c`
       <div class="overview">
         <section class="tiles">
@@ -4917,24 +5020,24 @@ let x = class extends Q {
             <small>${i.length} aktive Zonen</small></div>
           ${o ? c`<div class="tile"><span>Grundstück</span><strong>${T(o)}</strong>
                 <small>davon ${Math.round(a / o * 100)} % bewässert</small></div>` : p}
-          <div class="tile"><span>Gezeichnet</span><strong>${s.filter((d) => d.drawn !== null).length} von ${t.length}</strong>
+          <div class="tile"><span>Gezeichnet</span><strong>${n.filter((h) => h.drawn !== null).length} von ${t.length}</strong>
             <small>Zonen im Plan</small></div>
-          <div class="tile"><span>Wasser pro Durchgang</span><strong>${w(r)} L</strong>
+          <div class="tile"><span>Wasser pro Durchgang</span><strong>${x(r)} L</strong>
             <small>alle aktiven Zonen einmal</small></div>
           <div class="tile ${l > 0.5 ? "warn" : ""}"><span>Überschneidungen</span><strong>${T(l)}</strong>
             <small>werden doppelt gegossen</small></div>
         </section>
         <section class="types">
-          ${h.map(
-      (d) => c`<div class="type">
-              <ha-icon icon=${m[d.type][1]}></ha-icon>
-              <span>${m[d.type][0]}</span>
-              <strong>${T(d.area)}</strong>
-              <small>${d.count} Zone${d.count === 1 ? "" : "n"}</small>
+          ${d.map(
+      (h) => c`<div class="type">
+              <ha-icon icon=${m[h.type][1]}></ha-icon>
+              <span>${m[h.type][0]}</span>
+              <strong>${T(h.area)}</strong>
+              <small>${h.count} Zone${h.count === 1 ? "" : "n"}</small>
             </div>`
     )}
         </section>
-        ${u.length ? c`<section class="card"><h3>Noch offen</h3><ul class="hints">${u.map((d) => c`<li>${d}</li>`)}</ul></section>` : p}
+        ${u.length ? c`<section class="card"><h3>Noch offen</h3><ul class="hints">${u.map((h) => c`<li>${h}</li>`)}</ul></section>` : p}
         <section class="card">
           <h3>Zonen</h3>
           <div class="table-wrap">
@@ -4942,16 +5045,16 @@ let x = class extends Q {
               <thead><tr><th>Zone</th><th>Art</th><th>Ventil</th><th class="n">Fläche</th><th class="n">Dauer</th>
                 <th class="n">Liter</th><th class="n">mm</th><th class="n">Bedarf</th></tr></thead>
               <tbody>
-                ${s.map(
-      (d, g) => c`<tr class=${d.z.enabled ? "" : "off"}>
-                    <td><span class="dot" style="--zone:${this.zoneColor(g)}"></span>${d.z.name}</td>
-                    <td>${m[d.z.type]?.[0] ?? d.z.type}</td>
-                    <td>${n(d.z)?.name ?? "–"}</td>
-                    <td class="n">${d.area ? T(d.area) : "–"}${d.drawn === null && d.area ? c`<sup title="von Hand">*</sup>` : p}</td>
-                    <td class="n">${d.seconds ? Oe(d.seconds) : "–"}</td>
-                    <td class="n">${w(d.liters)}</td>
-                    <td class="n">${w(d.mm, 1)}</td>
-                    <td class="n">${this.status?.zones[d.z.id] ? `${w(this.status.zones[d.z.id].need_mm, 1)} mm` : "–"}</td>
+                ${n.map(
+      (h, g) => c`<tr class=${h.z.enabled ? "" : "off"}>
+                    <td><span class="dot" style="--zone:${this.zoneColor(g)}"></span>${h.z.name}</td>
+                    <td>${m[h.z.type]?.[0] ?? h.z.type}</td>
+                    <td>${s(h.z)?.name ?? "–"}</td>
+                    <td class="n">${h.area ? T(h.area) : "–"}${h.drawn === null && h.area ? c`<sup title="von Hand">*</sup>` : p}</td>
+                    <td class="n">${h.seconds ? Oe(h.seconds) : "–"}</td>
+                    <td class="n">${x(h.liters)}</td>
+                    <td class="n">${x(h.mm, 1)}</td>
+                    <td class="n">${this.status?.zones[h.z.id] ? `${x(this.status.zones[h.z.id].need_mm, 1)} mm` : "–"}</td>
                   </tr>`
     )}
               </tbody>
@@ -4965,13 +5068,13 @@ let x = class extends Q {
             <table>
               <thead><tr><th>Ventil</th><th>Zonen</th><th class="n">Fläche</th><th class="n">Durchfluss</th><th class="n">Regenrate</th></tr></thead>
               <tbody>
-                ${b.map(
-      (d) => c`<tr>
-                    <td>${d.v.name}</td>
-                    <td>${d.mine.map((g) => g.z.name).join(", ")}</td>
-                    <td class="n">${T(d.area)}</td>
-                    <td class="n">${d.v.learned_flow_l_min ? `${w(d.v.learned_flow_l_min, 1)} L/min` : "–"}</td>
-                    <td class="n">${d.rate ? `${w(d.rate, 1)} mm/h` : "–"}</td>
+                ${$.map(
+      (h) => c`<tr>
+                    <td>${h.v.name}</td>
+                    <td>${h.mine.map((g) => g.z.name).join(", ")}</td>
+                    <td class="n">${T(h.area)}</td>
+                    <td class="n">${h.v.learned_flow_l_min ? `${x(h.v.learned_flow_l_min, 1)} L/min` : "–"}</td>
+                    <td class="n">${h.rate ? `${x(h.rate, 1)} mm/h` : "–"}</td>
                   </tr>`
     )}
               </tbody>
@@ -5053,8 +5156,8 @@ let x = class extends Q {
   async exportPlan() {
     this.menuOpen = !1;
     try {
-      const e = await this._hass.callWS({ type: `${Z}/export` }), t = new Blob([JSON.stringify(e, null, 2)], { type: "application/json" }), n = URL.createObjectURL(t), s = document.createElement("a");
-      s.href = n, s.download = `bewaesserung-sicherung-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`, s.style.display = "none", document.body.appendChild(s), s.click(), s.remove(), setTimeout(() => URL.revokeObjectURL(n), 1e3), this.showToast(
+      const e = await this._hass.callWS({ type: `${R}/export` }), t = new Blob([JSON.stringify(e, null, 2)], { type: "application/json" }), s = URL.createObjectURL(t), n = document.createElement("a");
+      n.href = s, n.download = `bewaesserung-sicherung-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`, n.style.display = "none", document.body.appendChild(n), n.click(), n.remove(), setTimeout(() => URL.revokeObjectURL(s), 1e3), this.showToast(
         this.dirty ? "Sicherung heruntergeladen (ohne die noch nicht gespeicherten Änderungen)" : "Sicherung heruntergeladen"
       );
     } catch (e) {
@@ -5062,11 +5165,11 @@ let x = class extends Q {
     }
   }
   async pickImport(e) {
-    const t = e.target, n = t.files?.[0];
-    if (t.value = "", this.menuOpen = !1, !!n)
+    const t = e.target, s = t.files?.[0];
+    if (t.value = "", this.menuOpen = !1, !!s)
       try {
-        const s = JSON.parse(await n.text());
-        this.pendingImport = { name: n.name, data: s };
+        const n = JSON.parse(await s.text());
+        this.pendingImport = { name: s.name, data: n };
       } catch {
         this.showToast("Die Datei ist keine gültige Sicherung (kein JSON)", !0);
       }
@@ -5076,14 +5179,14 @@ let x = class extends Q {
     if (t) {
       this.pendingImport = null;
       try {
-        const n = await this._hass.callWS({
-          type: `${Z}/import`,
+        const s = await this._hass.callWS({
+          type: `${R}/import`,
           mode: e,
           data: t.data
-        }), s = n.notes.length ? ` ${n.notes.join(" ")}` : "";
-        n.reloaded ? (this.showToast(`Sicherung eingespielt, wird neu geladen …${s}`), this.unsub?.(), this.unsub = void 0, setTimeout(() => void this.load(), 4e3)) : (this.showToast(`Zeichnung übernommen.${s}`), await this.load());
-      } catch (n) {
-        this.showToast(`Nicht eingespielt: ${this.message(n)}`, !0);
+        }), n = s.notes.length ? ` ${s.notes.join(" ")}` : "";
+        s.reloaded ? (this.showToast(`Sicherung eingespielt, wird neu geladen …${n}`), this.unsub?.(), this.unsub = void 0, setTimeout(() => void this.load(), 4e3)) : (this.showToast(`Zeichnung übernommen.${n}`), await this.load());
+      } catch (s) {
+        this.showToast(`Nicht eingespielt: ${this.message(s)}`, !0);
       }
     }
   }
@@ -5123,7 +5226,7 @@ let x = class extends Q {
     `;
   }
   renderPlan() {
-    const { w: e, h: t } = this.size, { cx: n, cy: s, scale: i } = this.view, a = `translate(${e / 2} ${t / 2}) scale(${i}) translate(${-n} ${-s})`, r = 1 / i, l = this.tool === "select" ? this.drag?.type === "pan" ? "grabbing" : "grab" : "crosshair";
+    const { w: e, h: t } = this.size, { cx: s, cy: n, scale: i } = this.view, a = `translate(${e / 2} ${t / 2}) scale(${i}) translate(${-s} ${-n})`, r = 1 / i, l = this.tool === "select" ? this.drag?.type === "pan" ? "grabbing" : "grab" : "crosshair";
     return c`
       <svg
         class="plan ${this.wetOn ? "wet" : ""}"
@@ -5136,7 +5239,7 @@ let x = class extends Q {
         @pointercancel=${this.onPointerUp}
         @wheel=${this.onWheel}
         @dblclick=${(o) => {
-      this.tool === "bed" && (o.preventDefault(), this.draft = this.draft.slice(0, -1), this.finishBed()), this.tool === "hose" && (o.preventDefault(), this.draft = this.draft.slice(0, -1), this.finishHose()), this.tool === "feature" && q(this.featureKind) !== "point" && (o.preventDefault(), this.draft = this.draft.slice(0, -1), this.finishFeature());
+      this.tool === "bed" && (o.preventDefault(), this.draft = this.draft.slice(0, -1), this.finishBed()), this.tool === "hose" && (o.preventDefault(), this.draft = this.draft.slice(0, -1), this.finishHose()), this.tool === "feature" && j(this.featureKind) !== "point" && (o.preventDefault(), this.draft = this.draft.slice(0, -1), this.finishFeature());
     }}
       >
         <defs>
@@ -5152,7 +5255,7 @@ let x = class extends Q {
       (o) => f`<circle cx=${o[0]} cy=${o[1]} r=${4.5 * r}><title>Abzweig (T-Stück)</title></circle>`
     )}</g>
           ${this.wetOn ? this.renderRaster() : p}
-          ${this.plan.zones.map((o, h) => this.renderZone(o, h, r))}
+          ${this.plan.zones.map((o, d) => this.renderZone(o, d, r))}
           ${this.renderSelectedHandles(r)} ${this.renderFeatureHandles(r)}
           ${this.renderDraft(r)} ${this.renderScaleDraft(r)} ${this.renderMeasure(r)}
           ${this.renderValveLinks(r)} ${this.renderFlow(r)}
@@ -5170,44 +5273,44 @@ let x = class extends Q {
     `;
   }
   visibleBox() {
-    const { cx: e, cy: t, scale: n } = this.view, s = this.size.w / 2 / n, i = this.size.h / 2 / n;
-    return { x0: e - s, y0: t - i, x1: e + s, y1: t + i };
+    const { cx: e, cy: t, scale: s } = this.view, n = this.size.w / 2 / s, i = this.size.h / 2 / s;
+    return { x0: e - n, y0: t - i, x1: e + n, y1: t + i };
   }
   renderBackground(e) {
-    const t = this.plan.garden, n = this.visibleBox(), s = [];
+    const t = this.plan.garden, s = this.visibleBox(), n = [];
     if (t.background === "map" && t.latitude != null && t.longitude != null) {
       const r = this.tileTemplate();
       if (r) {
-        const l = this.plan.providers[t.map_provider ?? ""], o = l?.max_zoom ?? 20, h = Math.max(
+        const l = this.plan.providers[t.map_provider ?? ""], o = l?.max_zoom ?? 20, d = Math.max(
           1,
           Math.min(o, Math.round(st(t.latitude, this.view.scale * (window.devicePixelRatio > 1 ? 1.4 : 1))))
-        ), m = at(r, [t.latitude, t.longitude], n, h);
-        s.push(f`<rect x=${n.x0} y=${n.y0} width=${n.x1 - n.x0} height=${n.y1 - n.y0} class="map-fill"></rect>`);
-        const u = e * 0.5, b = (w) => w.map(
-          (d) => f`<image href=${d.url} x=${d.x - u} y=${d.y - u} width=${d.size + 2 * u} height=${d.size + 2 * u} preserveAspectRatio="none" crossorigin="anonymous"></image>`
+        ), m = at(r, [t.latitude, t.longitude], s, d);
+        n.push(f`<rect x=${s.x0} y=${s.y0} width=${s.x1 - s.x0} height=${s.y1 - s.y0} class="map-fill"></rect>`);
+        const u = e * 0.5, $ = (x) => x.map(
+          (h) => f`<image href=${h.url} x=${h.x - u} y=${h.y - u} width=${h.size + 2 * u} height=${h.size + 2 * u} preserveAspectRatio="none" crossorigin="anonymous"></image>`
         );
-        s.push(...b(m)), l?.overlay && t.map_provider !== "custom" && s.push(...b(at(l.overlay, [t.latitude, t.longitude], n, h)));
+        n.push(...$(m)), l?.overlay && t.map_provider !== "custom" && n.push(...$(at(l.overlay, [t.latitude, t.longitude], s, d)));
       }
     } else if (t.background === "image" && this.imageUrl && this.imageSize) {
       const r = this.imageMpp();
-      s.push(
+      n.push(
         f`<image href=${this.imageUrl} x="0" y="0" width=${this.imageSize[0] * r} height=${this.imageSize[1] * r} preserveAspectRatio="none"></image>`
       );
     }
-    const i = [f`<g class="bg" opacity=${t.background_opacity ?? 1}>${s}</g>`], a = (t.background_opacity ?? 1) < 0.35;
-    return (t.background !== "map" || a) && i.push(this.renderGrid(n, e, t.background === "image" && !a)), i;
+    const i = [f`<g class="bg" opacity=${t.background_opacity ?? 1}>${n}</g>`], a = (t.background_opacity ?? 1) < 0.35;
+    return (t.background !== "map" || a) && i.push(this.renderGrid(s, e, t.background === "image" && !a)), i;
   }
-  renderGrid(e, t, n) {
-    const s = Dt(40 * t), i = [], a = s * 5;
-    for (let r = Math.floor(e.x0 / s) * s; r <= e.x1; r += s) {
+  renderGrid(e, t, s) {
+    const n = Dt(40 * t), i = [], a = n * 5;
+    for (let r = Math.floor(e.x0 / n) * n; r <= e.x1; r += n) {
       const l = Math.abs(r / a - Math.round(r / a)) < 1e-6;
       i.push(f`<line x1=${r} y1=${e.y0} x2=${r} y2=${e.y1} class=${l ? "grid major" : "grid"}></line>`);
     }
-    for (let r = Math.floor(e.y0 / s) * s; r <= e.y1; r += s) {
+    for (let r = Math.floor(e.y0 / n) * n; r <= e.y1; r += n) {
       const l = Math.abs(r / a - Math.round(r / a)) < 1e-6;
       i.push(f`<line x1=${e.x0} y1=${r} x2=${e.x1} y2=${r} class=${l ? "grid major" : "grid"}></line>`);
     }
-    return f`<g class=${n ? "grid-layer faint" : "grid-layer"}>${i}</g>`;
+    return f`<g class=${s ? "grid-layer faint" : "grid-layer"}>${i}</g>`;
   }
   tileTemplate() {
     const e = this.plan.garden;
@@ -5216,20 +5319,20 @@ let x = class extends Q {
   zoneColor(e) {
     return ut[e % ut.length];
   }
-  renderZone(e, t, n) {
-    const s = this.zoneColor(t), i = this.status?.zones[e.id]?.state ?? "idle", a = this.selected?.kind === "zone" && this.selected.id === e.id, r = this.wetOn && e.enabled ? pt(e, this.plan.valves, this.status) : null, l = `zone ${i} ${a ? "selected" : ""} ${e.enabled ? "" : "disabled"} ${r ? "nowet" : ""}`;
-    let o, h = null;
-    if (e.type === "sprinkler" && e.center && e.radius_m ? (o = f`<path d=${nt(e.center, e.radius_m, e.start_angle_deg, e.arc_deg)}></path>`, h = e.arc_deg >= 360 ? e.center : N(e.center, e.radius_m * 0.55, e.start_angle_deg + e.arc_deg / 2)) : e.type === "hose" && e.polygon.length >= 2 && e.radius_m ? (o = this.hoseShape(e.id, e.polygon, e.radius_m, n), h = this.zoneAnchor(e)) : e.type === "drip" && e.polygon.length >= 3 && (o = f`<polygon points=${e.polygon.map((b) => b.join(",")).join(" ")}></polygon>`, h = ve(e.polygon)), !o) return p;
-    const m = se(e), u = this.soilOn ? Ee[e.soil_type ?? "loam"] : "";
+  renderZone(e, t, s) {
+    const n = this.zoneColor(t), i = this.status?.zones[e.id]?.state ?? "idle", a = this.selected?.kind === "zone" && this.selected.id === e.id, r = this.wetOn && e.enabled ? pt(e, this.plan.valves, this.status) : null, l = `zone ${i} ${a ? "selected" : ""} ${e.enabled ? "" : "disabled"} ${r ? "nowet" : ""}`;
+    let o, d = null;
+    if (e.type === "sprinkler" && e.center && e.radius_m ? (o = f`<path d=${nt(e.center, e.radius_m, e.start_angle_deg, e.arc_deg)}></path>`, d = e.arc_deg >= 360 ? e.center : Z(e.center, e.radius_m * 0.55, e.start_angle_deg + e.arc_deg / 2)) : e.type === "hose" && e.polygon.length >= 2 && e.radius_m ? (o = this.hoseShape(e.id, e.polygon, e.radius_m, s), d = this.zoneAnchor(e)) : e.type === "drip" && e.polygon.length >= 3 && (o = f`<polygon points=${e.polygon.map(($) => $.join(",")).join(" ")}></polygon>`, d = ye(e.polygon)), !o) return p;
+    const m = ie(e), u = this.soilOn ? Ee[e.soil_type ?? "loam"] : "";
     return f`
-      <g class=${l} style="--zone:${u || s}"
-        @pointerdown=${(b) => {
-      this.tool === "select" && (this.selected = { kind: "zone", id: e.id }, this.tab = "zones", this.startDrag(b, { type: "move-zone", id: e.id, start: this.toPlan(b), orig: structuredClone(e) }));
+      <g class=${l} style="--zone:${u || n}"
+        @pointerdown=${($) => {
+      this.tool === "select" && (this.selected = { kind: "zone", id: e.id }, this.tab = "zones", this.startDrag($, { type: "move-zone", id: e.id, start: this.toPlan($), orig: structuredClone(e) }));
     }}>
         ${o}
-        ${h ? f`<text x=${h[0]} y=${h[1]} font-size=${13 * n} stroke-width=${3 * n} class="label">
-              <tspan x=${h[0]} dy="0">${e.name}</tspan>
-              <tspan x=${h[0]} dy=${15 * n} class="sub">${r ? `kein Wert: ${r}` : `${T(m)}${De[i] ? ` · ${De[i]}` : ""}`}</tspan>
+        ${d ? f`<text x=${d[0]} y=${d[1]} font-size=${13 * s} stroke-width=${3 * s} class="label">
+              <tspan x=${d[0]} dy="0">${e.name}</tspan>
+              <tspan x=${d[0]} dy=${15 * s} class="sub">${r ? `kein Wert: ${r}` : `${T(m)}${De[i] ? ` · ${De[i]}` : ""}`}</tspan>
             </text>` : p}
       </g>`;
   }
@@ -5237,35 +5340,35 @@ let x = class extends Q {
    * Schlauch: kräftige Linie, darum die Reichweite als Umriss (gleicher
    * Abstand zur Linie, runde Enden) mit leichter Füllung.
    */
-  hoseShape(e, t, n, s, i = "") {
-    const a = t.map((o) => o.join(",")).join(" "), r = 2 * s, l = `hose-mask-${e}`;
+  hoseShape(e, t, s, n, i = "") {
+    const a = t.map((o) => o.join(",")).join(" "), r = 2 * n, l = `hose-mask-${e}`;
     return f`<g class="hose ${i}">
       <mask id=${l} maskUnits="userSpaceOnUse" x="-100000" y="-100000" width="200000" height="200000">
         <rect x="-100000" y="-100000" width="200000" height="200000" fill="white"></rect>
-        <polyline points=${a} fill="none" stroke="black" stroke-width=${2 * n}
+        <polyline points=${a} fill="none" stroke="black" stroke-width=${2 * s}
           stroke-linecap="round" stroke-linejoin="round"></polyline>
       </mask>
-      <polyline class="hose-band" points=${a} stroke-width=${2 * n} style="--band:${2 * n}"></polyline>
-      <polyline class="hose-reach" points=${a} stroke-width=${2 * n + 2 * r} mask="url(#${l})"></polyline>
+      <polyline class="hose-band" points=${a} stroke-width=${2 * s} style="--band:${2 * s}"></polyline>
+      <polyline class="hose-reach" points=${a} stroke-width=${2 * s + 2 * r} mask="url(#${l})"></polyline>
       <polyline class="hose-line" points=${a}></polyline>
-      ${t.map((o, h) => h === 0 || h === t.length - 1 ? f`<circle class="hose-end" cx=${o[0]} cy=${o[1]} r=${3.5 * s}></circle>` : p)}
+      ${t.map((o, d) => d === 0 || d === t.length - 1 ? f`<circle class="hose-end" cx=${o[0]} cy=${o[1]} r=${3.5 * n}></circle>` : p)}
     </g>`;
   }
   renderSelectedHandles(e) {
     if (this.tool !== "select" || this.selected?.kind !== "zone") return p;
-    const t = this.zone(this.selected.id), n = 7 * e, s = (a, r, l = "", o = "") => f`<circle class="handle ${l}" cx=${a[0]} cy=${a[1]} r=${n}
-        @pointerdown=${(h) => this.startDrag(h, r)}><title>${o}</title></circle>`;
+    const t = this.zone(this.selected.id), s = 7 * e, n = (a, r, l = "", o = "") => f`<circle class="handle ${l}" cx=${a[0]} cy=${a[1]} r=${s}
+        @pointerdown=${(d) => this.startDrag(d, r)}><title>${o}</title></circle>`;
     if (t.type === "sprinkler" && t.center && t.radius_m) {
       const a = t.center, r = t.arc_deg >= 360, l = r ? t.start_angle_deg + 135 : t.start_angle_deg + t.arc_deg / 2, o = [
-        f`<line class="guide" x1=${a[0]} y1=${a[1]} x2=${N(a, t.radius_m, t.start_angle_deg)[0]} y2=${N(a, t.radius_m, t.start_angle_deg)[1]}></line>`,
-        s(a, { type: "center", id: t.id }, "center", "Mittelpunkt verschieben"),
-        s(N(a, t.radius_m, l), { type: "radius", id: t.id }, "radius", "Reichweite ändern"),
-        s(N(a, t.radius_m, t.start_angle_deg), { type: "start", id: t.id }, "angle", "Anfang des Bogens")
+        f`<line class="guide" x1=${a[0]} y1=${a[1]} x2=${Z(a, t.radius_m, t.start_angle_deg)[0]} y2=${Z(a, t.radius_m, t.start_angle_deg)[1]}></line>`,
+        n(a, { type: "center", id: t.id }, "center", "Mittelpunkt verschieben"),
+        n(Z(a, t.radius_m, l), { type: "radius", id: t.id }, "radius", "Reichweite ändern"),
+        n(Z(a, t.radius_m, t.start_angle_deg), { type: "start", id: t.id }, "angle", "Anfang des Bogens")
       ];
       return r ? o.push(
-        s(N(a, t.radius_m * 0.8, t.start_angle_deg + 20), { type: "end", id: t.id }, "angle small", "Bogen öffnen")
+        n(Z(a, t.radius_m * 0.8, t.start_angle_deg + 20), { type: "end", id: t.id }, "angle small", "Bogen öffnen")
       ) : o.push(
-        s(N(a, t.radius_m, t.start_angle_deg + t.arc_deg), { type: "end", id: t.id }, "angle", "Ende des Bogens")
+        n(Z(a, t.radius_m, t.start_angle_deg + t.arc_deg), { type: "end", id: t.id }, "angle", "Ende des Bogens")
       ), o;
     }
     const i = t.type === "hose" ? 2 : 3;
@@ -5273,123 +5376,130 @@ let x = class extends Q {
       const a = t.polygon, r = t.type === "hose" ? a.slice(0, -1) : a;
       return [
         ...t.type === "hose" && t.radius_m ? (() => {
-          const o = rt(a, t.radius_m), h = rt(a, 0);
+          const o = rt(a, t.radius_m), d = rt(a, 0);
           return [
-            f`<line class="guide" x1=${h[0]} y1=${h[1]} x2=${o[0]} y2=${o[1]}></line>`,
-            s(o, { type: "hose-radius", id: t.id }, "radius", "Reichweite ändern")
+            f`<line class="guide" x1=${d[0]} y1=${d[1]} x2=${o[0]} y2=${o[1]}></line>`,
+            n(o, { type: "hose-radius", id: t.id }, "radius", "Reichweite ändern")
           ];
         })() : [],
-        ...r.map((o, h) => {
-          const m = a[(h + 1) % a.length], u = [(o[0] + m[0]) / 2, (o[1] + m[1]) / 2];
-          return f`<circle class="handle mid" cx=${u[0]} cy=${u[1]} r=${n * 0.7}
-            @pointerdown=${(b) => this.insertVertex(b, t, h)}><title>Ziehen: neuen Punkt einfügen</title></circle>`;
+        ...r.map((o, d) => {
+          const m = a[(d + 1) % a.length], u = [(o[0] + m[0]) / 2, (o[1] + m[1]) / 2];
+          return f`<circle class="handle mid" cx=${u[0]} cy=${u[1]} r=${s * 0.7}
+            @pointerdown=${($) => this.insertVertex($, t, d)}><title>Ziehen: neuen Punkt einfügen</title></circle>`;
         }),
         ...a.map(
-          (o, h) => f`<circle class="handle" cx=${o[0]} cy=${o[1]} r=${n}
-            @pointerdown=${(m) => this.startDrag(m, { type: "vertex", id: t.id, index: h })}
-            @contextmenu=${(m) => this.removeVertex(m, t, h)}
-            @dblclick=${(m) => this.removeVertex(m, t, h)}><title>Ziehen: verschieben · Doppelklick: löschen</title></circle>`
+          (o, d) => f`<circle class="handle" cx=${o[0]} cy=${o[1]} r=${s}
+            @pointerdown=${(m) => this.startDrag(m, { type: "vertex", id: t.id, index: d })}
+            @contextmenu=${(m) => this.removeVertex(m, t, d)}
+            @dblclick=${(m) => this.removeVertex(m, t, d)}><title>Ziehen: verschieben · Doppelklick: löschen</title></circle>`
         )
       ];
     }
     return p;
   }
   renderFeatures(e) {
-    return this.features.map((t) => {
-      const n = this.selected?.kind === "feature" && this.selected.id === t.id, s = q(t.kind), i = (o) => {
-        this.tool === "select" && (this.selected = { kind: "feature", id: t.id }, this.tab = "plan", this.startDrag(o, { type: "f-move", id: t.id, start: this.toPlan(o), orig: structuredClone(t) }));
-      }, a = `feature ${t.kind} ${n ? "selected" : ""} ${t.locked ? "locked" : ""}`;
-      if (s === "area") {
-        const o = ve(t.points), h = t.kind === "soil" ? Ee[t.soil_type ?? ""] ?? "#a9825a" : "";
-        return f`<polygon class=${a} points=${t.points.map((m) => m.join(",")).join(" ")}
-          style=${h ? `fill:${h}44;stroke:${h}` : ""}
-          @pointerdown=${i}><title>${W(t)}${t.kind === "soil" ? `: ${this.soilName(t.soil_type)}` : ""}</title></polygon>
-          ${t.label ? f`<text class="feature-name" x=${o[0]} y=${o[1]} dy=${4 * e} font-size=${12 * e}
-                stroke-width=${3 * e}>${t.label}</text>` : p}`;
+    const t = { area: 0, line: 1, point: 2 };
+    return [...this.features].sort((n, i) => t[j(n.kind)] - t[j(i.kind)]).map((n) => {
+      const i = this.selected?.kind === "feature" && this.selected.id === n.id, a = j(n.kind), r = (u) => {
+        this.tool === "select" && (this.selected = { kind: "feature", id: n.id }, this.tab = "plan", this.startDrag(u, { type: "f-move", id: n.id, start: this.toPlan(u), orig: structuredClone(n) }));
+      }, l = `feature ${n.kind} ${i ? "selected" : ""} ${n.locked ? "locked" : ""}`;
+      if (a === "area") {
+        const u = ye(n.points), $ = n.kind === "soil" ? Ee[n.soil_type ?? ""] ?? "#a9825a" : "";
+        return f`<polygon class=${l} points=${n.points.map((x) => x.join(",")).join(" ")}
+          style=${$ ? `fill:${$}44;stroke:${$}` : ""}
+          @pointerdown=${r}><title>${U(n)}${n.kind === "soil" ? `: ${this.soilName(n.soil_type)}` : ""}</title></polygon>
+          ${n.label ? f`<text class="feature-name" x=${u[0]} y=${u[1]} dy=${4 * e} font-size=${12 * e}
+                stroke-width=${3 * e}>${n.label}</text>` : p}`;
       }
-      if (s === "line") {
-        const o = t.kind === "boundary" && t.points.length >= 3 ? ve(t.points) : null;
-        return f`<g class=${a} @pointerdown=${i}>
-          <polyline class="hit" points=${t.points.map((h) => h.join(",")).join(" ")} stroke-width=${12 * e}></polyline>
-          <polyline points=${t.points.map((h) => h.join(",")).join(" ")}></polyline>
-          <title>${W(t)}${o ? `: ${T(Y(t.points))}` : ""}</title></g>
-          ${o && n ? f`<text class="feature-name plot" x=${o[0]} y=${o[1]} font-size=${13 * e} stroke-width=${3 * e}>
-                Grundstück ${T(Y(t.points))}</text>` : p}`;
+      if (a === "line") {
+        const u = n.kind === "boundary" && n.points.length >= 3 ? ye(n.points) : null;
+        return f`<g class=${l} @pointerdown=${r}>
+          <polyline class="hit" points=${n.points.map(($) => $.join(",")).join(" ")} stroke-width=${12 * e}></polyline>
+          <polyline points=${n.points.map(($) => $.join(",")).join(" ")}></polyline>
+          <title>${U(n)}${u ? `: ${T(X(n.points))}` : ""}</title></g>
+          ${u && i ? f`<text class="feature-name plot" x=${u[0]} y=${u[1]} font-size=${13 * e} stroke-width=${3 * e}>
+                Grundstück ${T(X(n.points))}</text>` : p}`;
       }
-      const [r, l] = t.points[0];
-      return t.kind === "tree" ? f`<g class=${a} @pointerdown=${i}>
-          <circle cx=${r} cy=${l} r=${t.radius_m ?? 1}></circle>
-          <circle class="trunk" cx=${r} cy=${l} r=${Math.max(3 * e, (t.trunk_m ?? 0) / 2)}></circle>
-          <title>${W(t)}</title></g>` : t.kind === "label" ? f`<text class=${a} x=${r} y=${l} font-size=${14 * e} stroke-width=${3 * e}
-          @pointerdown=${i}>${t.label}</text>` : f`<g class=${a} @pointerdown=${i}>
-        <circle cx=${r} cy=${l} r=${8 * e}></circle>
-        <text x=${r} y=${l} dy=${4 * e} font-size=${11 * e}>H</text>
-        <title>${W(t)}</title></g>`;
+      const [o, d] = n.points[0];
+      if (n.kind === "tree")
+        return f`<g class=${l} @pointerdown=${r}>
+          <circle cx=${o} cy=${d} r=${n.radius_m ?? 1}></circle>
+          <circle class="trunk" cx=${o} cy=${d} r=${Math.max(3 * e, (n.trunk_m ?? 0) / 2)}></circle>
+          <title>${U(n)}</title></g>`;
+      if (n.kind === "label")
+        return f`<text class=${l} x=${o} y=${d} font-size=${14 * e} stroke-width=${3 * e}
+          @pointerdown=${r}>${n.label}</text>`;
+      const m = this.waterFlowing();
+      return f`<g class="${l} ${m ? "open" : ""}" @pointerdown=${r}>
+        <circle cx=${o} cy=${d} r=${8 * e}></circle>
+        <text x=${o} y=${d} dy=${4 * e} font-size=${11 * e}>H</text>
+        ${m ? f`<path class="drip" d=${`M${o} ${d + 10 * e} q${-3 * e} ${4 * e} 0 ${6 * e} q${3 * e} ${-2 * e} 0 ${-6 * e} Z`}></path>` : p}
+        <title>${U(n)}: ${m ? "Wasser fließt" : "zu"}</title></g>`;
     });
   }
   renderFeatureHandles(e) {
     if (this.tool !== "select" || this.selected?.kind !== "feature") return p;
     const t = this.feature(this.selected.id);
     if (!t || t.locked) return p;
-    const n = 7 * e, s = q(t.kind);
-    if (s === "point") {
+    const s = 7 * e, n = j(t.kind);
+    if (n === "point") {
       if (t.kind !== "tree") return p;
-      const [l, o] = t.points[0], h = N(t.points[0], t.radius_m ?? 1, 135);
+      const [l, o] = t.points[0], d = Z(t.points[0], t.radius_m ?? 1, 135);
       return f`
-        <circle class="handle center" cx=${l} cy=${o} r=${n}
+        <circle class="handle center" cx=${l} cy=${o} r=${s}
           @pointerdown=${(m) => this.startDrag(m, { type: "f-move", id: t.id, start: this.toPlan(m), orig: structuredClone(t) })}></circle>
-        <circle class="handle" cx=${h[0]} cy=${h[1]} r=${n}
+        <circle class="handle" cx=${d[0]} cy=${d[1]} r=${s}
           @pointerdown=${(m) => this.startDrag(m, { type: "f-radius", id: t.id })}><title>Kronengröße</title></circle>`;
     }
     const i = t.points;
     return [
-      ...(s === "area" ? i : i.slice(0, -1)).map((l, o) => {
-        const h = i[(o + 1) % i.length], m = [(l[0] + h[0]) / 2, (l[1] + h[1]) / 2];
-        return f`<circle class="handle mid" cx=${m[0]} cy=${m[1]} r=${n * 0.7}
+      ...(n === "area" ? i : i.slice(0, -1)).map((l, o) => {
+        const d = i[(o + 1) % i.length], m = [(l[0] + d[0]) / 2, (l[1] + d[1]) / 2];
+        return f`<circle class="handle mid" cx=${m[0]} cy=${m[1]} r=${s * 0.7}
         @pointerdown=${(u) => this.insertFeatureVertex(u, t, o)}><title>Ziehen: neuen Punkt einfügen</title></circle>`;
       }),
       ...i.map(
-        (l, o) => f`<circle class="handle" cx=${l[0]} cy=${l[1]} r=${n}
-          @pointerdown=${(h) => this.startDrag(h, { type: "f-vertex", id: t.id, index: o })}
-          @contextmenu=${(h) => this.removeFeatureVertex(h, t, o)}
-          @dblclick=${(h) => this.removeFeatureVertex(h, t, o)}><title>Ziehen: verschieben · Doppelklick: löschen</title></circle>`
+        (l, o) => f`<circle class="handle" cx=${l[0]} cy=${l[1]} r=${s}
+          @pointerdown=${(d) => this.startDrag(d, { type: "f-vertex", id: t.id, index: o })}
+          @contextmenu=${(d) => this.removeFeatureVertex(d, t, o)}
+          @dblclick=${(d) => this.removeFeatureVertex(d, t, o)}><title>Ziehen: verschieben · Doppelklick: löschen</title></circle>`
       )
     ];
   }
-  insertFeatureVertex(e, t, n) {
+  insertFeatureVertex(e, t, s) {
     if (this.tool !== "select") return;
     e.stopPropagation(), this.remember();
-    const s = t.points[n], i = t.points[(n + 1) % t.points.length];
-    t.points.splice(n + 1, 0, [y((s[0] + i[0]) / 2), y((s[1] + i[1]) / 2)]), this.changed(), this.renderRoot.querySelector("svg.plan").setPointerCapture(e.pointerId), this.drag = { type: "f-vertex", id: t.id, index: n + 1 };
+    const n = t.points[s], i = t.points[(s + 1) % t.points.length];
+    t.points.splice(s + 1, 0, [y((n[0] + i[0]) / 2), y((n[1] + i[1]) / 2)]), this.changed(), this.renderRoot.querySelector("svg.plan").setPointerCapture(e.pointerId), this.drag = { type: "f-vertex", id: t.id, index: s + 1 };
   }
-  removeFeatureVertex(e, t, n) {
+  removeFeatureVertex(e, t, s) {
     e.preventDefault(), e.stopPropagation();
-    const s = q(t.kind) === "area" ? 3 : 2;
-    if (t.points.length <= s) {
-      this.showToast(`${U[t.kind].label}: mindestens ${s} Punkte`, !0);
+    const n = j(t.kind) === "area" ? 3 : 2;
+    if (t.points.length <= n) {
+      this.showToast(`${V[t.kind].label}: mindestens ${n} Punkte`, !0);
       return;
     }
-    this.remember(), t.points.splice(n, 1), this.changed();
+    this.remember(), t.points.splice(s, 1), this.changed();
   }
   /** Messwerkzeug: Strecken mit Längen und Summe. */
   renderMeasure(e) {
     if (this.tool !== "measure" || !this.measurePts.length) return p;
-    const t = this.hover ? [...this.measurePts, this.hover] : this.measurePts, n = t.slice(1).map((s, i) => {
+    const t = this.hover ? [...this.measurePts, this.hover] : this.measurePts, s = t.slice(1).map((n, i) => {
       const a = t[i];
-      if (P(a, s) < 0.01) return p;
-      const r = [(a[0] + s[0]) / 2, (a[1] + s[1]) / 2];
+      if (M(a, n) < 0.01) return p;
+      const r = [(a[0] + n[0]) / 2, (a[1] + n[1]) / 2];
       return f`<text class="measure-label" x=${r[0]} y=${r[1]} dy=${-6 * e} font-size=${13 * e}
-        stroke-width=${3 * e}>${J(P(a, s))}</text>`;
+        stroke-width=${3 * e}>${J(M(a, n))}</text>`;
     });
     return f`<g class="measure">
-      <polyline points=${t.map((s) => s.join(",")).join(" ")}></polyline>
-      ${this.measurePts.map((s) => f`<circle cx=${s[0]} cy=${s[1]} r=${4 * e}></circle>`)}
-      ${n}
+      <polyline points=${t.map((n) => n.join(",")).join(" ")}></polyline>
+      ${this.measurePts.map((n) => f`<circle cx=${n[0]} cy=${n[1]} r=${4 * e}></circle>`)}
+      ${s}
     </g>`;
   }
   /** Mittelpunkt einer gezeichneten Zone (für Beschriftung und Verbindungslinie). */
   zoneAnchor(e) {
-    return e.type === "sprinkler" ? e.center && e.radius_m ? e.center : null : e.type === "hose" ? e.polygon.length >= 2 ? cn(e.polygon, 0.5) : null : e.polygon.length >= 3 ? ve(e.polygon) : null;
+    return e.type === "sprinkler" ? e.center && e.radius_m ? e.center : null : e.type === "hose" ? e.polygon.length >= 2 ? cn(e.polygon, 0.5) : null : e.polygon.length >= 3 ? ye(e.polygon) : null;
   }
   /** Gestrichelte Linie von jeder Zone zu ihrem Ventil (wenn beide im Plan sind). */
   /**
@@ -5399,16 +5509,16 @@ let x = class extends Q {
   renderFlow(e) {
     const t = this.plan.zones.filter((i) => this.status?.zones[i.id]?.state === "running");
     if (!t.length) return p;
-    const n = this.features.filter((i) => i.kind === "tap").map((i) => i.points[0]), s = this.pipeLines();
+    const s = this.features.filter((i) => i.kind === "tap").map((i) => i.points[0]), n = this.pipeLines();
     return f`<g class="flow">
       ${t.map((i) => {
-      const a = this.plan.valves.find((o) => o.id === i.valve_id), r = a?.position && n.length ? pn(s, n, a.position) : [], l = i.type === "sprinkler" && i.center && i.radius_m ? [0, 1].map(
+      const a = this.plan.valves.find((o) => o.id === i.valve_id), r = a?.position && s.length ? pn(n, s, a.position) : [], l = i.type === "sprinkler" && i.center && i.radius_m ? [0, 1].map(
         (o) => f`<path class="spray" style=${`transform-origin:${i.center[0]}px ${i.center[1]}px;animation-delay:${o * 0.8}s`}
                   d=${nt(i.center, i.radius_m, i.start_angle_deg, i.arc_deg)}></path>`
       ) : p;
       return f`
-          ${r.map(([o, h]) => f`<line class="pipe-active" x1=${o[0]} y1=${o[1]} x2=${h[0]} y2=${h[1]}></line>`)}
-          ${r.map(([o, h]) => f`<line class="water" x1=${o[0]} y1=${o[1]} x2=${h[0]} y2=${h[1]}
+          ${r.map(([o, d]) => f`<line class="pipe-active" x1=${o[0]} y1=${o[1]} x2=${d[0]} y2=${d[1]}></line>`)}
+          ${r.map(([o, d]) => f`<line class="water" x1=${o[0]} y1=${o[1]} x2=${d[0]} y2=${d[1]}
             stroke-dasharray=${`${3 * e} ${7 * e}`} style=${`--period:${10 * e}px`}></line>`)}
           ${a?.position ? f`<circle class="valve-open" cx=${a.position[0]} cy=${a.position[1]} r=${11 * e}></circle>` : p}
           ${l}`;
@@ -5421,25 +5531,25 @@ let x = class extends Q {
    * Mitte eines Stücks), verschieben und löschen (Doppelklick).
    */
   renderValveLinks(e) {
-    return this.plan.zones.map((t, n) => {
-      const s = this.plan.valves.find((d) => d.id === t.valve_id), i = this.zoneAnchor(t);
-      if (!s?.position || !i) return p;
-      const r = this.selected?.kind === "zone" && this.selected.id === t.id || this.selected?.kind === "valve" && this.selected.id === s.id, l = r && this.tool === "select", o = t.valve_route ?? [], h = [s.position, ...o, i], m = this.status?.zones[t.id]?.state === "running", u = f`<path class="valve-link ${r ? "selected" : ""} ${m ? "flowing" : ""}" style="--zone:${this.zoneColor(n)};--period:${10 * e}px"
-        d=${ot(h, Math.max(0.4, 16 * e))} stroke-dasharray=${`${6 * e} ${4 * e}`}></path>`;
+    return this.plan.zones.map((t, s) => {
+      const n = this.plan.valves.find((h) => h.id === t.valve_id), i = this.zoneAnchor(t);
+      if (!n?.position || !i) return p;
+      const r = this.selected?.kind === "zone" && this.selected.id === t.id || this.selected?.kind === "valve" && this.selected.id === n.id, l = r && this.tool === "select", o = t.valve_route ?? [], d = [n.position, ...o, i], m = this.status?.zones[t.id]?.state === "running", u = f`<path class="valve-link ${r ? "selected" : ""} ${m ? "flowing" : ""}" style="--zone:${this.zoneColor(s)};--period:${10 * e}px"
+        d=${ot(d, Math.max(0.4, 16 * e))} stroke-dasharray=${`${6 * e} ${4 * e}`}></path>`;
       if (!l) return u;
-      const b = 7 * e, w = ot(h, Math.max(0.4, 16 * e));
+      const $ = 7 * e, x = ot(d, Math.max(0.4, 16 * e));
       return f`${u}
-        <path class="link-hit" d=${w} stroke-width=${14 * e}
-          @pointerdown=${(d) => this.grabLink(d, t, h)}>
+        <path class="link-hit" d=${x} stroke-width=${14 * e}
+          @pointerdown=${(h) => this.grabLink(h, t, d)}>
           <title>Linie ziehen: Knick einfügen</title></path>
-        ${h.slice(0, -1).map((d, g) => {
-        const v = h[g + 1], S = [(d[0] + v[0]) / 2, (d[1] + v[1]) / 2];
-        return f`<circle class="handle mid link" cx=${S[0]} cy=${S[1]} r=${b * 0.7}
-            @pointerdown=${(M) => this.insertRoutePoint(M, t, g, S)}>
+        ${d.slice(0, -1).map((h, g) => {
+        const v = d[g + 1], S = [(h[0] + v[0]) / 2, (h[1] + v[1]) / 2];
+        return f`<circle class="handle mid link" cx=${S[0]} cy=${S[1]} r=${$ * 0.7}
+            @pointerdown=${(P) => this.insertRoutePoint(P, t, g, S)}>
             <title>Ziehen: Knick in der Leitung einfügen</title></circle>`;
       })}
         ${o.map(
-        (d, g) => f`<circle class="handle link" cx=${d[0]} cy=${d[1]} r=${b}
+        (h, g) => f`<circle class="handle link" cx=${h[0]} cy=${h[1]} r=${$}
             @pointerdown=${(v) => this.startDrag(v, { type: "route", id: t.id, index: g })}
             @dblclick=${(v) => this.removeRoutePoint(v, t, g)}
             @contextmenu=${(v) => this.removeRoutePoint(v, t, g)}>
@@ -5448,78 +5558,97 @@ let x = class extends Q {
     });
   }
   /** Leitung irgendwo anfassen: dort entsteht ein Knick, der gleich mitgezogen wird. */
-  grabLink(e, t, n) {
+  grabLink(e, t, s) {
     if (this.tool !== "select" || e.button !== 0) return;
-    const s = this.toPlan(e);
+    const n = this.toPlan(e);
     let i = 0, a = Number.POSITIVE_INFINITY;
-    for (let r = 0; r < n.length - 1; r++) {
-      const l = Et(s, n[r], n[r + 1]);
+    for (let r = 0; r < s.length - 1; r++) {
+      const l = Et(n, s[r], s[r + 1]);
       l < a && (a = l, i = r);
     }
-    this.selected = { kind: "zone", id: t.id }, this.insertRoutePoint(e, t, i, s);
+    this.selected = { kind: "zone", id: t.id }, this.insertRoutePoint(e, t, i, n);
   }
-  insertRoutePoint(e, t, n, s) {
+  insertRoutePoint(e, t, s, n) {
     if (this.tool !== "select") return;
     e.stopPropagation(), this.remember();
     const i = [...t.valve_route ?? []];
-    i.splice(n, 0, [y(s[0]), y(s[1])]), t.valve_route = i, this.changed(), this.renderRoot.querySelector("svg.plan").setPointerCapture(e.pointerId), this.drag = { type: "route", id: t.id, index: n };
+    i.splice(s, 0, [y(n[0]), y(n[1])]), t.valve_route = i, this.changed(), this.renderRoot.querySelector("svg.plan").setPointerCapture(e.pointerId), this.drag = { type: "route", id: t.id, index: s };
   }
-  removeRoutePoint(e, t, n) {
-    e.preventDefault(), e.stopPropagation(), this.remember(), t.valve_route = (t.valve_route ?? []).filter((s, i) => i !== n), this.changed();
+  removeRoutePoint(e, t, s) {
+    e.preventDefault(), e.stopPropagation(), this.remember(), t.valve_route = (t.valve_route ?? []).filter((n, i) => i !== s), this.changed();
   }
   renderSnapHint(e) {
     return this.snapHint ? f`<circle class="snap-hint" cx=${this.snapHint[0]} cy=${this.snapHint[1]} r=${9 * e}></circle>` : p;
   }
   renderDraft(e) {
     if (this.tool === "feature" && this.draft.length) {
-      const s = this.hover ? [...this.draft, this.hover] : this.draft, i = q(this.featureKind) === "area";
+      const n = this.hover ? [...this.draft, this.hover] : this.draft, i = j(this.featureKind) === "area";
       return f`
         <g class="draft feature-draft ${this.featureKind}">
-          <polyline points=${[...s, ...i && s.length > 2 ? [s[0]] : []].map((a) => a.join(",")).join(" ")}></polyline>
+          <polyline points=${[...n, ...i && n.length > 2 ? [n[0]] : []].map((a) => a.join(",")).join(" ")}></polyline>
           ${this.draft.map((a, r) => f`<circle cx=${a[0]} cy=${a[1]} r=${(r === 0 ? 7 : 5) * e}></circle>`)}
         </g>`;
     }
     if (this.tool === "hose" && this.draft.length) {
-      const s = this.hover ? [...this.draft, this.hover] : this.draft;
+      const n = this.hover ? [...this.draft, this.hover] : this.draft;
       return f`<g class="draft">
-        ${s.length >= 2 ? f`<g class="zone" style="--zone:#1e88e5">${this.hoseShape("draft", s, this.hoseRadius, e)}</g>` : p}
-        <polyline points=${s.map((i) => i.join(",")).join(" ")} style="fill:none"></polyline>
+        ${n.length >= 2 ? f`<g class="zone" style="--zone:#1e88e5">${this.hoseShape("draft", n, this.hoseRadius, e)}</g>` : p}
+        <polyline points=${n.map((i) => i.join(",")).join(" ")} style="fill:none"></polyline>
         ${this.draft.map((i) => f`<circle cx=${i[0]} cy=${i[1]} r=${5 * e}></circle>`)}
       </g>`;
     }
     if (this.tool !== "bed" || !this.draft.length) return p;
-    const t = this.hover ? [...this.draft, this.hover] : this.draft, n = this.plan.zones.findIndex((s) => s.id === this.toolTarget);
+    const t = this.hover ? [...this.draft, this.hover] : this.draft, s = this.plan.zones.findIndex((n) => n.id === this.toolTarget);
     return f`
-      <g class="draft" style="--zone:${this.zoneColor(n)}">
-        <polyline points=${t.map((s) => s.join(",")).join(" ")}></polyline>
+      <g class="draft" style="--zone:${this.zoneColor(s)}">
+        <polyline points=${t.map((n) => n.join(",")).join(" ")}></polyline>
         ${this.draft.map(
-      (s, i) => f`<circle cx=${s[0]} cy=${s[1]} r=${(i === 0 ? 8 : 5) * e} class=${i === 0 ? "first" : ""}></circle>`
+      (n, i) => f`<circle cx=${n[0]} cy=${n[1]} r=${(i === 0 ? 8 : 5) * e} class=${i === 0 ? "first" : ""}></circle>`
     )}
       </g>`;
   }
   renderScaleDraft(e) {
     if (this.tool !== "scale") return p;
-    const t = this.imageMpp(), n = this.scaleDraft.map((s) => [s[0] * t, s[1] * t]);
+    const t = this.imageMpp(), s = this.scaleDraft.map((n) => [n[0] * t, n[1] * t]);
     return f`<g class="scale-draft">
-      ${n.length === 2 ? f`<line x1=${n[0][0]} y1=${n[0][1]} x2=${n[1][0]} y2=${n[1][1]}></line>` : p}
-      ${n.map((s) => f`<circle cx=${s[0]} cy=${s[1]} r=${6 * e}></circle>`)}
+      ${s.length === 2 ? f`<line x1=${s[0][0]} y1=${s[0][1]} x2=${s[1][0]} y2=${s[1][1]}></line>` : p}
+      ${s.map((n) => f`<circle cx=${n[0]} cy=${n[1]} r=${6 * e}></circle>`)}
     </g>`;
   }
-  renderMarker(e, t, n) {
+  renderMarker(e, t, s) {
     if (!t.position) return p;
-    const [s, i] = t.position, a = this.selected?.kind === e && this.selected.id === t.id, r = e === "valve" ? "V" : mt[t.kind] ?? "S", l = 11 * n;
+    const [n, i] = t.position, a = this.selected?.kind === e && this.selected.id === t.id, r = mt[t.kind] ?? "S", l = 11 * s, o = e === "valve" && this.valveOpen(t.id);
+    if (e === "valve") {
+      const d = 6 * s;
+      return f`
+        <g class="marker valve ${a ? "selected" : ""} ${o ? "open" : ""}"
+          @pointerdown=${(m) => {
+        this.tool === "select" && (this.selected = { kind: e, id: t.id }, this.tab = "zones", this.startDrag(m, { type: "marker", kind: e, id: t.id }));
+      }}>
+          <rect x=${n - l} y=${i - l} width=${2 * l} height=${2 * l} rx=${4 * s}></rect>
+          <path class="bowtie" d=${`M${n - d} ${i - d * 0.7} L${n + d} ${i + d * 0.7} L${n + d} ${i - d * 0.7} L${n - d} ${i + d * 0.7} Z`}></path>
+          ${o ? f`<line class="handle-bar" x1=${n - d} y1=${i - d * 1.25} x2=${n + d} y2=${i - d * 1.25}></line>` : f`<line class="handle-bar" x1=${n} y1=${i} x2=${n} y2=${i - d * 1.45}></line>`}
+          <title>${t.name}: ${o ? "offen" : "zu"}</title>
+        </g>`;
+    }
     return f`
       <g class="marker ${e} ${a ? "selected" : ""}"
-        @pointerdown=${(o) => {
-      this.tool === "select" && (this.selected = { kind: e, id: t.id }, this.tab = "zones", this.startDrag(o, { type: "marker", kind: e, id: t.id }));
+        @pointerdown=${(d) => {
+      this.tool === "select" && (this.selected = { kind: e, id: t.id }, this.tab = "zones", this.startDrag(d, { type: "marker", kind: e, id: t.id }));
     }}>
-        ${e === "valve" ? f`<rect x=${s - l} y=${i - l} width=${2 * l} height=${2 * l} rx=${4 * n}></rect>` : f`<circle cx=${s} cy=${i} r=${l}></circle>`}
-        <text x=${s} y=${i} font-size=${12 * n} dy=${4.2 * n}>${r}</text>
+        <circle cx=${n} cy=${i} r=${l}></circle>
+        <text x=${n} y=${i} font-size=${12 * s} dy=${4.2 * s}>${r}</text>
         <title>${t.name}</title>
       </g>`;
   }
+  valveOpen(e) {
+    return this.plan.zones.some((t) => t.valve_id === e && this.status?.zones[t.id]?.state === "running");
+  }
+  waterFlowing() {
+    return Object.values(this.status?.zones ?? {}).some((e) => e.state === "running");
+  }
   renderOverlay() {
-    const e = this.plan.garden, t = this.toolBanner(), n = Vn(this.view.scale), s = e.background === "map" ? this.plan.providers[e.map_provider ?? ""] : void 0;
+    const e = this.plan.garden, t = this.toolBanner(), s = Vn(this.view.scale), n = e.background === "map" ? this.plan.providers[e.map_provider ?? ""] : void 0;
     return c`
       <div class="tools">
         <button class="icon" title="Vergrößern" @click=${() => this.zoomBy(1.4)}><ha-icon icon="mdi:plus"></ha-icon></button>
@@ -5555,10 +5684,10 @@ let x = class extends Q {
         <svg viewBox="-12 -12 24 24"><path d="M0 -10 L4 2 L0 0 L-4 2 Z" class="n"></path><path d="M0 10 L4 2 L0 0 L-4 2 Z" class="s"></path></svg>
         <span>N</span>
       </div>
-      <div class="scalebar"><div style="width:${n.px}px"></div><span>${n.label}</span></div>
+      <div class="scalebar"><div style="width:${s.px}px"></div><span>${s.label}</span></div>
       ${this.wetOn ? this.renderWetLegend() : p}
       ${this.soilOn && !this.wetOn ? this.renderSoilLegend() : p}
-      ${e.background === "map" ? c`<div class="attribution">${s?.attribution ?? "Eigener Kartendienst"}</div>` : p}
+      ${e.background === "map" ? c`<div class="attribution">${n?.attribution ?? "Eigener Kartendienst"}</div>` : p}
       ${!this.hasAnyDrawing() && this.tool === "select" ? c`<div class="welcome">
             <ha-icon icon="mdi:draw"></ha-icon>
             <div>
@@ -5569,25 +5698,25 @@ let x = class extends Q {
     `;
   }
   hasAnyDrawing() {
-    return this.features.length > 0 || this.plan.zones.some((e) => se(e) !== null);
+    return this.features.length > 0 || this.plan.zones.some((e) => ie(e) !== null);
   }
   toolBanner() {
     if (this.tool === "select") return p;
     let e = "", t = p;
-    const n = this.toolTarget ? this.zoneOrMarkerName(this.toolTarget) : "";
-    if (this.tool === "sprinkler" && (e = `${n}: Am Sprinkler drücken und bis zum Rand ziehen.`), this.tool === "hose" && (e = `${n}: Den Verlauf des Schlauchs als Linie anklicken, Doppelklick beendet.`, t = c`<label class="inline">Reichweite
+    const s = this.toolTarget ? this.zoneOrMarkerName(this.toolTarget) : "";
+    if (this.tool === "sprinkler" && (e = `${s}: Am Sprinkler drücken und bis zum Rand ziehen.`), this.tool === "hose" && (e = `${s}: Den Verlauf des Schlauchs als Linie anklicken, Doppelklick beendet.`, t = c`<label class="inline">Reichweite
           <input type="number" min="0.05" max="20" step="0.05" .value=${String(this.hoseRadius)}
-            @input=${(s) => {
-      const i = Number(s.target.value);
+            @input=${(n) => {
+      const i = Number(n.target.value);
       i > 0 && (this.hoseRadius = Math.min(20, i));
     }} /> m</label>
-        <button class="text" ?disabled=${this.draft.length < 2} @click=${this.finishHose}>Fertig</button>`), this.tool === "bed" && (e = `${n}: Ecken anklicken, zum Schließen den ersten Punkt.`, t = c`<button class="text" ?disabled=${this.draft.length < 3} @click=${this.finishBed}>Fertig</button>`), this.tool === "place") {
-      const s = this.plan.garden.background === "map";
-      e = `${n}: Auf die Stelle im Plan klicken${s ? " oder an deinen Standort setzen" : ""}.`, s && (t = c`<button class="text" ?disabled=${this.locating} @click=${this.placeAtMe}><ha-icon icon="mdi:crosshairs-gps"></ha-icon>Mein Standort</button>`);
+        <button class="text" ?disabled=${this.draft.length < 2} @click=${this.finishHose}>Fertig</button>`), this.tool === "bed" && (e = `${s}: Ecken anklicken, zum Schließen den ersten Punkt.`, t = c`<button class="text" ?disabled=${this.draft.length < 3} @click=${this.finishBed}>Fertig</button>`), this.tool === "place") {
+      const n = this.plan.garden.background === "map";
+      e = `${s}: Auf die Stelle im Plan klicken${n ? " oder an deinen Standort setzen" : ""}.`, n && (t = c`<button class="text" ?disabled=${this.locating} @click=${this.placeAtMe}><ha-icon icon="mdi:crosshairs-gps"></ha-icon>Mein Standort</button>`);
     }
     if (this.tool === "feature") {
-      const s = U[this.featureKind], i = s.family;
-      e = i === "area" ? `${s.label}: Ecken anklicken, zum Schließen den ersten Punkt.` : i === "line" ? `${s.label}: Punkte anklicken, Doppelklick beendet.` : this.featureKind === "tree" ? `${s.label}: In die Mitte drücken und bis zum Kronenrand ziehen.` : `${s.label}: Auf die Stelle klicken.`, i !== "point" && (t = c`<button
+      const n = V[this.featureKind], i = n.family;
+      e = i === "area" ? `${n.label}: Ecken anklicken, zum Schließen den ersten Punkt.` : i === "line" ? `${n.label}: Punkte anklicken, Doppelklick beendet.` : this.featureKind === "tree" ? `${n.label}: In die Mitte drücken und bis zum Kronenrand ziehen.` : `${n.label}: Auf die Stelle klicken.`, i !== "point" && (t = c`<button
           class="text"
           ?disabled=${this.draft.length < (i === "area" ? 3 : 2)}
           @click=${this.finishFeature}
@@ -5596,8 +5725,8 @@ let x = class extends Q {
         </button>`);
     }
     if (this.tool === "measure") {
-      const s = ae(this.measurePts);
-      e = this.measurePts.length < 2 ? "Messen: Punkte anklicken. Alt-Taste: ohne Einrasten." : `Gemessen: ${J(s)}${this.measurePts.length > 2 ? " (Summe)" : ""}`, this.measurePts.length && (t = c`<button class="text" @click=${() => this.measurePts = []}>Neu</button>`);
+      const n = re(this.measurePts);
+      e = this.measurePts.length < 2 ? "Messen: Punkte anklicken. Alt-Taste: ohne Einrasten." : `Gemessen: ${J(n)}${this.measurePts.length > 2 ? " (Summe)" : ""}`, this.measurePts.length && (t = c`<button class="text" @click=${() => this.measurePts = []}>Neu</button>`);
     }
     return this.tool === "scale" && (e = this.scaleDraft.length < 2 ? "Maßstab: Zwei Punkte im Bild anklicken, deren Abstand du kennst (z. B. die Ecken der Terrasse)." : "Abstand eingeben:", this.scaleDraft.length === 2 && (t = c`<input
             class="small"
@@ -5605,8 +5734,8 @@ let x = class extends Q {
             inputmode="decimal"
             placeholder="Meter"
             .value=${this.scaleInput}
-            @input=${(s) => this.scaleInput = s.target.value}
-            @keydown=${(s) => s.key === "Enter" && this.applyScale()}
+            @input=${(n) => this.scaleInput = n.target.value}
+            @keydown=${(n) => n.key === "Enter" && this.applyScale()}
           /><span>m</span>
           <button class="text" @click=${this.applyScale}>Übernehmen</button>`)), c`<div class="banner">
       <span>${e}</span>${t}
@@ -5615,8 +5744,8 @@ let x = class extends Q {
   }
   zoneOrMarkerName(e) {
     if (e.includes(":")) {
-      const [t, n] = e.split(":");
-      return this.marker(t, n)?.name ?? "";
+      const [t, s] = e.split(":");
+      return this.marker(t, s)?.name ?? "";
     }
     return this.zone(e)?.name ?? "";
   }
@@ -5631,12 +5760,12 @@ let x = class extends Q {
     const t = this.selected;
     return c`
       <ul class="list">
-        ${e.zones.map((n, s) => this.renderZoneItem(n, s, t?.kind === "zone" && t.id === n.id))}
+        ${e.zones.map((s, n) => this.renderZoneItem(s, n, t?.kind === "zone" && t.id === s.id))}
       </ul>
       ${e.valves.length || e.sensors.length ? c`<h3>Ventile und Sensoren</h3>
             <ul class="list compact">
-              ${e.valves.map((n) => this.renderMarkerItem("valve", n))}
-              ${e.sensors.map((n) => this.renderMarkerItem("sensor", n))}
+              ${e.valves.map((s) => this.renderMarkerItem("valve", s))}
+              ${e.sensors.map((s) => this.renderMarkerItem("sensor", s))}
             </ul>` : p}
       <p class="hint small">
         Ziehen verschiebt die Ansicht, das Mausrad zoomt. Gezeichnete Flächen ersetzen die Fläche
@@ -5645,30 +5774,30 @@ let x = class extends Q {
       </p>
     `;
   }
-  renderZoneItem(e, t, n) {
-    const s = this.status?.zones[e.id], i = se(e), a = i !== null, r = e.type === "sprinkler";
+  renderZoneItem(e, t, s) {
+    const n = this.status?.zones[e.id], i = ie(e), a = i !== null, r = e.type === "sprinkler";
     return c`
-      <li class="item ${n ? "open" : ""}" style="--zone:${this.zoneColor(t)}">
+      <li class="item ${s ? "open" : ""}" style="--zone:${this.zoneColor(t)}">
         <div class="row" @click=${() => {
-      this.selected = n ? null : { kind: "zone", id: e.id };
+      this.selected = s ? null : { kind: "zone", id: e.id };
     }}>
           <span class="dot"></span>
           <ha-icon icon=${r ? "mdi:sprinkler-variant" : e.type === "hose" ? "mdi:pipe" : "mdi:water-outline"}></ha-icon>
           <span class="name">${e.name}</span>
-          ${s && s.state !== "idle" ? c`<span class="badge ${s.state}">${De[s.state]}</span>` : p}
+          ${n && n.state !== "idle" ? c`<span class="badge ${n.state}">${De[n.state]}</span>` : p}
           <span class="meta">${a ? T(i) : c`<em>nicht gezeichnet</em>`}</span>
         </div>
-        ${n ? this.renderInspector(e, s) : p}
+        ${s ? this.renderInspector(e, n) : p}
       </li>
     `;
   }
   renderInspector(e, t) {
-    const n = e.type === "sprinkler", s = se(e), i = s !== null, a = n ? "sprinkler" : e.type === "hose" ? "hose" : "bed", r = (o, h, m, u, b = 0.1) => c`<label class="field">
+    const s = e.type === "sprinkler", n = ie(e), i = n !== null, a = s ? "sprinkler" : e.type === "hose" ? "hose" : "bed", r = (o, d, m, u, $ = 0.1) => c`<label class="field">
         <span>${o}</span>
-        <input type="number" step=${b} .value=${h == null ? "" : String(h)}
-          @change=${(w) => {
-      const d = parseFloat(w.target.value);
-      Number.isFinite(d) && (this.remember(), u(d), this.changed());
+        <input type="number" step=${$} .value=${d == null ? "" : String(d)}
+          @change=${(x) => {
+      const h = parseFloat(x.target.value);
+      Number.isFinite(h) && (this.remember(), u(h), this.changed());
     }} />
         <span class="unit">${m}</span>
       </label>`;
@@ -5682,9 +5811,9 @@ let x = class extends Q {
       ["drip", "Beet / Tropfschlauch", "mdi:water-outline"],
       ["hose", "Gießschlauch", "mdi:pipe"]
     ].map(
-      ([o, h, m]) => c`<button role="radio" aria-checked=${e.type === o ? "true" : "false"}
+      ([o, d, m]) => c`<button role="radio" aria-checked=${e.type === o ? "true" : "false"}
                 class=${e.type === o ? "active" : ""} @click=${() => this.setZoneType(e, o)}>
-                <ha-icon icon=${m}></ha-icon>${h}</button>`
+                <ha-icon icon=${m}></ha-icon>${d}</button>`
     )}
           </div>
           <small class="hint">${e.type === "hose" ? "Eine Linie, darum die Reichweite (Radius)." : e.type === "sprinkler" ? "Kreis oder Kreisausschnitt um den Sprinkler." : "Eine Fläche aus Ecken."}</small>
@@ -5693,8 +5822,8 @@ let x = class extends Q {
           <span>Ventil</span>
           <select
             @change=${(o) => {
-      const h = o.target.value;
-      this.remember(), e.valve_id = h || null;
+      const d = o.target.value;
+      this.remember(), e.valve_id = d || null;
       for (const m of this.plan.valves)
         m.zone_ids = m.zone_ids.filter((u) => u !== e.id), m.id === e.valve_id && m.zone_ids.push(e.id);
       this.changed();
@@ -5703,7 +5832,7 @@ let x = class extends Q {
             <option value="" ?selected=${!e.valve_id}>kein Ventil</option>
             ${this.plan.valves.map(
       (o) => c`<option value=${o.id} ?selected=${e.valve_id === o.id}>
-                ${o.name}${o.zone_ids.some((h) => h !== e.id) ? " (auch andere Zonen)" : ""}
+                ${o.name}${o.zone_ids.some((d) => d !== e.id) ? " (auch andere Zonen)" : ""}
               </option>`
     )}
           </select>
@@ -5719,7 +5848,7 @@ let x = class extends Q {
               </p>` : p}
         <dl>
           <dt>Fläche gezeichnet</dt>
-          <dd>${i ? T(s) : "–"}</dd>
+          <dd>${i ? T(n) : "–"}</dd>
           <dt>Fläche von Hand</dt>
           <dd>${e.area_m2 ? T(e.area_m2) : "–"}</dd>
           ${e.overlap_m2 > 0.05 ? c`<dt>Überschneidung</dt><dd class="warn">${T(e.overlap_m2)} mit anderen Zonen</dd>` : p}
@@ -5728,7 +5857,7 @@ let x = class extends Q {
                   <span class="reason">(${t.reason})</span></dd>` : p}
           ${t?.locked_reason ? c`<dt>Gesperrt</dt><dd class="warn">${t.locked_reason}</dd>` : p}
         </dl>
-        ${n && i ? c`<div class="fields">
+        ${s && i ? c`<div class="fields">
               ${r("Reichweite", e.radius_m, "m", (o) => e.radius_m = Math.max(0.1, o))}
               ${r("Richtung", e.start_angle_deg, "°", (o) => e.start_angle_deg = (o % 360 + 360) % 360, 5)}
               ${r("Bogen", e.arc_deg, "°", (o) => e.arc_deg = Math.min(360, Math.max(1, o)), 5)}
@@ -5737,8 +5866,8 @@ let x = class extends Q {
         ${e.type === "hose" && i ? c`<div class="fields">
                 ${r("Reichweite (Radius)", e.radius_m, "m", (o) => e.radius_m = Math.min(20, Math.max(0.05, o)), 0.05)}
               </div>
-              <p class="hint small">Schlauch ${J(ae(e.polygon))} lang. Bewässert wird alles bis
-                ${J(e.radius_m ?? 0)} um die Linie: ${T(se(e))}.
+              <p class="hint small">Schlauch ${J(re(e.polygon))} lang. Bewässert wird alles bis
+                ${J(e.radius_m ?? 0)} um die Linie: ${T(ie(e))}.
                 Reichweite auch am runden Anfasser im Plan ziehen.</p>
               ${this.renderEdges(e.polygon, !1, (o) => e.polygon = o)}` : p}
         ${e.type === "drip" && i ? this.renderEdges(e.polygon, !0, (o) => e.polygon = o) : p}
@@ -5750,21 +5879,24 @@ let x = class extends Q {
                 <ha-icon icon="mdi:eraser"></ha-icon>Entfernen
               </button>` : p}
           <span class="spacer"></span>
-          <button class="text" title="In die Warteschlange einreihen" ?disabled=${this.status?.winter_mode}
-            @click=${() => this.waterNow(e)}>
-            <ha-icon icon="mdi:watering-can"></ha-icon>Jetzt gießen
-          </button>
+          ${t && (t.state === "running" || t.state === "queued") ? c`<button class="text danger" title=${t.state === "running" ? "Gießen abbrechen, das Ventil schließt" : "Aus der Warteschlange nehmen"}
+                @click=${() => this.cancelZone(e)}>
+                <ha-icon icon="mdi:stop"></ha-icon>${t.state === "running" ? "Gießen abbrechen" : "Herausnehmen"}
+              </button>` : c`<button class="text" title="In die Warteschlange einreihen" ?disabled=${this.status?.winter_mode}
+                @click=${() => this.waterNow(e)}>
+                <ha-icon icon="mdi:watering-can"></ha-icon>Jetzt gießen
+              </button>`}
         </div>
       </div>
     `;
   }
   renderMarkerItem(e, t) {
-    const n = this.selected?.kind === e && this.selected.id === t.id, s = e === "valve" ? t.safety_level === "device" ? "schließt selbst" : "nur Home Assistant" : Hn[t.kind] ?? "";
+    const s = this.selected?.kind === e && this.selected.id === t.id, n = e === "valve" ? t.safety_level === "device" ? "schließt selbst" : "nur Home Assistant" : Fn[t.kind] ?? "";
     return c`
-      <li class="item ${n ? "open" : ""}">
+      <li class="item ${s ? "open" : ""}">
         <div class="row" @click=${() => this.selected = { kind: e, id: t.id }}>
           <span class="marker-icon ${e}">${e === "valve" ? "V" : mt[t.kind] ?? "S"}</span>
-          <span class="name">${t.name}<small>${s}</small></span>
+          <span class="name">${t.name}<small>${n}</small></span>
           <button class="text small" @click=${(i) => {
       i.stopPropagation(), this.startTool("place", `${e}:${t.id}`);
     }}>${t.position ? "Versetzen" : "Platzieren"}</button>
@@ -5792,8 +5924,8 @@ let x = class extends Q {
           .value=${String(t)}
           @pointerdown=${() => this.remember()}
           @keydown=${() => this.remember()}
-          @input=${(n) => {
-      this.plan.garden.background_opacity = Number(n.target.value) / 100, this.changed();
+          @input=${(s) => {
+      this.plan.garden.background_opacity = Number(s.target.value) / 100, this.changed();
     }}
         />
         <output>${t} %</output>
@@ -5801,13 +5933,13 @@ let x = class extends Q {
     `;
   }
   /** Kantenlängen ansehen und als Zahl eintippen (genauer als das Luftbild). */
-  renderEdges(e, t, n) {
-    const s = on(e, t);
+  renderEdges(e, t, s) {
+    const n = on(e, t);
     return c`
       <details class="edges">
-        <summary>Seitenlängen (${s.length})</summary>
+        <summary>Seitenlängen (${n.length})</summary>
         <div class="edge-list">
-          ${s.map(
+          ${n.map(
       (i, a) => c`<label class="field">
               <span>Seite ${a + 1}</span>
               <input
@@ -5817,7 +5949,7 @@ let x = class extends Q {
                 .value=${i.toFixed(2)}
                 @change=${(r) => {
         const l = parseFloat(r.target.value.replace(",", "."));
-        l > 0 && (this.remember(), n(ln(e, a, l).map((o) => [y(o[0]), y(o[1])])), this.changed());
+        l > 0 && (this.remember(), s(ln(e, a, l).map((o) => [y(o[0]), y(o[1])])), this.changed());
       }}
               />
               <span class="unit">m</span>
@@ -5829,14 +5961,14 @@ let x = class extends Q {
     `;
   }
   renderPlanTab() {
-    const e = this.selected?.kind === "feature" ? this.feature(this.selected.id) : null, t = (n) => {
-      const s = U[n], i = this.tool === "feature" && this.featureKind === n;
+    const e = this.selected?.kind === "feature" ? this.feature(this.selected.id) : null, t = (s) => {
+      const n = V[s], i = this.tool === "feature" && this.featureKind === s;
       return c`<button
         class="tool ${i ? "active" : ""}"
-        title=${s.label}
-        @click=${() => i ? this.cancelTool() : this.startTool("feature", n)}
+        title=${n.label}
+        @click=${() => i ? this.cancelTool() : this.startTool("feature", s)}
       >
-        <ha-icon icon=${s.icon}></ha-icon><span>${s.label}</span>
+        <ha-icon icon=${n.icon}></ha-icon><span>${n.label}</span>
       </button>`;
     };
     return c`
@@ -5854,30 +5986,30 @@ let x = class extends Q {
       <h3>Punkte</h3>
       <div class="palette">${["tree", "tap", "label"].map(t)}</div>
       <label class="check">
-        <input type="checkbox" .checked=${this.snapOn} @change=${(n) => this.snapOn = n.target.checked} />
+        <input type="checkbox" .checked=${this.snapOn} @change=${(s) => this.snapOn = s.target.checked} />
         An Ecken einrasten <small>(Alt-Taste: kurz aus)</small>
       </label>
       ${this.features.length ? c`<div class="list-head">
               <h3>Im Plan (${this.features.length})</h3>
               <span class="spacer"></span>
-              ${this.features.some((n) => !n.locked) ? c`<button class="text" @click=${() => this.setLocked(this.features, !0)}>
+              ${this.features.some((s) => !s.locked) ? c`<button class="text" @click=${() => this.setLocked(this.features, !0)}>
                     <ha-icon icon="mdi:lock"></ha-icon>Alle sperren</button>` : c`<button class="text" @click=${() => this.setLocked(this.features, !1)}>
                     <ha-icon icon="mdi:lock-open-variant-outline"></ha-icon>Alle entsperren</button>`}
             </div>
             <p class="hint small">Gesperrte Formen lassen sich im Plan nicht anfassen oder verschieben; Klicks gehen zum Plan darunter.
               Bearbeiten: hier in der Liste auswählen und entsperren.</p>
             <ul class="list compact">
-              ${this.features.map((n) => this.renderFeatureItem(n, e?.id === n.id))}
+              ${this.features.map((s) => this.renderFeatureItem(s, e?.id === s.id))}
             </ul>` : p}
     `;
   }
   renderFeatureItem(e, t) {
-    const n = U[e.kind], s = n?.family ?? "area", i = s === "area" ? T(Y(e.points)) : s === "line" ? e.kind === "boundary" && e.points.length >= 3 ? `${T(Y(e.points))} · ${J(ae(e.points, !0))} Umfang` : J(ae(e.points)) : e.kind === "tree" ? `Ø ${J(2 * (e.radius_m ?? 0))}` : "", a = Object.entries(U).filter(([, r]) => r.family === s);
+    const s = V[e.kind], n = s?.family ?? "area", i = n === "area" ? T(X(e.points)) : n === "line" ? e.kind === "boundary" && e.points.length >= 3 ? `${T(X(e.points))} · ${J(re(e.points, !0))} Umfang` : J(re(e.points)) : e.kind === "tree" ? `Ø ${J(2 * (e.radius_m ?? 0))}` : "", a = Object.entries(V).filter(([, r]) => r.family === n);
     return c`
       <li class="item ${t ? "open" : ""}">
         <div class="row" @click=${() => this.selected = t ? null : { kind: "feature", id: e.id }}>
-          <ha-icon icon=${n?.icon ?? "mdi:shape-outline"}></ha-icon>
-          <span class="name">${W(e)}</span>
+          <ha-icon icon=${s?.icon ?? "mdi:shape-outline"}></ha-icon>
+          <span class="name">${U(e)}</span>
           <span class="meta">${i}</span>
           <button class="icon small lock ${e.locked ? "on" : ""}"
             title=${e.locked ? "Gesperrt: im Plan nicht verschiebbar. Klicken zum Entsperren" : "Sperren: im Plan nicht mehr verschiebbar"}
@@ -5954,7 +6086,7 @@ let x = class extends Q {
                     <span class="unit">m</span>
                   </label>
                   <p class="hint small">Ein dicker Stamm hält den Strahl eines Sprinklers auf. Die Nässekarte zeigt dahinter einen Wasserschatten.</p>` : p}
-              ${s !== "point" ? this.renderEdges(e.points, s === "area", (r) => e.points = r) : p}
+              ${n !== "point" ? this.renderEdges(e.points, n === "area", (r) => e.points = r) : p}
               <div class="actions">
                 <span class="spacer"></span>
                 <button class="text danger" @click=${() => this.deleteFeature(e.id)}>
@@ -5966,16 +6098,16 @@ let x = class extends Q {
     `;
   }
   renderBackgroundTab() {
-    const e = this.plan.garden, t = this.plan.providers, n = (s, i, a, r) => c`
-      <button class="choice ${e.background === s ? "active" : ""}" @click=${() => this.setBackground(s)}>
+    const e = this.plan.garden, t = this.plan.providers, s = (n, i, a, r) => c`
+      <button class="choice ${e.background === n ? "active" : ""}" @click=${() => this.setBackground(n)}>
         <ha-icon icon=${i}></ha-icon>
         <span><strong>${a}</strong><small>${r}</small></span>
       </button>`;
     return c`
       <div class="choices">
-        ${n("map", "mdi:satellite-variant", "Luftbild", "Kartendienst, live im Browser geladen")}
-        ${n("image", "mdi:image-outline", "Eigenes Bild", "Foto, Skizze oder Screenshot")}
-        ${n("none", "mdi:grid", "Raster", "Leeres Raster in Metern")}
+        ${s("map", "mdi:satellite-variant", "Luftbild", "Kartendienst, live im Browser geladen")}
+        ${s("image", "mdi:image-outline", "Eigenes Bild", "Foto, Skizze oder Screenshot")}
+        ${s("none", "mdi:grid", "Raster", "Leeres Raster in Metern")}
       </div>
       ${this.renderOpacity()}
       ${e.background === "map" ? this.renderMapSettings(e, t) : p}
@@ -5987,10 +6119,10 @@ let x = class extends Q {
       <h3>Kartendienst</h3>
       <select
         .value=${e.map_provider ?? "basemap_at"}
-        @change=${(n) => this.updateGarden({ map_provider: n.target.value })}
+        @change=${(s) => this.updateGarden({ map_provider: s.target.value })}
       >
         ${Object.entries(t).map(
-      ([n, s]) => c`<option value=${n} ?selected=${e.map_provider === n}>${s.name}</option>`
+      ([s, n]) => c`<option value=${s} ?selected=${e.map_provider === s}>${n.name}</option>`
     )}
         <option value="custom" ?selected=${e.map_provider === "custom"}>Eigene Adresse …</option>
       </select>
@@ -6006,7 +6138,7 @@ let x = class extends Q {
       ${e.map_provider === "custom" ? c`<label class="field wide">
               <span>Adresse mit {z}, {x}, {y}</span>
               <input type="url" placeholder="https://…/{z}/{x}/{y}.jpg" .value=${e.map_url ?? ""}
-                @change=${(n) => this.updateGarden({ map_url: n.target.value.trim() })} />
+                @change=${(s) => this.updateGarden({ map_url: s.target.value.trim() })} />
             </label>` : p}
       <h3>Ausschnitt</h3>
       <p class="hint small">
@@ -6043,7 +6175,7 @@ let x = class extends Q {
             <label class="field">
               <span>Norden im Bild</span>
               <input type="number" step="5" .value=${String(e.north_deg)}
-                @change=${(n) => this.updateGarden({ north_deg: parseFloat(n.target.value) || 0 })} />
+                @change=${(s) => this.updateGarden({ north_deg: parseFloat(s.target.value) || 0 })} />
               <span class="unit">°</span>
             </label>
             <p class="hint small">0° = Norden ist oben im Bild. Nur für die Kompassanzeige.</p>
@@ -6051,135 +6183,135 @@ let x = class extends Q {
     `;
   }
 };
-x.styles = Fe;
+k.styles = We;
 _([
   be({ type: Boolean, reflect: !0 })
-], x.prototype, "narrow", 2);
+], k.prototype, "narrow", 2);
 _([
-  $()
-], x.prototype, "plan", 2);
+  b()
+], k.prototype, "plan", 2);
 _([
-  $()
-], x.prototype, "status", 2);
+  b()
+], k.prototype, "status", 2);
 _([
-  $()
-], x.prototype, "error", 2);
+  b()
+], k.prototype, "error", 2);
 _([
-  $()
-], x.prototype, "toast", 2);
+  b()
+], k.prototype, "toast", 2);
 _([
-  $()
-], x.prototype, "tab", 2);
+  b()
+], k.prototype, "tab", 2);
 _([
-  $()
-], x.prototype, "featureKind", 2);
+  b()
+], k.prototype, "featureKind", 2);
 _([
-  $()
-], x.prototype, "measurePts", 2);
+  b()
+], k.prototype, "measurePts", 2);
 _([
-  $()
-], x.prototype, "snapOn", 2);
+  b()
+], k.prototype, "snapOn", 2);
 _([
-  $()
-], x.prototype, "snapHint", 2);
+  b()
+], k.prototype, "snapHint", 2);
 _([
-  $()
-], x.prototype, "tool", 2);
+  b()
+], k.prototype, "tool", 2);
 _([
-  $()
-], x.prototype, "toolTarget", 2);
+  b()
+], k.prototype, "toolTarget", 2);
 _([
-  $()
-], x.prototype, "selected", 2);
+  b()
+], k.prototype, "selected", 2);
 _([
-  $()
-], x.prototype, "draft", 2);
+  b()
+], k.prototype, "draft", 2);
 _([
-  $()
-], x.prototype, "scaleDraft", 2);
+  b()
+], k.prototype, "scaleDraft", 2);
 _([
-  $()
-], x.prototype, "scaleInput", 2);
+  b()
+], k.prototype, "scaleInput", 2);
 _([
-  $()
-], x.prototype, "view", 2);
+  b()
+], k.prototype, "view", 2);
 _([
-  $()
-], x.prototype, "size", 2);
+  b()
+], k.prototype, "size", 2);
 _([
-  $()
-], x.prototype, "imageUrl", 2);
+  b()
+], k.prototype, "imageUrl", 2);
 _([
-  $()
-], x.prototype, "imageSize", 2);
+  b()
+], k.prototype, "imageSize", 2);
 _([
-  $()
-], x.prototype, "saving", 2);
+  b()
+], k.prototype, "saving", 2);
 _([
-  $()
-], x.prototype, "dirty", 2);
+  b()
+], k.prototype, "dirty", 2);
 _([
-  $()
-], x.prototype, "searchOpen", 2);
+  b()
+], k.prototype, "searchOpen", 2);
 _([
-  $()
-], x.prototype, "searchQuery", 2);
+  b()
+], k.prototype, "searchQuery", 2);
 _([
-  $()
-], x.prototype, "searchResults", 2);
+  b()
+], k.prototype, "searchResults", 2);
 _([
-  $()
-], x.prototype, "searching", 2);
+  b()
+], k.prototype, "searching", 2);
 _([
-  $()
-], x.prototype, "searchError", 2);
+  b()
+], k.prototype, "searchError", 2);
 _([
-  $()
-], x.prototype, "searchPin", 2);
+  b()
+], k.prototype, "searchPin", 2);
 _([
-  $()
-], x.prototype, "locating", 2);
+  b()
+], k.prototype, "locating", 2);
 _([
-  $()
-], x.prototype, "hoseRadius", 2);
+  b()
+], k.prototype, "hoseRadius", 2);
 _([
-  $()
-], x.prototype, "toastUndo", 2);
+  b()
+], k.prototype, "toastUndo", 2);
 _([
-  $()
-], x.prototype, "layersOpen", 2);
+  b()
+], k.prototype, "layersOpen", 2);
 _([
-  $()
-], x.prototype, "page", 2);
+  b()
+], k.prototype, "page", 2);
 _([
-  $()
-], x.prototype, "raster", 2);
+  b()
+], k.prototype, "raster", 2);
 _([
-  $()
-], x.prototype, "rasterMenu", 2);
+  b()
+], k.prototype, "rasterMenu", 2);
 _([
-  $()
-], x.prototype, "soilOn", 2);
+  b()
+], k.prototype, "soilOn", 2);
 _([
-  $()
-], x.prototype, "menuOpen", 2);
+  b()
+], k.prototype, "menuOpen", 2);
 _([
-  $()
-], x.prototype, "pendingImport", 2);
+  b()
+], k.prototype, "pendingImport", 2);
 _([
-  $()
-], x.prototype, "hover", 2);
-x = _([
+  b()
+], k.prototype, "hover", 2);
+k = _([
   Ie("irrigation-planner-panel")
-], x);
+], k);
 function y(e) {
   return Math.round(e * 100) / 100;
 }
 function gt(e) {
   return Math.round(e / 5) * 5 % 360;
 }
-function se(e) {
-  return e.type === "sprinkler" ? e.center && e.radius_m ? wt(e.radius_m, e.arc_deg) : null : e.type === "hose" ? e.polygon.length >= 2 && e.radius_m ? _t(e.polygon, e.radius_m) : null : e.polygon.length >= 3 ? Y(e.polygon) : null;
+function ie(e) {
+  return e.type === "sprinkler" ? e.center && e.radius_m ? wt(e.radius_m, e.arc_deg) : null : e.type === "hose" ? e.polygon.length >= 2 && e.radius_m ? _t(e.polygon, e.radius_m) : null : e.polygon.length >= 3 ? X(e.polygon) : null;
 }
 function J(e) {
   return e < 1 ? `${Math.round(e * 100)} cm` : `${e.toLocaleString("de-DE", { maximumFractionDigits: 2 })} m`;
@@ -6194,16 +6326,16 @@ function Oe(e) {
 }
 function Dt(e) {
   const t = 10 ** Math.floor(Math.log10(e));
-  for (const n of [1, 2, 5, 10]) if (n * t >= e) return n * t;
+  for (const s of [1, 2, 5, 10]) if (s * t >= e) return s * t;
   return 10 * t;
 }
 function Vn(e) {
-  const t = Dt(110 / e), n = t >= 1e3 ? `${t / 1e3} km` : t >= 1 ? `${t} m` : `${t * 100} cm`;
-  return { px: t * e, label: n };
+  const t = Dt(110 / e), s = t >= 1e3 ? `${t / 1e3} km` : t >= 1 ? `${t} m` : `${t * 100} cm`;
+  return { px: t * e, label: s };
 }
 function Gn(e) {
   return { very_low: 0.45, low: 0.7, medium: 0.95, high: 1.08 }[e] ?? 9;
 }
 export {
-  x as IrrigationPlannerPanel
+  k as IrrigationPlannerPanel
 };

@@ -246,6 +246,7 @@ def status_payload(data: IrrigationPlannerData) -> dict[str, Any]:
         "sensors": _sensor_values(data),
         "winter_mode": data.store.model.settings.winter_mode,
         "automatic": data.store.model.settings.automatic,
+        "water_saving_pct": data.store.model.settings.water_saving_pct,
         "problems": data.problems,
     }
 

@@ -25,6 +25,7 @@ from .balance import zone_taw
 from .const import DOMAIN
 from .geometry import zone_area
 from .history import source_text
+from .model import MAX_WATER_SAVING_PCT
 from .scheduler import RunState
 
 if TYPE_CHECKING:
@@ -148,6 +149,7 @@ def operation_payload(data: IrrigationPlannerData) -> dict[str, Any]:
         "weather_entity": data.balance.weather_entity,
         "automatic": settings.automatic,
         "winter_mode": settings.winter_mode,
+        "water_saving_pct": settings.water_saving_pct,
         "problems": data.problems,
         "history_last": data.history.entries[-1]["at"]
         if data.history.entries
@@ -286,7 +288,57 @@ def ws_set_automatic(
     connection.send_result(msg["id"], {"automatic": msg["on"]})
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/settings/water_saving",
+        vol.Required("percent"): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=MAX_WATER_SAVING_PCT)
+        ),
+    }
+)
+@websocket_api.require_admin
+@callback
+def ws_set_water_saving(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Wassersparen einstellen (geplante Gießdauer um n % kürzen)."""
+    data = _data(hass)
+    if data is None:
+        connection.send_error(msg["id"], "not_loaded", "Nicht eingerichtet")
+        return
+    data.store.model.settings.water_saving_pct = msg["percent"]
+    data.async_model_changed()
+    data.balance.async_notify()
+    connection.send_result(msg["id"], {"percent": msg["percent"]})
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/balance/reset",
+        vol.Optional("zone_id"): str,
+    }
+)
+@websocket_api.require_admin
+@callback
+def ws_balance_reset(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Wasserkonto einer Zone (oder aller) auf „voll“ setzen."""
+    data = _data(hass)
+    if data is None:
+        connection.send_error(msg["id"], "not_loaded", "Nicht eingerichtet")
+        return
+    zone_id = msg.get("zone_id")
+    if zone_id is not None and all(z.id != zone_id for z in data.store.model.zones):
+        connection.send_error(msg["id"], "invalid", f"Zone {zone_id} gibt es nicht")
+        return
+    data.balance.async_reset(zone_id)
+    connection.send_result(msg["id"], {"reset": zone_id or "all"})
+
+
 ALL_COMMANDS: Final = (
+    ws_set_water_saving,
+    ws_balance_reset,
     ws_operation_subscribe,
     ws_history_get,
     ws_queue_cancel,

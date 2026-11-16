@@ -236,3 +236,50 @@ async def test_toggle_automatic(
     msg = await _call(other, type=f"{DOMAIN}/settings/automatic", on=False)
     assert msg["error"]["code"] == "unauthorized"
     assert settings.automatic is True
+
+
+async def test_water_saving_and_reset(
+    hass: HomeAssistant,
+    setup: Any,
+    sim: SimValves,
+    hass_ws_client: Any,
+    mock_config_entry: MockConfigEntry,
+    hass_read_only_access_token: str,
+) -> None:
+    """Wassersparen kürzt die geplante Dauer; das Wasserkonto lässt sich zurücksetzen."""
+    await setup(_model())
+    data = mock_config_entry.runtime_data
+    zone = data.store.model.zones[0]
+    assert data.balance.planned(zone).seconds == 60
+    client = await hass_ws_client(hass)
+    msg = await _call(client, type=f"{DOMAIN}/settings/water_saving", percent=25)
+    assert msg["success"], msg
+    planned = data.balance.planned(zone)
+    assert planned.seconds == 45
+    assert "Wassersparen minus 25 %" in planned.reason
+    msg = await _call(client, type=f"{DOMAIN}/settings/water_saving", percent=80)
+    assert not msg["success"]  # höchstens 50 %
+    assert data.store.model.settings.water_saving_pct == 25
+
+    # Regler als Entität (z. B. für eine Hitze-Automation)
+    registry = er.async_get(hass)
+    number = registry.async_get_entity_id(
+        "number", DOMAIN, f"{mock_config_entry.entry_id}_water_saving"
+    )
+    await hass.services.async_call(
+        "number", "set_value", {"entity_id": number, "value": 10}, blocking=True
+    )
+    assert data.balance.planned(zone).seconds == 54
+
+    data.balance.balance("z1").deficit_mm = 12.0
+    data.balance.balance("z2").deficit_mm = 7.0
+    msg = await _call(client, type=f"{DOMAIN}/balance/reset", zone_id="z1")
+    assert msg["success"], msg
+    assert data.balance.balance("z1").deficit_mm == 0
+    assert data.balance.balance("z2").deficit_mm == 7.0
+    assert (await _call(client, type=f"{DOMAIN}/balance/reset"))["success"]
+    assert data.balance.balance("z2").deficit_mm == 0
+
+    other = await hass_ws_client(hass, access_token=hass_read_only_access_token)
+    msg = await _call(other, type=f"{DOMAIN}/balance/reset")
+    assert msg["error"]["code"] == "unauthorized"
