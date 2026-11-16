@@ -1518,6 +1518,19 @@ export const styles = css`
   .pin {
     pointer-events: none;
   }
+  .mypos {
+    pointer-events: none;
+  }
+  .mypos .acc {
+    fill: rgba(26, 115, 232, 0.15);
+    stroke: rgba(26, 115, 232, 0.5);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  .mypos .dot {
+    fill: #1a73e8;
+    stroke: #fff;
+  }
   .banner {
     position: absolute;
     top: 12px;

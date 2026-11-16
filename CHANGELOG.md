@@ -31,6 +31,7 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 - Seite „Zeitplan“ im Panel: Wochenansicht aller Programme (nächste 7 Tage, in der Zeitzone von Home Assistant), Programm-Karten mit Ablauf, nächstem Start und letztem Ergebnis; Programme bearbeiten (Zonen, Reihenfolge, Startzeit oder „fertig bis“ mit Sonnenzeit, Wochentage, Wetter-Überspringen), neu anlegen und löschen (nicht während gegossen wird); „Jetzt starten“ reiht nur ein.
 - Ereignisse für eigene Automationen: `irrigation_planner_run_started`, `irrigation_planner_run_finished` (mit Ergebnis und Sekunden), `irrigation_planner_program_started`, `irrigation_planner_program_skipped` (mit Grund). Die Zeitplan-Seite zeigt sie zusammen mit den Entitäten je Programm.
 - WebSocket-Befehle `irrigation_planner/programs/get`, `programs/save`, `programs/create`, `programs/delete` (Ändern nur für Admins).
+- Orten (Fadenkreuz-Knopf auf der Karte): nimmt den Standort aus dem Browser, springt dorthin und zeigt ihn als blauen Punkt mit Genauigkeit. Ist der Plan noch leer, wird der Standort zur Kartenmitte (Luftbild wird eingeschaltet). Beim Platzieren eines Ventils oder Sensors: „Mein Standort“. Der Standort wird nicht gespeichert; Browser erlauben Orten nur über https.
 
 ### Behoben
 - Die Vorlage `configuration.yaml` der Testinstanz fehlte im Repo (wurde von `.gitignore` ausgeblendet).

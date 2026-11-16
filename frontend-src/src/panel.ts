@@ -34,6 +34,7 @@ import { FEATURE_META, MAX_LABEL_LENGTH, SOIL_COLORS, family, featureName, newFe
 import { type Place, SEARCH_ATTRIBUTION, searchAddress } from "./geocode";
 import "./schedule";
 import { styles } from "./styles";
+import { type MyPosition, fmtAccuracy, locateErrorText, locateUnavailable } from "./locate";
 import { WET_STOPS, computeWetGrid, drawnArea, gridImage, inPolygon, mmPerRun, runSeconds } from "./wetmap";
 import type {
   Feature,
@@ -128,6 +129,10 @@ export class IrrigationPlannerPanel extends LitElement {
   @state() private searching = false;
   @state() private searchError = "";
   @state() private searchPin: { point: Point; name: string } | null = null;
+  // Eigener Standort (nur im Browser, wird nicht gespeichert)
+  @state() private myPos: MyPosition | null = null;
+  @state() private locating = false;
+  private watchId?: number;
 
   private _hass?: Hass;
   private savedJson = "";
@@ -171,6 +176,7 @@ export class IrrigationPlannerPanel extends LitElement {
     this.unsub?.();
     this.unsub = undefined;
     this.resizer?.disconnect();
+    this.stopLocate();
   }
 
   protected firstUpdated(_changed: PropertyValues): void {
@@ -944,6 +950,114 @@ export class IrrigationPlannerPanel extends LitElement {
     }
     this.changed();
     this.showToast("Kartenmitte gesetzt");
+  }
+
+  // Orten ---------------------------------------------------------------------------
+
+  private toggleLocate(): void {
+    if (this.locating) {
+      this.stopLocate();
+      return;
+    }
+    const why = locateUnavailable(window.isSecureContext, "geolocation" in navigator);
+    if (why) {
+      this.showToast(why, true);
+      return;
+    }
+    this.locating = true;
+    let first = true;
+    this.watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        this.myPos = {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+        };
+        if (first) {
+          first = false;
+          this.showMyPosition();
+        }
+      },
+      (err) => {
+        this.showToast(locateErrorText(err.code), true);
+        this.stopLocate();
+      },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 },
+    );
+  }
+
+  private stopLocate(): void {
+    if (this.watchId !== undefined) navigator.geolocation?.clearWatch(this.watchId);
+    this.watchId = undefined;
+    this.locating = false;
+    this.myPos = null;
+  }
+
+  /** Standort in Planmetern (null: noch keiner oder keine Kartenmitte). */
+  private myPoint(): Point | null {
+    const g = this.plan?.garden;
+    if (!this.myPos || g?.background !== "map" || g.latitude == null || g.longitude == null) return null;
+    return latLonToPlan(this.myPos.latitude, this.myPos.longitude, [g.latitude, g.longitude]);
+  }
+
+  /** Ansicht auf den eigenen Standort legen (ist noch nichts gezeichnet: Kartenmitte). */
+  private showMyPosition(): void {
+    const pos = this.myPos;
+    if (!pos) return;
+    const g = this.plan!.garden;
+    const scale = Math.max(this.view.scale, 1 / metersPerPixel(pos.latitude, 20));
+    this.autoFit = false;
+    const switched = g.background === "none";
+    if (switched) {
+      // Noch kein Hintergrund: gleich das Luftbild einschalten.
+      this.remember();
+      g.background = "map";
+      g.map_provider ??= "basemap_at";
+      g.map_zoom ??= 19;
+    }
+    const empty =
+      !this.hasAnyDrawing() &&
+      ![...this.plan!.valves, ...this.plan!.sensors].some((m) => m.position);
+    if (empty || g.latitude == null || g.longitude == null) {
+      this.remember();
+      g.latitude = Math.round(pos.latitude * 1e7) / 1e7;
+      g.longitude = Math.round(pos.longitude * 1e7) / 1e7;
+      this.view = { cx: 0, cy: 0, scale };
+      this.changed();
+      this.showToast(`Kartenmitte auf deinen Standort gesetzt (${fmtAccuracy(pos.accuracy)}).`);
+      return;
+    }
+    const p = this.myPoint()!;
+    this.view = { cx: p[0], cy: p[1], scale };
+    if (switched) this.changed();
+    if (Math.hypot(p[0], p[1]) > 2000) {
+      this.showToast("Du bist weit weg vom Garten. Der Punkt zeigt, wo du gerade bist.");
+    } else {
+      this.showToast(`Standort gefunden (${fmtAccuracy(pos.accuracy)}).`);
+    }
+  }
+
+  /** Ventil oder Sensor, der gerade platziert wird, an den eigenen Standort setzen. */
+  private placeAtMe(): void {
+    const p = this.myPoint();
+    if (!p || this.tool !== "place") return;
+    const [kind, id] = this.toolTarget.split(":") as ["valve" | "sensor", string];
+    this.remember();
+    this.marker(kind, id).position = [round(p[0]), round(p[1])];
+    this.selected = { kind, id };
+    this.changed();
+    this.cancelTool();
+    this.showToast("An deinen Standort gesetzt");
+  }
+
+  private renderMyPosition(px: number) {
+    const p = this.myPoint();
+    if (!p || !this.myPos) return nothing;
+    return svg`<g class="mypos">
+      <circle class="acc" cx=${p[0]} cy=${p[1]} r=${this.myPos.accuracy}></circle>
+      <circle class="dot" cx=${p[0]} cy=${p[1]} r=${7 * px} stroke-width=${3 * px}></circle>
+      <title>Du bist hier (${fmtAccuracy(this.myPos.accuracy)})</title>
+    </g>`;
   }
 
   // Adresssuche ------------------------------------------------------------------
@@ -1729,7 +1843,7 @@ export class IrrigationPlannerPanel extends LitElement {
           ${this.plan!.valves.map((v) => this.renderMarker("valve", v, px))}
           ${this.plan!.sensors.map((s) => this.renderMarker("sensor", s, px))}
           ${this.wetOn ? this.renderSensorValues(px) : nothing}
-          ${this.renderSnapHint(px)}
+          ${this.renderSnapHint(px)} ${this.renderMyPosition(px)}
           ${this.searchPin && this.plan!.garden.background === "map"
             ? svg`<g class="pin" transform="translate(${this.searchPin.point[0]} ${this.searchPin.point[1]}) scale(${px})">
                 <path d="M0 0 C-3 -9 -11 -13 -11 -22 A11 11 0 1 1 11 -22 C11 -13 3 -9 0 0 Z"></path>
@@ -2157,6 +2271,13 @@ export class IrrigationPlannerPanel extends LitElement {
               <ha-icon icon="mdi:magnify"></ha-icon>
             </button>`
           : nothing}
+        ${g.background !== "image"
+          ? html`<button class="icon ${this.locating ? "on" : ""}"
+              title=${this.locating ? "Orten beenden" : "Orten: meinen Standort zeigen"}
+              @click=${this.toggleLocate}>
+              <ha-icon icon=${this.locating ? (this.myPos ? "mdi:crosshairs-gps" : "mdi:crosshairs-question") : "mdi:crosshairs"}></ha-icon>
+            </button>`
+          : nothing}
       </div>
       ${banner} ${this.renderSearch()} ${this.renderLayers()}
       <div class="compass" style="transform: rotate(${g.background === "image" ? -g.north_deg : 0}deg)" title="Norden">
@@ -2199,7 +2320,12 @@ export class IrrigationPlannerPanel extends LitElement {
       text = `${name}: Ecken anklicken, zum Schließen den ersten Punkt.`;
       actions = html`<button class="text" ?disabled=${this.draft.length < 3} @click=${this.finishBed}>Fertig</button>`;
     }
-    if (this.tool === "place") text = `${name}: Auf die Stelle im Plan klicken.`;
+    if (this.tool === "place") {
+      text = `${name}: Auf die Stelle im Plan klicken${this.myPoint() ? " oder an deinen Standort setzen" : ""}.`;
+      if (this.myPoint()) {
+        actions = html`<button class="text" @click=${this.placeAtMe}><ha-icon icon="mdi:crosshairs-gps"></ha-icon>Mein Standort</button>`;
+      }
+    }
     if (this.tool === "feature") {
       const meta = FEATURE_META[this.featureKind];
       const fam = meta.family;
