@@ -100,6 +100,10 @@ class _ValveWatch:
     last_flow: float | None = None
     disturbed: bool = False  # Lauf mit Alarm: nicht daraus lernen
     since: dict[str, datetime] = field(default_factory=dict)
+    # Gemessene Menge der letzten Öffnung (für den Verlauf)
+    last_liters: float | None = None
+    last_closed: datetime | None = None
+    measured: bool = False  # in dieser Öffnung gab es Messwerte
 
 
 class Watchdog:
@@ -185,6 +189,27 @@ class Watchdog:
             )
         except HomeAssistantError:
             return None
+
+    def measured_liters(self, valve_id: str, since: datetime) -> float | None:
+        """Gemessene Liter der Öffnung, die nach ``since`` begann (``None`` = kein Zähler).
+
+        Ist das Ventil für die Überwachung noch offen (die Meldung „zu“ kommt
+        oft kurz nach dem Ende des Laufs), zählt der Stand bis jetzt.
+        """
+        watch = self._watch.get(valve_id)
+        if watch is None:
+            return None
+        if watch.open_since is not None:
+            if not watch.measured:
+                return None
+            liters = watch.flow_sum / 60
+            if watch.last_sample is not None and watch.last_flow is not None:
+                seconds = (dt_util.utcnow() - watch.last_sample).total_seconds()
+                liters += watch.last_flow * max(0.0, seconds) / 60
+            return liters
+        if watch.last_closed is not None and watch.last_closed >= since:
+            return watch.last_liters
+        return None
 
     def device_status(self, valve_id: str) -> DeviceStatus | None:
         """Gedeuteter Gerätestatus (``None`` = unbekannt)."""
@@ -340,6 +365,7 @@ class Watchdog:
                 watch.open_since = now
                 watch.flow_sum = watch.flow_seconds = 0.0
                 watch.disturbed = False
+                watch.measured = flow is not None
                 watch.last_sample = now
                 watch.last_flow = flow
                 return
@@ -349,6 +375,7 @@ class Watchdog:
                 watch.flow_seconds += seconds
             watch.last_sample = now
             watch.last_flow = flow
+            watch.measured = watch.measured or flow is not None
             if any(a.valve_id == valve_id for a in self.alarms.values()):
                 watch.disturbed = True
         elif is_open is False and watch.open_since is not None:
@@ -357,6 +384,8 @@ class Watchdog:
                 watch.flow_sum += watch.last_flow * seconds
                 watch.flow_seconds += seconds
             self._learn(valve_id, watch)
+            watch.last_liters = watch.flow_sum / 60 if watch.measured else None
+            watch.last_closed = now
             watch.open_since = None
 
     def _learn(self, valve_id: str, watch: _ValveWatch) -> None:

@@ -145,6 +145,7 @@ class IrrigationScheduler:
         self._tasks: set[asyncio.Task[Any]] = set()
         self._listeners: list[Callable[[], None]] = []
         self._run_listeners: list[Callable[[Run, float], None]] = []
+        self._cancel_listeners: list[Callable[[Run], None]] = []
         self._unsubs: list[CALLBACK_TYPE] = []
         self._stopping = False
         # Zonen, die nach einem Alarm gesperrt sind (Zone → Grund).
@@ -370,6 +371,49 @@ class IrrigationScheduler:
         if valve_id not in supply.stuck and valve_id not in self._closing:
             self._spawn(self._close_or_mark(supply, valve_id), f"Alarm {valve_id}")
 
+    @callback
+    def async_cancel_zone(self, zone_id: str) -> bool:
+        """Bricht eine Zone ab (Warteschlange oder laufend).
+
+        Gießt sie gerade, wird sie geschlossen; die Warteschlange macht mit
+        dem Nächsten weiter. Gibt an, ob es etwas abzubrechen gab.
+        """
+        return self._cancel(lambda run: run.zone_id == zone_id)
+
+    @callback
+    def async_cancel_program(self, program_id: str) -> bool:
+        """Bricht ein Programm ab: alle seine Läufe (laufend und wartend)."""
+        source = f"program:{program_id}"
+        return self._cancel(lambda run: run.source == source)
+
+    def _cancel(self, match: Callable[[Run], bool]) -> bool:
+        found = False
+        for supply in self.supplies.values():
+            keep: list[Run] = []
+            for run in supply.pending:
+                if match(run):
+                    self._drop(run)
+                    found = True
+                else:
+                    keep.append(run)
+            supply.pending = keep
+            for run in supply.active.values():
+                if match(run):
+                    run.interrupt()
+                    found = True
+        if found:
+            self._notify()
+        return found
+
+    def _drop(self, run: Run) -> None:
+        """Wartender Lauf wird nicht ausgeführt."""
+        run.state = RunState.SKIPPED
+        for listener in list(self._cancel_listeners):
+            try:
+                listener(run)
+            except Exception:
+                LOGGER.exception("Fehler beim Melden eines abgebrochenen Laufs")
+
     def supply_of(self, valve_id: str) -> SupplyQueue | None:
         """Wasserversorgung eines Ventils."""
         return self.supplies.get(self._supply_of_valve.get(valve_id, ""))
@@ -378,7 +422,7 @@ class IrrigationScheduler:
         """Leert alle Warteschlangen und schließt alle Ventile."""
         for supply in self.supplies.values():
             for run in supply.pending:
-                run.state = RunState.SKIPPED
+                self._drop(run)
             supply.pending.clear()
             for run in supply.active.values():
                 run.interrupt()
@@ -408,6 +452,14 @@ class IrrigationScheduler:
         """Meldet sich für beendete Läufe an (Lauf, Sekunden offen)."""
         self._run_listeners.append(listener)
         return lambda: self._run_listeners.remove(listener)
+
+    @callback
+    def async_add_cancel_listener(
+        self, listener: Callable[[Run], None]
+    ) -> CALLBACK_TYPE:
+        """Meldet sich für Läufe an, die abgebrochen wurden, bevor sie begannen."""
+        self._cancel_listeners.append(listener)
+        return lambda: self._cancel_listeners.remove(listener)
 
     @callback
     def async_add_listener(self, update: Callable[[], None]) -> CALLBACK_TYPE:

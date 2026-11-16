@@ -21,6 +21,7 @@ from .balance import BalanceManager
 from .const import CONF_WEATHER_ENTITY, CONF_WINDOW_END, DOMAIN, LOGGER, NAME
 from .drivers.ha import HassValveDriver
 from .drivers.registry import create_driver
+from .history import HistoryManager
 from .panel import async_register_panel, async_remove_panel
 from .profiles import Profile, async_load_builtin_profiles
 from .programs import ProgramManager
@@ -54,6 +55,7 @@ class IrrigationPlannerData:
     programs: ProgramManager
     watchdog: Watchdog
     balance: BalanceManager
+    history: HistoryManager
     season: Season | None = None
     # Geräte-ID des Hauptgeräts (Zonen und Programme hängen daran).
     main_device_id: str = ""
@@ -129,6 +131,8 @@ async def async_setup_entry(
     )
     await balance.async_load()
     programs.balance = balance
+    history = HistoryManager(hass, store, scheduler, watchdog)
+    await history.async_load()
     entry.runtime_data = IrrigationPlannerData(
         store=store,
         profiles=profiles,
@@ -137,6 +141,7 @@ async def async_setup_entry(
         programs=programs,
         watchdog=watchdog,
         balance=balance,
+        history=history,
     )
     main_device = dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -152,6 +157,7 @@ async def async_setup_entry(
     programs.async_start()
     watchdog.async_start()
     balance.async_start()
+    history.async_start()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await async_register_panel(hass)
     LOGGER.debug(
@@ -174,4 +180,5 @@ async def async_unload_entry(
         entry.runtime_data.season.async_stop()
     await entry.runtime_data.scheduler.async_shutdown()
     await entry.runtime_data.balance.async_stop()
+    await entry.runtime_data.history.async_stop()
     return unloaded

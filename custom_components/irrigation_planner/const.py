@@ -68,6 +68,8 @@ RAIN_CONDITIONS: Final = frozenset(
 )
 SERVICE_RUN_PROGRAM: Final = "run_program"
 SERVICE_SKIP_NEXT: Final = "skip_next"
+SERVICE_CANCEL_ZONE: Final = "cancel_zone"
+SERVICE_CANCEL_PROGRAM: Final = "cancel_program"
 ATTR_PROGRAM_ID: Final = "program_id"
 
 # Überwachung des Durchflusses (Konzept, Abschnitt 7)

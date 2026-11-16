@@ -21,6 +21,8 @@ from .const import (
     DOMAIN,
     MAX_VALVE_DURATION_S,
     MIN_VALVE_DURATION_S,
+    SERVICE_CANCEL_PROGRAM,
+    SERVICE_CANCEL_ZONE,
     SERVICE_RECALCULATE,
     SERVICE_RELEASE_ZONE,
     SERVICE_RESET_BALANCE,
@@ -135,4 +137,29 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
     hass.services.async_register(
         DOMAIN, SERVICE_SKIP_NEXT, skip_next, schema=PROGRAM_SCHEMA
+    )
+
+    async def cancel_zone(call: ServiceCall) -> None:
+        # Nur schließen bzw. aus der Warteschlange nehmen; der Rest läuft weiter.
+        if not _scheduler(hass).async_cancel_zone(call.data[ATTR_ZONE_ID]):
+            raise ServiceValidationError(
+                f"Zone {call.data[ATTR_ZONE_ID]} läuft nicht und wartet nicht"
+            )
+
+    async def cancel_program(call: ServiceCall) -> None:
+        if not _scheduler(hass).async_cancel_program(call.data[ATTR_PROGRAM_ID]):
+            raise ServiceValidationError(
+                f"Programm {call.data[ATTR_PROGRAM_ID]} läuft nicht"
+            )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CANCEL_ZONE,
+        cancel_zone,
+        schema=vol.Schema(
+            {vol.Required(ATTR_ZONE_ID): vol.All(str, vol.Length(min=1))}
+        ),
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_CANCEL_PROGRAM, cancel_program, schema=PROGRAM_SCHEMA
     )

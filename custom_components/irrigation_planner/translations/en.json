@@ -85,6 +85,26 @@
           "description": "Empty = all zones."
         }
       }
+    },
+    "cancel_zone": {
+      "name": "Cancel zone",
+      "description": "Removes a zone from the queue or closes it if it is watering. The queue continues with the next zone.",
+      "fields": {
+        "zone_id": {
+          "name": "Zone ID",
+          "description": "ID of the zone."
+        }
+      }
+    },
+    "cancel_program": {
+      "name": "Cancel program",
+      "description": "Stops a running program: closes the zone that is watering and removes its waiting zones.",
+      "fields": {
+        "program_id": {
+          "name": "Program ID",
+          "description": "ID of the program."
+        }
+      }
     }
   },
   "entity": {

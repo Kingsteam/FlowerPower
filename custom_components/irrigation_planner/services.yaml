@@ -44,3 +44,17 @@ reset_balance:
       example: rasen_vorne
       selector:
         text:
+cancel_zone:
+  fields:
+    zone_id:
+      required: true
+      example: rasen_vorne
+      selector:
+        text:
+cancel_program:
+  fields:
+    program_id:
+      required: true
+      example: morgens
+      selector:
+        text:

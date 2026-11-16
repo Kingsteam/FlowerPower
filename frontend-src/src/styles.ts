@@ -723,6 +723,12 @@ export const styles = css`
   :host([narrow]) .pages button {
     padding: 5px 10px;
   }
+  :host([narrow]) .pages .label {
+    display: none;
+  }
+  :host([narrow]) .pages {
+    margin-left: 8px;
+  }
 
   /* Nässekarte */
   svg.plan.wet .zone path,
@@ -1684,5 +1690,188 @@ export const styles = css`
     to {
       transform: rotate(360deg);
     }
+  }
+
+  /* Betrieb */
+  .operation .card h2 {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 12px 0 8px;
+  }
+  .card-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .card-head .spacer {
+    flex: 1;
+  }
+  .card-head select {
+    width: auto;
+    max-width: 50%;
+    font: inherit;
+    padding: 4px 6px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: inherit;
+  }
+  .queue,
+  .history {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .queue li {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 4px 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+  }
+  .queue li:first-child {
+    border-top: none;
+  }
+  .queue li.running ha-icon {
+    color: var(--accent);
+  }
+  .queue li.waiting {
+    color: var(--muted);
+  }
+  .queue .what {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .queue .what strong {
+    color: var(--primary-text-color, #212121);
+  }
+  .queue .what small,
+  .queue .left {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .operation .bar {
+    height: 6px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .operation .bar > div {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.9s linear;
+  }
+  .operation .bar.small {
+    width: 120px;
+    max-width: 100%;
+    background: color-mix(in srgb, var(--warn) 18%, transparent);
+  }
+  .operation .bar.small > div {
+    background: var(--warn);
+  }
+  .operation td small,
+  .operation p.small {
+    color: var(--muted);
+  }
+  .operation small.bad {
+    color: var(--bad);
+  }
+  .legend {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .legend i {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    margin-right: 6px;
+    vertical-align: -1px;
+  }
+  svg.chart {
+    width: 100%;
+    height: auto;
+    max-height: 260px;
+    margin-top: 8px;
+    font-size: 13px;
+  }
+  svg.chart .grid {
+    stroke: var(--line);
+    stroke-width: 1;
+  }
+  svg.chart .axis {
+    stroke: var(--muted);
+    stroke-width: 1;
+  }
+  svg.chart text {
+    fill: var(--muted);
+  }
+  svg.chart .day,
+  svg.chart .liters {
+    text-anchor: middle;
+  }
+  svg.chart .liters {
+    fill: var(--accent);
+  }
+  svg.chart .hit {
+    fill: transparent;
+  }
+  svg.chart g:hover .hit {
+    fill: color-mix(in srgb, currentColor 6%, transparent);
+  }
+  .history li {
+    display: grid;
+    grid-template-columns: auto 110px 1fr;
+    gap: 2px 10px;
+    align-items: start;
+    padding: 8px 0;
+    border-top: 1px solid var(--line);
+  }
+  .history li:first-child {
+    border-top: none;
+  }
+  .history .time {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .history li div {
+    display: flex;
+    flex-direction: column;
+  }
+  .history li small {
+    color: var(--muted);
+  }
+  .history li.ok ha-icon {
+    color: var(--ok);
+  }
+  .history li.warn ha-icon {
+    color: var(--warn);
+  }
+  .history li.bad ha-icon {
+    color: var(--bad);
+  }
+  .history li.muted ha-icon {
+    color: var(--muted);
+  }
+  :host([narrow]) .history li {
+    grid-template-columns: auto 1fr;
+  }
+  :host([narrow]) .history li > div {
+    grid-column: 2;
+  }
+  :host([narrow]) .queue li {
+    grid-template-columns: auto 1fr auto;
+  }
+  :host([narrow]) .queue .left {
+    grid-column: 2;
   }
 `;

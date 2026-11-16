@@ -66,7 +66,7 @@ from .water_balance import (
 BALANCE_STORAGE_KEY: Final = f"{DOMAIN}.balance"
 BALANCE_STORAGE_VERSION: Final = 1
 SAMPLE_INTERVAL_S: Final = 600
-HISTORY_DAYS: Final = 14
+HISTORY_DAYS: Final = 60
 
 
 # Zonen-Kennwerte -------------------------------------------------------------
@@ -223,6 +223,11 @@ class BalanceManager:
     def history(self) -> list[DayResult]:
         """Abgeschlossene Tage, neueste zuletzt."""
         return list(self._state.history)
+
+    @property
+    def today(self) -> DayAggregate | None:
+        """Bisher gesammeltes Wetter von heute."""
+        return self._state.today
 
     # Laden, Speichern, Start --------------------------------------------------
 

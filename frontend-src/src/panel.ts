@@ -34,6 +34,7 @@ import {
 } from "./geometry";
 import { FEATURE_META, MAX_LABEL_LENGTH, SOIL_COLORS, family, featureName, newFeatureId } from "./features";
 import { type Place, SEARCH_ATTRIBUTION, searchAddress } from "./geocode";
+import "./operation";
 import "./schedule";
 import { styles } from "./styles";
 import { type MyPosition, fmtAccuracy, locateErrorText, locateUnavailable } from "./locate";
@@ -146,7 +147,7 @@ export class IrrigationPlannerPanel extends LitElement {
   @state() private toastUndo = false;
   @state() private layersOpen = false;
   // Seite: Plan oder Übersicht; Nässekarte über dem Plan
-  @state() private page: "plan" | "overview" | "schedule" = "plan";
+  @state() private page: "plan" | "operation" | "overview" | "schedule" = "plan";
   @state() private wetOn = false;
   @state() private soilOn = false;
   private wetCache: { key: string; url: string; grid: ReturnType<typeof computeWetGrid> } | null = null;
@@ -1246,7 +1247,13 @@ export class IrrigationPlannerPanel extends LitElement {
     }
     return html`
       ${this.renderHeader()}
-      ${this.page === "overview"
+      ${this.page === "operation"
+        ? html`<ip-operation
+            .hass=${this._hass}
+            @ip-toast=${(e: CustomEvent<{ text: string; isError: boolean }>) =>
+              this.showToast(e.detail.text, e.detail.isError)}
+          ></ip-operation>`
+        : this.page === "overview"
         ? this.renderOverview()
         : this.page === "schedule"
           ? html`<ip-schedule
@@ -1614,14 +1621,17 @@ export class IrrigationPlannerPanel extends LitElement {
         <div class="title">Bewässerung</div>
         ${this.plan
           ? html`<nav class="pages">
-              <button class=${this.page === "plan" ? "active" : ""} @click=${() => (this.page = "plan")}>
-                <ha-icon icon="mdi:map-outline"></ha-icon>Plan
+              <button class=${this.page === "plan" ? "active" : ""} title="Plan" @click=${() => (this.page = "plan")}>
+                <ha-icon icon="mdi:map-outline"></ha-icon><span class="label">Plan</span>
               </button>
-              <button class=${this.page === "overview" ? "active" : ""} @click=${() => (this.page = "overview")}>
-                <ha-icon icon="mdi:chart-box-outline"></ha-icon>Übersicht
+              <button class=${this.page === "operation" ? "active" : ""} title="Betrieb" @click=${() => (this.page = "operation")}>
+                <ha-icon icon="mdi:play-circle-outline"></ha-icon><span class="label">Betrieb</span>
               </button>
-              <button class=${this.page === "schedule" ? "active" : ""} @click=${() => (this.page = "schedule")}>
-                <ha-icon icon="mdi:calendar-clock"></ha-icon>Zeitplan
+              <button class=${this.page === "overview" ? "active" : ""} title="Flächen" @click=${() => (this.page = "overview")}>
+                <ha-icon icon="mdi:chart-box-outline"></ha-icon><span class="label">Flächen</span>
+              </button>
+              <button class=${this.page === "schedule" ? "active" : ""} title="Zeitplan" @click=${() => (this.page = "schedule")}>
+                <ha-icon icon="mdi:calendar-clock"></ha-icon><span class="label">Zeitplan</span>
               </button>
             </nav>`
           : nothing}

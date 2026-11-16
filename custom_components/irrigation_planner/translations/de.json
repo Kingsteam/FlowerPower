@@ -85,6 +85,26 @@
           "description": "Leer = alle Zonen."
         }
       }
+    },
+    "cancel_zone": {
+      "name": "Zone abbrechen",
+      "description": "Nimmt eine Zone aus der Warteschlange oder schließt sie, wenn sie gerade gießt. Danach geht es mit der nächsten Zone weiter.",
+      "fields": {
+        "zone_id": {
+          "name": "Zonen-ID",
+          "description": "ID der Zone."
+        }
+      }
+    },
+    "cancel_program": {
+      "name": "Programm abbrechen",
+      "description": "Beendet ein laufendes Programm: schließt die Zone, die gerade gießt, und nimmt die wartenden Zonen heraus.",
+      "fields": {
+        "program_id": {
+          "name": "Programm-ID",
+          "description": "ID des Programms."
+        }
+      }
     }
   },
   "entity": {
