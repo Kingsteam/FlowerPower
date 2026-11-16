@@ -599,7 +599,7 @@
     },
     "plant_type": {
       "options": {
-        "__none__": "(not set)",
+        "none": "(not set)",
         "lawn": "Lawn",
         "flower_bed": "Flower bed",
         "raised_bed": "Raised bed",

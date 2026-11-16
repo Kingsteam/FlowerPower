@@ -74,6 +74,8 @@ from .water_balance import DEFAULT_SOIL, PLANTS, SOILS
 
 NEW = "__new__"
 NONE = "__none__"
+# Für übersetzte Auswahllisten: Schlüssel dürfen nicht mit _ beginnen (hassfest).
+PLANT_NONE = "none"
 TIMER_DRIVERS = ("zigbee2mqtt", "service_call")
 ROLE_FILTERS: dict[ValveRole, EntitySelectorConfig] = {
     ValveRole.VALVE: EntitySelectorConfig(domain=["switch", "valve"]),
@@ -673,8 +675,8 @@ class IrrigationPlannerOptionsFlow(OptionsFlow):
                     0, 2000, 0.1, "m²"
                 ),
                 vol.Required(
-                    "plant_type", default=zone.plant_type or NONE
-                ): _translated("plant_type", [NONE, *PLANTS]),
+                    "plant_type", default=zone.plant_type or PLANT_NONE
+                ): _translated("plant_type", [PLANT_NONE, *PLANTS]),
                 vol.Required("kc", default=self._kc_default(zone)): _number(
                     0, 1.5, 0.05
                 ),
@@ -738,7 +740,7 @@ class IrrigationPlannerOptionsFlow(OptionsFlow):
             zone.type = ZoneType(calc["zone_type"])
             zone.area_m2 = float(calc["area_m2"]) or None
             plant = calc["plant_type"]
-            zone.plant_type = None if plant == NONE else plant
+            zone.plant_type = None if plant == PLANT_NONE else plant
             kc = float(calc["kc"])
             # 0 = Pflanzenfaktor der gewählten Pflanzenart übernehmen.
             zone.kc = kc or (PLANTS[plant][0] if plant in PLANTS else 1.0)

@@ -599,7 +599,7 @@
     },
     "plant_type": {
       "options": {
-        "__none__": "(keine Angabe)",
+        "none": "(keine Angabe)",
         "lawn": "Rasen",
         "flower_bed": "Blumenbeet",
         "raised_bed": "Hochbeet",

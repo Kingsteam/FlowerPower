@@ -86,3 +86,4 @@ Zum Ausprobieren von Hand: einmalig `uv pip install -r devtools/testinstanz/requ
 - Endet ein Fortschrittsschritt sofort, reicht Home Assistant die Eingaben des vorigen Formulars an den nächsten Schritt weiter. Bestätigungsschritte dürfen solche Eingaben nicht als „Senden“ werten.
 - Service-Handler und `async_call_later`-Rückrufe als `async def` oder mit `@callback` anlegen, sonst laufen sie in einem Nebenthread.
 - Unterordnete Geräte mit `via_device_id` (Geräte-ID) anhängen; `via_device` ist veraltet.
+- Schlüssel in `strings.json` (auch Auswahl-Optionen mit `translation_key`) nur `[a-z0-9-_]`, nicht mit `_` oder `-` beginnen/enden. Das prüft nur hassfest auf GitHub, nicht pytest.
