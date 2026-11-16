@@ -41,6 +41,26 @@
     "stop_all": {
       "name": "Alles stoppen",
       "description": "Leert alle Warteschlangen und schließt alle Ventile."
+    },
+    "run_program": {
+      "name": "Programm starten",
+      "description": "Reiht alle Zonen eines Programms jetzt ein.",
+      "fields": {
+        "program_id": {
+          "name": "Programm-ID",
+          "description": "ID des Programms."
+        }
+      }
+    },
+    "skip_next": {
+      "name": "Nächsten Lauf überspringen",
+      "description": "Überspringt den nächsten geplanten Start eines Programms einmal.",
+      "fields": {
+        "program_id": {
+          "name": "Programm-ID",
+          "description": "ID des Programms."
+        }
+      }
     }
   }
 }

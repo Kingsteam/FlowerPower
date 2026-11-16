@@ -20,6 +20,7 @@ from .model import (
     Pump,
     Sensor,
     SensorKind,
+    Settings,
     Valve,
     ValveRole,
     WaterSupply,
@@ -116,6 +117,7 @@ def zone_to_dict(zone: Zone) -> Data:
         "valve_id": zone.valve_id,
         "priority": zone.priority,
         "max_duration_s": zone.max_duration_s,
+        "duration_s": zone.duration_s,
         "cycle_soak": zone.cycle_soak,
         "enabled": zone.enabled,
     }
@@ -139,6 +141,7 @@ def zone_from_dict(raw: Data) -> Zone:
         valve_id=raw.get("valve_id"),
         priority=int(_opt(raw, "priority", 0)),
         max_duration_s=raw.get("max_duration_s"),
+        duration_s=raw.get("duration_s"),
         cycle_soak=bool(_opt(raw, "cycle_soak", False)),
         enabled=bool(_opt(raw, "enabled", True)),
     )
@@ -258,6 +261,7 @@ def program_to_dict(program: Program) -> Data:
         "skip_on_frost": program.skip_on_frost,
         "skip_on_wind": program.skip_on_wind,
         "enabled": program.enabled,
+        "last_run": program.last_run,
     }
 
 
@@ -279,6 +283,7 @@ def program_from_dict(raw: Data) -> Program:
         skip_on_frost=bool(_opt(raw, "skip_on_frost", True)),
         skip_on_wind=bool(_opt(raw, "skip_on_wind", False)),
         enabled=bool(_opt(raw, "enabled", True)),
+        last_run=raw.get("last_run"),
     )
 
 
@@ -314,9 +319,30 @@ def sensor_from_dict(raw: Data) -> Sensor:
 # Gesamtmodell ---------------------------------------------------------------
 
 
+def settings_to_dict(settings: Settings) -> Data:
+    """Wandelt Einstellungen in dict um."""
+    return {
+        "automatic": settings.automatic,
+        "winter_mode": settings.winter_mode,
+        "winter_start": settings.winter_start,
+        "winter_end": settings.winter_end,
+    }
+
+
+def settings_from_dict(raw: Data) -> Settings:
+    """Wandelt dict in Einstellungen um."""
+    return Settings(
+        automatic=bool(_opt(raw, "automatic", True)),
+        winter_mode=bool(_opt(raw, "winter_mode", False)),
+        winter_start=raw.get("winter_start"),
+        winter_end=raw.get("winter_end"),
+    )
+
+
 def model_to_dict(model: GardenModel) -> Data:
     """Gesamtmodell → dict (so wird es gespeichert)."""
     return {
+        "settings": settings_to_dict(model.settings),
         "garden": garden_to_dict(model.garden),
         "zones": [zone_to_dict(z) for z in model.zones],
         "valves": [valve_to_dict(v) for v in model.valves],
@@ -329,6 +355,7 @@ def model_to_dict(model: GardenModel) -> Data:
 def model_from_dict(raw: Data) -> GardenModel:
     """Wandelt dict in Gesamtmodell um und prüft dabei alle Bezüge (``ValueError``)."""
     model = GardenModel(
+        settings=settings_from_dict(_opt(raw, "settings", {}) or {}),
         garden=garden_from_dict(_opt(raw, "garden", {}) or {}),
         zones=[zone_from_dict(z) for z in _opt(raw, "zones", [])],
         valves=[valve_from_dict(v) for v in _opt(raw, "valves", [])],

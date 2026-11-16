@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 
 from .const import STORAGE_KEY, STORAGE_MINOR_VERSION, STORAGE_VERSION
@@ -26,6 +26,7 @@ type StoredData = dict[str, Any]
 def _empty_data() -> StoredData:
     """Leeres Gartenmodell."""
     return {
+        "settings": {},
         "garden": {},
         "zones": [],
         "valves": [],
@@ -79,6 +80,12 @@ class IrrigationPlannerStore:
         except (KeyError, TypeError) as err:
             raise ValueError(f"Gespeicherte Daten sind unvollständig: {err}") from err
         return self.model
+
+    @callback
+    def async_schedule_save(self) -> None:
+        """Speichert gleich (gebündelt), z. B. nach einem Schalterwechsel."""
+        self.model.validate()
+        self._store.async_delay_save(lambda: model_to_dict(self.model), 1)
 
     async def async_save(self) -> None:
         """Prüft und speichert das aktuelle Modell."""

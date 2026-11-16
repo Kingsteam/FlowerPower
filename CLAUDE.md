@@ -10,7 +10,7 @@ Eigene Home-Assistant-Integration (HACS) für die Gartenbewässerung. Der Besitz
 
 Gartenplan, berechnete Gießdauer je Zone, ausfallsichere Ventilsteuerung, Überwachung des Durchflusses und Winterpause, unabhängig von der Hardware. Ziel und Architektur: `docs/KONZEPT.md`. Geplante Bedienung: `docs/HANDBUCH.md`.
 
-Stand: Phase 1, Schritte 1–3 fertig (Speichern, Treiber und Profile, Warteschlange). **Die Integration steuert jetzt Ventile**, über die Dienste `run_zone` und `stop_all`. Ventile und Zonen lassen sich noch nicht in der Oberfläche anlegen (Schritt 7); Plattformen/Entitäten fehlen noch (Schritt 5).
+Stand: Phase 1, Schritte 1–4 fertig (Speichern, Treiber und Profile, Warteschlange, Programme mit Zeitplan). **Die Integration steuert jetzt Ventile**, über die Dienste `run_zone`, `run_program`, `skip_next`, `stop_all` und den Zeitplan. Ventile und Zonen lassen sich noch nicht in der Oberfläche anlegen (Schritt 7); Plattformen/Entitäten fehlen noch (Schritt 5).
 
 ## Sicherheitsregeln (nicht verhandelbar)
 
@@ -41,10 +41,11 @@ Das Wissen über die konkrete Anlage des Besitzers liegt im separaten privaten R
 | `profiles/` | Geräteprofile als YAML + Lader; `device_timer` ohne `{duration}` im Befehl wird abgelehnt |
 | `diagnostics.py` | Diagnosedaten (Koordinaten geschwärzt) |
 | `scheduler.py` | Warteschlange je Wasserversorgung (`IrrigationScheduler`): Platz erst frei, wenn das Ventil **nachweislich zu** ist; klemmt es, bleibt die Versorgung gesperrt und OFF wird jede Minute wiederholt; von außen offene Ventile zählen mit; Startprüfung schließt offene Ventile; Höchstdauer je Zone |
-| `services.py`, `services.yaml` | Dienste `run_zone` (reiht nur ein) und `stop_all` |
+| `programs.py` | Ablaufplan (`build_plan`: Nacheinander, Abwechselnd mit Einziehzeit, Priorität), Zeitplan (`next_start`: Startzeit oder „fertig bis“, Wochentage oder alle N Tage; ohne Zeiten = Ende des Zeitfensters), Wetter-Überspringen, `ProgramManager` (prüft jede Minute, nur bei Automatik an und ohne Winterpause) |
+| `services.py`, `services.yaml` | Dienste `run_zone` (reiht nur ein), `run_program`, `skip_next`, `stop_all` |
 | `geometry.py`, `water_balance.py`, `watchdog.py`, `season.py`, `websocket_api.py` | nur Platzhalter mit Docstring |
 | `strings.json`, `translations/` | Texte (en = `strings.json`, de) |
-| `tests/` | pytest mit `pytest-homeassistant-custom-component` |
+| `tests/` | pytest mit `pytest-homeassistant-custom-component`; `helpers.py` (simulierte Ventile `SimValves`, `make_model`), Fixtures `sim`, `setup`, `advance` in `conftest.py` |
 | `docs/` | `KONZEPT.md`, `HANDBUCH.md`, `bilder/`, `entwuerfe.html` |
 | `devtools/testinstanz/` | simulierte Test-Home-Assistant-Instanz: `start.py`, Simulator `irrigation_sim` (10 Ventile, Bodenfeuchte, Wasserzähler, Störungen); nicht Teil der Auslieferung |
 

@@ -58,3 +58,14 @@ SERVICE_RUN_ZONE: Final = "run_zone"
 SERVICE_STOP_ALL: Final = "stop_all"
 ATTR_ZONE_ID: Final = "zone_id"
 ATTR_DURATION: Final = "duration"
+
+# Programme
+CYCLE_DEFAULT_S: Final = 300  # Länge einer Gießphase bei „Abwechselnd“
+FROST_THRESHOLD_C: Final = 3.0  # darunter: Frost, Programm wird übersprungen
+WIND_THRESHOLD_KMH: Final = 30.0  # darüber: zu windig
+RAIN_CONDITIONS: Final = frozenset(
+    {"rainy", "pouring", "lightning-rainy", "snowy-rainy", "hail", "snowy"}
+)
+SERVICE_RUN_PROGRAM: Final = "run_program"
+SERVICE_SKIP_NEXT: Final = "skip_next"
+ATTR_PROGRAM_ID: Final = "program_id"

@@ -103,6 +103,8 @@ class Zone:
     valve_id: str | None = None
     priority: int = 0
     max_duration_s: int | None = None
+    # Geplante Gießdauer, vorerst von Hand (ab Phase 2 berechnet).
+    duration_s: int | None = None
     cycle_soak: bool = False
     enabled: bool = True
 
@@ -175,6 +177,8 @@ class Program:
     skip_on_frost: bool = True
     skip_on_wind: bool = False
     enabled: bool = True
+    # Datum des letzten automatischen oder manuellen Starts (ISO, für „alle N Tage“).
+    last_run: str | None = None
 
 
 @dataclass(slots=True, kw_only=True)
@@ -191,9 +195,21 @@ class Sensor:
 
 
 @dataclass(slots=True, kw_only=True)
+class Settings:
+    """Globale Schalter."""
+
+    automatic: bool = True  # Zeitpläne aktiv
+    winter_mode: bool = False  # Winterpause
+    # Winterpause automatisch nach Datum (MM-TT), z. B. "11-01" bis "03-31".
+    winter_start: str | None = None
+    winter_end: str | None = None
+
+
+@dataclass(slots=True, kw_only=True)
 class GardenModel:
     """Das gesamte gespeicherte Modell."""
 
+    settings: Settings = field(default_factory=Settings)
     garden: Garden = field(default_factory=Garden)
     zones: list[Zone] = field(default_factory=list)
     valves: list[Valve] = field(default_factory=list)
@@ -216,6 +232,8 @@ class GardenModel:
             _check_ref(f"Zone {zone.id}", "Ventil", zone.valve_id, valve_ids)
             if zone.max_duration_s is not None and zone.max_duration_s < 1:
                 raise ValueError(f"Zone {zone.id}: Höchstdauer muss positiv sein")
+            if zone.duration_s is not None and zone.duration_s < 1:
+                raise ValueError(f"Zone {zone.id}: Dauer muss positiv sein")
         for valve in self.valves:
             for zone_id in valve.zone_ids:
                 _check_ref(f"Ventil {valve.id}", "Zone", zone_id, zone_ids)
@@ -251,6 +269,16 @@ class GardenModel:
         for program in self.programs:
             for zone_id in program.zone_ids:
                 _check_ref(f"Programm {program.id}", "Zone", zone_id, zone_ids)
+            if any(day not in range(7) for day in program.weekdays):
+                raise ValueError(f"Programm {program.id}: Wochentage sind 0 bis 6")
+            if program.interval_days is not None and program.interval_days < 1:
+                raise ValueError(f"Programm {program.id}: Intervall muss positiv sein")
+            for label, value in (
+                ("Startzeit", program.start_time),
+                ("Fertig bis", program.finish_by),
+            ):
+                if value is not None:
+                    _check_time(f"Programm {program.id}: {label}", value)
         for sensor in self.sensors:
             for zone_id in sensor.zone_ids:
                 _check_ref(f"Sensor {sensor.id}", "Zone", zone_id, zone_ids)
@@ -270,3 +298,14 @@ def _unique_ids(kind: str, items: list[Any]) -> set[str]:
 def _check_ref(owner: str, kind: str, ref: str | None, known: set[str]) -> None:
     if ref is not None and ref not in known:
         raise ValueError(f"{owner} verweist auf unbekannte(s) {kind} {ref}")
+
+
+def _check_time(owner: str, value: str) -> None:
+    parts = value.split(":")
+    try:
+        hour, minute = int(parts[0]), int(parts[1])
+        second = int(parts[2]) if len(parts) > 2 else 0
+    except ValueError, IndexError:
+        raise ValueError(f"{owner}: {value!r} ist keine Uhrzeit (HH:MM)") from None
+    if not (0 <= hour < 24 and 0 <= minute < 60 and 0 <= second < 60) or len(parts) > 3:
+        raise ValueError(f"{owner}: {value!r} ist keine Uhrzeit (HH:MM)")

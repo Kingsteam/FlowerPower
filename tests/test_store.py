@@ -27,6 +27,7 @@ from custom_components.irrigation_planner.model import (
     Pump,
     Sensor,
     SensorKind,
+    Settings,
     Valve,
     ValveRole,
     WaterSupply,
@@ -48,6 +49,9 @@ def _ref(uid: str, domain: str = "sensor") -> EntityRef:
 def full_model() -> GardenModel:
     """Ein Modell, in dem jedes Feld gesetzt ist."""
     return GardenModel(
+        settings=Settings(
+            automatic=False, winter_mode=True, winter_start="11-01", winter_end="03-31"
+        ),
         garden=Garden(
             background_image="plan.png",
             scale_points=((0.0, 0.0), (220.0, 0.0)),
@@ -69,6 +73,7 @@ def full_model() -> GardenModel:
                 valve_id="v1",
                 priority=2,
                 max_duration_s=1800,
+                duration_s=600,
                 cycle_soak=True,
                 enabled=False,
             ),
@@ -133,6 +138,7 @@ def full_model() -> GardenModel:
                 skip_on_frost=True,
                 skip_on_wind=True,
                 enabled=False,
+                last_run="2026-06-01",
             )
         ],
         sensors=[

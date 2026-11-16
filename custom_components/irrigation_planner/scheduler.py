@@ -128,6 +128,8 @@ class IrrigationScheduler:
         self._listeners: list[Callable[[], None]] = []
         self._unsubs: list[CALLBACK_TYPE] = []
         self._stopping = False
+        # Zonen, die nach einem Alarm gesperrt sind (Zone → Grund).
+        self.locked_zones: dict[str, str] = {}
 
         for supply in model.water_supplies:
             members = set(supply.valve_ids) | {
@@ -223,6 +225,53 @@ class IrrigationScheduler:
         pause_after_s: int = 0,
     ) -> Run:
         """Reiht einen Lauf ein. Löst ``QueueError`` mit Grund aus."""
+        zone_name = self._zone_name(zone_id)
+        if any(r.zone_id == zone_id for r in self.runs()):
+            raise QueueError(f"Zone „{zone_name}“ läuft schon oder ist eingereiht")
+        supply, run = self._prepare(zone_id, duration_s, source, pause_after_s)
+        self._append(supply, run)
+        self._notify()
+        return run
+
+    @callback
+    def async_enqueue_program(
+        self, program_id: str, steps: list[tuple[str, int, int]]
+    ) -> list[Run]:
+        """Reiht alle Schritte eines Programms ein: alle oder keinen.
+
+        ``steps`` sind (Zone, Dauer, Pause danach). Eine Zone darf mehrfach
+        vorkommen (Ablauf „Abwechselnd“). Zonen, die gerade von anderswo
+        laufen oder eingereiht sind, werden übersprungen.
+        """
+        source = f"program:{program_id}"
+        if any(r.source == source for r in self.runs()):
+            raise QueueError("Dieses Programm läuft schon oder ist eingereiht")
+        busy = {r.zone_id for r in self.runs()}
+        prepared = []
+        for zone_id, duration_s, pause_after_s in steps:
+            if zone_id in busy:
+                LOGGER.warning(
+                    "Programm %s: Zone %s ist schon beschäftigt, übersprungen",
+                    program_id,
+                    zone_id,
+                )
+                continue
+            prepared.append(self._prepare(zone_id, duration_s, source, pause_after_s))
+        if not prepared:
+            raise QueueError("Das Programm hat keine Zone, die gießen kann")
+        for supply, run in prepared:
+            self._append(supply, run)
+        self._notify()
+        return [run for _, run in prepared]
+
+    def _zone_name(self, zone_id: str) -> str:
+        zone = next((z for z in self.model.zones if z.id == zone_id), None)
+        return zone.name if zone else zone_id
+
+    def _prepare(
+        self, zone_id: str, duration_s: int, source: str, pause_after_s: int
+    ) -> tuple[SupplyQueue, Run]:
+        """Prüft einen Lauf und baut ihn (noch nicht eingereiht)."""
         if self._stopping:
             raise QueueError("Der Bewässerungsplaner wird gerade beendet")
         try:
@@ -234,14 +283,16 @@ class IrrigationScheduler:
             raise QueueError(f"Zone {zone_id} gibt es nicht")
         if not zone.enabled:
             raise QueueError(f"Zone „{zone.name}“ ist deaktiviert")
+        if zone_id in self.locked_zones:
+            raise QueueError(
+                f"Zone „{zone.name}“ ist gesperrt: {self.locked_zones[zone_id]}"
+            )
         if zone.valve_id is None:
             raise QueueError(f"Zone „{zone.name}“ hat kein Ventil")
         if zone.valve_id not in self.drivers:
             raise QueueError(
                 f"Das Ventil von Zone „{zone.name}“ ist nicht steuerbar (siehe Protokoll)"
             )
-        if any(r.zone_id == zone_id for r in self.runs()):
-            raise QueueError(f"Zone „{zone.name}“ läuft schon oder ist eingereiht")
         limit = min(zone.max_duration_s or MAX_VALVE_DURATION_S, MAX_VALVE_DURATION_S)
         if duration_s > limit:
             LOGGER.info(
@@ -251,7 +302,6 @@ class IrrigationScheduler:
                 limit,
             )
             duration_s = limit
-
         supply = self.supplies[self._supply_of_valve[zone.valve_id]]
         run = Run(
             zone_id=zone_id,
@@ -261,11 +311,15 @@ class IrrigationScheduler:
             source=source,
             pause_after_s=max(0, int(pause_after_s)),
         )
+        return supply, run
+
+    @callback
+    def _append(self, supply: SupplyQueue, run: Run) -> None:
         supply.pending.append(run)
-        LOGGER.debug("Zone %s eingereiht (%s s, %s)", zone.name, duration_s, source)
-        self._notify()
+        LOGGER.debug(
+            "Zone %s eingereiht (%s s, %s)", run.zone_id, run.duration_s, run.source
+        )
         self._kick(supply)
-        return run
 
     @callback
     def async_skip(self, supply_id: str | None = None) -> None:

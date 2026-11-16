@@ -155,6 +155,7 @@ def _beispielgarten() -> dict:
                 "type": "drip",
                 "valve_id": f"ventil_{n}",
                 "max_duration_s": 1800,
+                "duration_s": 120 + 30 * n,
             }
         )
         ventile.append(
@@ -181,7 +182,27 @@ def _beispielgarten() -> dict:
                 "max_open_valves": 1,
             }
         ],
-        "programs": [],
+        "programs": [
+            {
+                "id": "morgens",
+                "name": "Morgenprogramm",
+                "zone_ids": [f"zone_{n}" for n in range(1, 9)],
+                "mode": "sequence",
+                "pause_between_s": 20,
+                "finish_by": "07:00:00",
+            },
+            {
+                "id": "rasen",
+                "name": "Rasen abwechselnd",
+                "zone_ids": ["zone_4", "zone_5", "zone_6", "zone_7"],
+                "mode": "cycle_soak",
+                "cycle_s": 120,
+                "soak_s": 600,
+                "pause_between_s": 10,
+                "start_time": "21:00:00",
+                "weekdays": [0, 2, 4],
+            },
+        ],
         "sensors": [],
     }
 

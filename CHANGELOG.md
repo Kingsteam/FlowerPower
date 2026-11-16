@@ -6,6 +6,9 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 ## [Unveröffentlicht]
 
 ### Neu
+- Programme (`programs.py`): Abläufe „Nacheinander“, „Abwechselnd“ (Gießphasen reihum, mit Einziehzeit) und „Nach Priorität“; Pause zwischen den Ventilen. Zeitplan mit Startzeit oder „fertig bis“, Wochentagen oder „alle N Tage“. Überspringen bei Regen, Frost oder Wind (Wetter-Entität). Automatisch nur, wenn „Automatik“ an und keine Winterpause ist.
+- Zonen haben eine Gießdauer (vorerst von Hand), das Modell globale Einstellungen (Automatik, Winterpause).
+- Dienste `run_program` und `skip_next`.
 - Warteschlange (`scheduler.py`): je Wasserversorgung höchstens `max_open_valves` Ventile offen (Standard 1), auch bei Starts von Hand. Ein Platz wird erst frei, wenn das Ventil nachweislich zu ist; schließt es nicht, bleibt die Versorgung gesperrt und das Schließen wird jede Minute wiederholt. Von außen geöffnete Ventile zählen mit. Beim Start werden offene Ventile geschlossen. Laufzeiten werden auf die Höchstdauer der Zone begrenzt.
 - Dienste `irrigation_planner.run_zone` und `irrigation_planner.stop_all`.
 - Testinstanz: Beispielgarten mit den 10 simulierten Zonen.
