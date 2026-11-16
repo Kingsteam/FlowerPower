@@ -32,6 +32,7 @@ export interface Feature {
   points: Point[];
   radius_m: number | null;
   label: string | null;
+  trunk_m?: number | null;
 }
 
 export function family(kind: string): FeatureFamily {

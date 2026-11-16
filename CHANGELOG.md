@@ -22,6 +22,9 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 - Neue Zonenart „Gießschlauch“: eine Linie mit bewässerter Breite je Seite; Fläche = Länge mal Breite plus runde Enden. Im Editor zeichnen wie eine Linie.
 - Ventil einer Zone direkt im Plan-Editor wählen; gestrichelte Verbindungslinie von der Zone zum Ventil.
 - Grundriss-Flächen nur noch leicht eingefärbt, damit das Luftbild sichtbar bleibt.
+- Seite „Übersicht“: bewässerte Fläche gesamt und je Art, Wasser pro Durchgang, Überschneidungen, Tabellen je Zone (Fläche, Dauer, Liter, mm, Bedarf) und je Ventil (Durchfluss, Regenrate), offene Punkte.
+- Nässekarte (Tropfen-Knopf auf der Karte): wie viel Wasser pro Durchgang wo ankommt, Überlappungen doppelt, Wasserschatten hinter dicken Baumstämmen; Sensorwerte (Bodenfeuchte farbig) im Plan.
+- Bäume im Grundriss mit Stammdurchmesser.
 - Testinstanz auf dem eigenen Mac mit einer Zeile im Terminal (`devtools/testinstanz/mac-start.sh`).
 
 ### Behoben

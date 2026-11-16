@@ -137,6 +137,8 @@ class Feature:
     points: list[Point] = field(default_factory=list)
     radius_m: float | None = None
     label: str | None = None
+    # Nur Baum: Stammdurchmesser in Metern (wirft beim Sprinkler Wasserschatten).
+    trunk_m: float | None = None
 
 
 @dataclass(slots=True, kw_only=True)
@@ -471,6 +473,10 @@ def _check_features(features: list[Feature]) -> None:
             raise ValueError(f"{name}: braucht mindestens {need} Punkte")
         if feature.kind == "tree" and not (feature.radius_m and feature.radius_m > 0):
             raise ValueError(f"{name}: Kronenradius muss positiv sein")
+        if feature.trunk_m is not None and not (
+            0 < feature.trunk_m <= 2 * (feature.radius_m or 0)
+        ):
+            raise ValueError(f"{name}: Stamm muss dünner als die Krone sein")
         if feature.kind == "label" and not (feature.label or "").strip():
             raise ValueError(f"{name}: Beschriftung fehlt")
         if feature.label is not None and len(feature.label) > MAX_LABEL_LENGTH:

@@ -33,6 +33,7 @@ import {
 import { FEATURE_META, MAX_LABEL_LENGTH, family, featureName, newFeatureId } from "./features";
 import { type Place, SEARCH_ATTRIBUTION, searchAddress } from "./geocode";
 import { styles } from "./styles";
+import { WET_STOPS, computeWetGrid, drawnArea, gridImage, mmPerRun, runSeconds, wetColor } from "./wetmap";
 import type {
   Feature,
   Garden,
@@ -136,6 +137,10 @@ export class IrrigationPlannerPanel extends LitElement {
   private toastTimer?: number;
   @state() private toastUndo = false;
   @state() private layersOpen = false;
+  // Seite: Plan oder Übersicht; Nässekarte über dem Plan
+  @state() private page: "plan" | "overview" = "plan";
+  @state() private wetOn = false;
+  private wetCache: { key: string; url: string; grid: ReturnType<typeof computeWetGrid> } | null = null;
   // Sichern und Wiederherstellen
   @state() private menuOpen = false;
   @state() private pendingImport: { name: string; data: unknown } | null = null;
@@ -1133,6 +1138,13 @@ export class IrrigationPlannerPanel extends LitElement {
     }
     return html`
       ${this.renderHeader()}
+      ${this.page === "overview" ? this.renderOverview() : this.renderPlanPage()}
+      ${this.renderToast()}
+    `;
+  }
+
+  private renderPlanPage(): TemplateResult {
+    return html`
       <div class="layout">
         <div class="stage">
           ${this.renderPlan()} ${this.renderOverlay()}
@@ -1161,6 +1173,11 @@ export class IrrigationPlannerPanel extends LitElement {
           </div>
         </aside>
       </div>
+    `;
+  }
+
+  private renderToast(): TemplateResult | typeof nothing {
+    return html`
       ${this.toast
         ? html`<div class="toast" role="status">
             <span>${this.toast}</span>
@@ -1181,6 +1198,192 @@ export class IrrigationPlannerPanel extends LitElement {
     `;
   }
 
+  // Nässekarte -----------------------------------------------------------------
+
+  private wetGrid() {
+    const plan = this.plan!;
+    const b = this.bounds();
+    if (!b) return null;
+    const key = JSON.stringify([
+      plan.zones,
+      plan.valves.map((v) => [v.id, v.learned_flow_l_min]),
+      plan.garden.features.filter((f) => f.kind === "tree"),
+      Object.entries(this.status?.zones ?? {}).map(([id, z]) => [id, z.planned_s]),
+    ]);
+    if (this.wetCache?.key !== key) {
+      const pad = 1;
+      const grid = computeWetGrid(plan.zones, plan.valves, this.status, plan.garden.features, [
+        b[0] - pad,
+        b[1] - pad,
+        b[2] + pad,
+        b[3] + pad,
+      ]);
+      this.wetCache = { key, grid, url: gridImage(grid) };
+    }
+    return this.wetCache;
+  }
+
+  private renderWetMap() {
+    const wet = this.wetGrid();
+    if (!wet?.url) return nothing;
+    const g = wet.grid;
+    return svg`<image class="wet-layer" href=${wet.url} x=${g.x0} y=${g.y0}
+      width=${g.cols * g.step} height=${g.rows * g.step} preserveAspectRatio="none"></image>`;
+  }
+
+  /** Messwerte der Sensoren neben dem Symbol (Bodenfeuchte farbig). */
+  private renderSensorValues(px: number) {
+    const values = this.status?.sensors ?? {};
+    return this.plan!.sensors.map((s) => {
+      const v = values[s.id];
+      if (!s.position || !v || typeof v.value !== "number") return nothing;
+      let cls = "";
+      if (s.kind === "soil_moisture") {
+        const span = v.field_capacity_pct - v.wilting_point_pct;
+        const rel = span > 0 ? (v.value - v.wilting_point_pct) / span : 0.5;
+        cls = rel < 0.35 ? "dry" : rel > 0.85 ? "wet" : "ok";
+      }
+      const text = `${Math.round(v.value * 10) / 10}${v.unit ? ` ${v.unit}` : ""}`;
+      return svg`<text class="sensor-value ${cls}" x=${s.position[0]} y=${s.position[1]} dy=${24 * px}
+        font-size=${12 * px} stroke-width=${3 * px}>${text}</text>`;
+    });
+  }
+
+  private renderWetLegend(): TemplateResult {
+    const missing = this.plan!.zones.filter(
+      (z) => z.enabled && drawnArea(z) !== null && mmPerRun(z, this.plan!.valves, this.status) === null,
+    );
+    const top = WET_STOPS[WET_STOPS.length - 1][0];
+    const gradient = WET_STOPS.map(([mm, [r, g, b]]) => `rgb(${r},${g},${b}) ${(mm / top) * 100}%`).join(", ");
+    return html`<div class="wet-legend">
+      <strong>Wasser pro Durchgang</strong>
+      <div class="bar" style="background: linear-gradient(to right, ${gradient})"></div>
+      <div class="ticks">${WET_STOPS.map(([mm]) => html`<span>${mm}${mm === top ? "+" : ""}</span>`)}<em>mm</em></div>
+      ${missing.length
+        ? html`<small>Ohne Wert (kein Ventil, Durchfluss oder Dauer): ${missing.map((z) => z.name).join(", ")}</small>`
+        : nothing}
+      <small>Schätzung aus Dauer × gelerntem Durchfluss; Überlappungen zählen doppelt.</small>
+    </div>`;
+  }
+
+  // Übersicht ------------------------------------------------------------------
+
+  private renderOverview(): TemplateResult {
+    const plan = this.plan!;
+    const zones = plan.zones;
+    const valveOf = (z: PlanZone) => plan.valves.find((v) => v.id === z.valve_id);
+    const rows = zones.map((z) => {
+      const drawn = drawnArea(z);
+      const area = drawn ?? z.area_m2;
+      const flow = valveOf(z)?.learned_flow_l_min ?? null;
+      const seconds = runSeconds(z, this.status);
+      const liters = flow && seconds ? (seconds / 60) * flow : null;
+      return { z, drawn, area, flow, seconds, liters, mm: mmPerRun(z, plan.valves, this.status) };
+    });
+    const active = rows.filter((r) => r.z.enabled);
+    const total = active.reduce((s, r) => s + (r.area ?? 0), 0);
+    const liters = active.reduce((s, r) => s + (r.liters ?? 0), 0);
+    const overlap = zones.reduce((s, z) => s + z.overlap_m2, 0) / 2;
+    const byType = (["sprinkler", "drip", "hose"] as const).map((type) => {
+      const list = active.filter((r) => r.z.type === type);
+      return { type, count: list.length, area: list.reduce((s, r) => s + (r.area ?? 0), 0) };
+    });
+    const TYPE: Record<string, [string, string]> = {
+      sprinkler: ["Sprinkler", "mdi:sprinkler-variant"],
+      drip: ["Tropfschlauch", "mdi:water-outline"],
+      hose: ["Gießschlauch", "mdi:pipe"],
+    };
+    const hints: string[] = [];
+    for (const r of rows) {
+      if (!r.z.enabled) continue;
+      if (r.drawn === null && !r.z.area_m2) hints.push(`${r.z.name}: weder gezeichnet noch Fläche von Hand`);
+      else if (r.drawn === null) hints.push(`${r.z.name}: noch nicht gezeichnet (Fläche von Hand)`);
+      if (!r.z.valve_id) hints.push(`${r.z.name}: kein Ventil zugeordnet`);
+      else if (!r.flow) hints.push(`${r.z.name}: Durchfluss noch nicht gelernt (nach dem ersten Lauf)`);
+    }
+    const valveRows = plan.valves
+      .map((v) => {
+        const mine = active.filter((r) => r.z.valve_id === v.id);
+        const area = mine.reduce((s, r) => s + (r.area ?? 0), 0);
+        const rate = v.learned_flow_l_min && area ? (v.learned_flow_l_min * 60) / area : null;
+        return { v, mine, area, rate };
+      })
+      .filter((r) => r.mine.length);
+    const num = (v: number | null, digits = 0) =>
+      v == null ? "–" : v.toLocaleString("de-DE", { maximumFractionDigits: digits });
+    return html`
+      <div class="overview">
+        <section class="tiles">
+          <div class="tile"><span>Bewässerte Fläche</span><strong>${fmtArea(total)}</strong>
+            <small>${active.length} aktive Zonen</small></div>
+          <div class="tile"><span>Gezeichnet</span><strong>${rows.filter((r) => r.drawn !== null).length} von ${zones.length}</strong>
+            <small>Zonen im Plan</small></div>
+          <div class="tile"><span>Wasser pro Durchgang</span><strong>${num(liters)} L</strong>
+            <small>alle aktiven Zonen einmal</small></div>
+          <div class="tile ${overlap > 0.5 ? "warn" : ""}"><span>Überschneidungen</span><strong>${fmtArea(overlap)}</strong>
+            <small>werden doppelt gegossen</small></div>
+        </section>
+        <section class="types">
+          ${byType.map(
+            (t) => html`<div class="type">
+              <ha-icon icon=${TYPE[t.type][1]}></ha-icon>
+              <span>${TYPE[t.type][0]}</span>
+              <strong>${fmtArea(t.area)}</strong>
+              <small>${t.count} Zone${t.count === 1 ? "" : "n"}</small>
+            </div>`,
+          )}
+        </section>
+        ${hints.length
+          ? html`<section class="card"><h3>Noch offen</h3><ul class="hints">${hints.map((h) => html`<li>${h}</li>`)}</ul></section>`
+          : nothing}
+        <section class="card">
+          <h3>Zonen</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Zone</th><th>Art</th><th>Ventil</th><th class="n">Fläche</th><th class="n">Dauer</th>
+                <th class="n">Liter</th><th class="n">mm</th><th class="n">Bedarf</th></tr></thead>
+              <tbody>
+                ${rows.map(
+                  (r, i) => html`<tr class=${r.z.enabled ? "" : "off"}>
+                    <td><span class="dot" style="--zone:${this.zoneColor(i)}"></span>${r.z.name}</td>
+                    <td>${TYPE[r.z.type]?.[0] ?? r.z.type}</td>
+                    <td>${valveOf(r.z)?.name ?? "–"}</td>
+                    <td class="n">${r.area ? fmtArea(r.area) : "–"}${r.drawn === null && r.area ? html`<sup title="von Hand">*</sup>` : nothing}</td>
+                    <td class="n">${r.seconds ? fmtDuration(r.seconds) : "–"}</td>
+                    <td class="n">${num(r.liters)}</td>
+                    <td class="n">${num(r.mm, 1)}</td>
+                    <td class="n">${this.status?.zones[r.z.id] ? `${num(this.status.zones[r.z.id].need_mm, 1)} mm` : "–"}</td>
+                  </tr>`,
+                )}
+              </tbody>
+            </table>
+          </div>
+          <p class="hint small">Dauer: geplant, sonst von Hand. Liter und mm je Durchgang aus dem gelernten Durchfluss. * = Fläche von Hand.</p>
+        </section>
+        <section class="card">
+          <h3>Ventile</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Ventil</th><th>Zonen</th><th class="n">Fläche</th><th class="n">Durchfluss</th><th class="n">Regenrate</th></tr></thead>
+              <tbody>
+                ${valveRows.map(
+                  (r) => html`<tr>
+                    <td>${r.v.name}</td>
+                    <td>${r.mine.map((m) => m.z.name).join(", ")}</td>
+                    <td class="n">${fmtArea(r.area)}</td>
+                    <td class="n">${r.v.learned_flow_l_min ? `${num(r.v.learned_flow_l_min, 1)} L/min` : "–"}</td>
+                    <td class="n">${r.rate ? `${num(r.rate, 1)} mm/h` : "–"}</td>
+                  </tr>`,
+                )}
+              </tbody>
+            </table>
+          </div>
+          <p class="hint small">Regenrate: so viele Millimeter pro Stunde kommen auf der Fläche an. Über etwa 15 mm/h kann Wasser auf schwerem Boden ablaufen; dann hilft „Abwechselnd“ mit Einziehzeit.</p>
+        </section>
+      </div>
+    `;
+  }
+
   private renderHeader(): TemplateResult {
     const s = this.status;
     return html`
@@ -1194,6 +1397,16 @@ export class IrrigationPlannerPanel extends LitElement {
           <ha-icon icon="mdi:menu"></ha-icon>
         </button>
         <div class="title">Bewässerung</div>
+        ${this.plan
+          ? html`<nav class="pages">
+              <button class=${this.page === "plan" ? "active" : ""} @click=${() => (this.page = "plan")}>
+                <ha-icon icon="mdi:map-outline"></ha-icon>Plan
+              </button>
+              <button class=${this.page === "overview" ? "active" : ""} @click=${() => (this.page = "overview")}>
+                <ha-icon icon="mdi:chart-box-outline"></ha-icon>Übersicht
+              </button>
+            </nav>`
+          : nothing}
         ${s
           ? html`<div class="chips">
               ${s.winter_mode
@@ -1359,7 +1572,7 @@ export class IrrigationPlannerPanel extends LitElement {
       this.tool === "select" ? (this.drag?.type === "pan" ? "grabbing" : "grab") : "crosshair";
     return html`
       <svg
-        class="plan"
+        class="plan ${this.wetOn ? "wet" : ""}"
         width=${w}
         height=${h}
         style="cursor:${cursor}"
@@ -1389,12 +1602,14 @@ export class IrrigationPlannerPanel extends LitElement {
         <g transform=${transform}>
           ${this.renderBackground(px)}
           <g class="features">${this.renderFeatures(px)}</g>
+          ${this.wetOn ? this.renderWetMap() : nothing}
           ${this.plan!.zones.map((z, i) => this.renderZone(z, i, px))}
           ${this.renderSelectedHandles(px)} ${this.renderFeatureHandles(px)}
           ${this.renderDraft(px)} ${this.renderScaleDraft(px)} ${this.renderMeasure(px)}
           ${this.renderValveLinks(px)}
           ${this.plan!.valves.map((v) => this.renderMarker("valve", v, px))}
           ${this.plan!.sensors.map((s) => this.renderMarker("sensor", s, px))}
+          ${this.wetOn ? this.renderSensorValues(px) : nothing}
           ${this.renderSnapHint(px)}
           ${this.searchPin && this.plan!.garden.background === "map"
             ? svg`<g class="pin" transform="translate(${this.searchPin.point[0]} ${this.searchPin.point[1]}) scale(${px})">
@@ -1605,7 +1820,7 @@ export class IrrigationPlannerPanel extends LitElement {
       if (f.kind === "tree") {
         return svg`<g class=${cls} @pointerdown=${down}>
           <circle cx=${x} cy=${y} r=${f.radius_m ?? 1}></circle>
-          <circle class="trunk" cx=${x} cy=${y} r=${3 * px}></circle>
+          <circle class="trunk" cx=${x} cy=${y} r=${Math.max(3 * px, (f.trunk_m ?? 0) / 2)}></circle>
           <title>${featureName(f)}</title></g>`;
       }
       if (f.kind === "label") {
@@ -1796,6 +2011,10 @@ export class IrrigationPlannerPanel extends LitElement {
         <button class="icon" title="Vergrößern" @click=${() => this.zoomBy(1.4)}><ha-icon icon="mdi:plus"></ha-icon></button>
         <button class="icon" title="Verkleinern" @click=${() => this.zoomBy(1 / 1.4)}><ha-icon icon="mdi:minus"></ha-icon></button>
         <button class="icon" title="Alles zeigen" @click=${this.fitView}><ha-icon icon="mdi:fit-to-screen-outline"></ha-icon></button>
+        <button class="icon ${this.wetOn ? "on" : ""}" title="Nässekarte: wie viel Wasser wo ankommt"
+          @click=${() => (this.wetOn = !this.wetOn)}>
+          <ha-icon icon="mdi:water-percent"></ha-icon>
+        </button>
         <button class="icon ${this.tool === "measure" ? "on" : ""}" title="Abstand messen"
           @click=${() => (this.tool === "measure" ? this.cancelTool() : this.startTool("measure"))}>
           <ha-icon icon="mdi:tape-measure"></ha-icon>
@@ -1819,6 +2038,7 @@ export class IrrigationPlannerPanel extends LitElement {
         <span>N</span>
       </div>
       <div class="scalebar"><div style="width:${bar.px}px"></div><span>${bar.label}</span></div>
+      ${this.wetOn ? this.renderWetLegend() : nothing}
       ${g.background === "map"
         ? html`<div class="attribution">${provider?.attribution ?? "Eigener Kartendienst"}</div>`
         : nothing}
@@ -2261,7 +2481,25 @@ export class IrrigationPlannerPanel extends LitElement {
                       }}
                     />
                     <span class="unit">m</span>
-                  </label>`
+                  </label>
+                  <label class="field wide">
+                    <span>Stammdurchmesser (0 = unbekannt)</span>
+                    <input
+                      type="number"
+                      step="0.05"
+                      min="0"
+                      .value=${(f.trunk_m ?? 0).toFixed(2)}
+                      @change=${(e: Event) => {
+                        const v = parseFloat((e.target as HTMLInputElement).value);
+                        if (!(v >= 0)) return;
+                        this.remember();
+                        f.trunk_m = v > 0 ? Math.min(round(v), 2 * (f.radius_m ?? 0)) : null;
+                        this.changed();
+                      }}
+                    />
+                    <span class="unit">m</span>
+                  </label>
+                  <p class="hint small">Ein dicker Stamm hält den Strahl eines Sprinklers auf. Die Nässekarte zeigt dahinter einen Wasserschatten.</p>`
                 : nothing}
               ${fam !== "point"
                 ? this.renderEdges(f.points, fam === "area", (pts) => (f.points = pts))

@@ -84,8 +84,16 @@ export interface ZoneStatus {
   locked_reason: string | null;
 }
 
+export interface SensorValue {
+  value: number | string;
+  unit: string | null;
+  field_capacity_pct: number;
+  wilting_point_pct: number;
+}
+
 export interface Status {
   zones: Record<string, ZoneStatus>;
+  sensors?: Record<string, SensorValue>;
   winter_mode: boolean;
   automatic: boolean;
   problems: string[];

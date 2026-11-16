@@ -675,6 +675,203 @@ export const styles = css`
     stroke-dasharray: 10 6;
     animation: flow 0.9s linear infinite;
   }
+  /* Seiten Plan / Übersicht in der Kopfzeile */
+  .pages {
+    display: flex;
+    gap: 2px;
+    margin-left: 16px;
+    background: color-mix(in srgb, currentColor 8%, transparent);
+    border-radius: 999px;
+    padding: 3px;
+  }
+  .pages button {
+    color: inherit;
+    padding: 5px 14px;
+    font-size: 14px;
+    gap: 6px;
+  }
+  .pages button.active {
+    background: var(--card);
+    color: var(--accent);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  }
+  :host([narrow]) .pages button {
+    padding: 5px 10px;
+  }
+
+  /* Nässekarte */
+  svg.plan.wet .zone path,
+  svg.plan.wet .zone polygon,
+  svg.plan.wet .zone polyline.hose-band {
+    fill: none;
+    stroke-width: 1.5;
+  }
+  svg.plan.wet .zone polyline.hose-band {
+    stroke: none;
+  }
+  .wet-layer {
+    pointer-events: none;
+  }
+  .sensor-value {
+    text-anchor: middle;
+    font-weight: 700;
+    fill: #455a64;
+    stroke: #fff;
+    paint-order: stroke;
+    stroke-linejoin: round;
+    pointer-events: none;
+  }
+  .sensor-value.dry {
+    fill: #c0392b;
+  }
+  .sensor-value.ok {
+    fill: #2e7d32;
+  }
+  .sensor-value.wet {
+    fill: #1565c0;
+  }
+  .wet-legend {
+    position: absolute;
+    right: 12px;
+    bottom: 30px;
+    width: 250px;
+    background: var(--card);
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    padding: 10px 12px;
+    font-size: 12.5px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .wet-legend .bar {
+    height: 10px;
+    border-radius: 5px;
+  }
+  .wet-legend .ticks {
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .wet-legend small {
+    color: var(--muted);
+    line-height: 1.35;
+  }
+
+  /* Übersicht */
+  .overview {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px max(16px, 3vw) 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+  }
+  .tile {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    box-shadow: var(--ha-card-box-shadow, 0 1px 3px rgba(0, 0, 0, 0.08));
+  }
+  .tile span {
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .tile strong {
+    font-size: 28px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .tile small {
+    color: var(--muted);
+  }
+  .tile.warn strong {
+    color: var(--bad);
+  }
+  .types {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+  }
+  .type {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 2px 10px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+  .type ha-icon {
+    grid-row: span 2;
+    color: var(--accent);
+  }
+  .type strong {
+    font-variant-numeric: tabular-nums;
+  }
+  .type small {
+    grid-column: 2 / 4;
+    color: var(--muted);
+  }
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 4px 16px 12px;
+    box-shadow: var(--ha-card-box-shadow, 0 1px 3px rgba(0, 0, 0, 0.08));
+  }
+  .hints {
+    margin: 0;
+    padding-left: 20px;
+    line-height: 1.6;
+  }
+  .table-wrap {
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  th {
+    text-align: left;
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 12.5px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  td .dot {
+    display: inline-block;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  th.n,
+  td.n {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  tr.off td {
+    color: var(--muted);
+  }
   .valve-link {
     stroke: var(--zone);
     stroke-width: 1.5;

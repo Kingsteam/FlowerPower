@@ -93,6 +93,7 @@ def garden_to_dict(garden: Garden) -> Data:
                 "points": [_point_out(p) for p in f.points],
                 "radius_m": f.radius_m,
                 "label": f.label,
+                "trunk_m": f.trunk_m,
             }
             for f in garden.features
         ],
@@ -123,6 +124,7 @@ def garden_from_dict(raw: Data) -> Garden:
                 points=[_point_in(p) for p in _opt(f, "points", [])],  # type: ignore[misc]
                 radius_m=None if f.get("radius_m") is None else float(f["radius_m"]),
                 label=f.get("label"),
+                trunk_m=None if f.get("trunk_m") is None else float(f["trunk_m"]),
             )
             for f in _opt(raw, "features", [])
         ],

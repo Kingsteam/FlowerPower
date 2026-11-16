@@ -30,6 +30,7 @@ import voluptuous as vol
 
 from .backup import ws_export, ws_import
 from .const import DOMAIN, MAP_PROVIDER_CUSTOM, MAP_PROVIDERS
+from .drivers.ha import resolve_entity_id
 from .geocode import GeocodeError, async_search
 from .geometry import geometry_area, overlaps, zone_area
 from .model import GardenModel, Point
@@ -163,6 +164,28 @@ def plan_payload(hass: HomeAssistant, data: IrrigationPlannerData) -> dict[str, 
     }
 
 
+def _sensor_values(data: IrrigationPlannerData) -> dict[str, Any]:
+    """Aktuelle Messwerte der Sensoren (für die Nässekarte)."""
+    hass = data.balance.hass
+    values: dict[str, Any] = {}
+    for sensor in data.store.model.sensors:
+        entity_id = resolve_entity_id(hass, sensor.entity)
+        state = hass.states.get(entity_id) if entity_id else None
+        if state is None or state.state in ("unknown", "unavailable"):
+            continue
+        try:
+            value: float | str = float(state.state)
+        except ValueError:
+            value = state.state
+        values[sensor.id] = {
+            "value": value,
+            "unit": state.attributes.get("unit_of_measurement"),
+            "field_capacity_pct": sensor.field_capacity_pct,
+            "wilting_point_pct": sensor.wilting_point_pct,
+        }
+    return values
+
+
 def status_payload(data: IrrigationPlannerData) -> dict[str, Any]:
     """Zustand je Zone für die Einfärbung im Plan."""
     runs = data.scheduler.runs()
@@ -185,6 +208,7 @@ def status_payload(data: IrrigationPlannerData) -> dict[str, Any]:
         }
     return {
         "zones": zones,
+        "sensors": _sensor_values(data),
         "winter_mode": data.store.model.settings.winter_mode,
         "automatic": data.store.model.settings.automatic,
         "problems": data.problems,

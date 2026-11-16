@@ -264,3 +264,32 @@ async def test_image_needs_login(
     assert (
         await client.get(f"/api/{DOMAIN}/image/plan-0000000000000000.png")
     ).status == 401
+
+
+async def test_status_contains_sensor_values(
+    hass: HomeAssistant,
+    setup: Any,
+    sim: SimValves,
+    hass_ws_client: Any,
+    entity_registry: Any,
+) -> None:
+    soil = entity_registry.async_get_or_create("sensor", "test", "boden_1")
+    hass.states.async_set(soil.entity_id, "31.5", {"unit_of_measurement": "%"})
+    model = make_model(1)
+    model["sensors"] = [
+        {
+            "id": "s1",
+            "name": "Boden",
+            "kind": "soil_moisture",
+            "entity": {"domain": "sensor", "platform": "test", "unique_id": "boden_1"},
+            "zone_ids": ["z1"],
+            "position": [1, 1],
+        }
+    ]
+    await setup(model)
+    client = await _ws(hass_ws_client, hass)
+    await client.send_json_auto_id({"type": f"{DOMAIN}/plan/subscribe"})
+    assert (await client.receive_json())["success"]
+    event = (await client.receive_json())["event"]
+    assert event["sensors"]["s1"]["value"] == 31.5
+    assert event["sensors"]["s1"]["unit"] == "%"

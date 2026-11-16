@@ -164,6 +164,14 @@ GRUNDRISS = [
         "points": [[-15, -21], [14, -21], [14, 10.5], [-15, 10.5], [-15, -21]],
     },
     {"id": "apfel", "kind": "tree", "points": [[9, 5.5]], "radius_m": 2.5},
+    # Kirschbaum im Rasen: Der Stamm wirft beim Sprinkler einen Wasserschatten.
+    {
+        "id": "kirsche",
+        "kind": "tree",
+        "points": [[5.5, -1.5]],
+        "radius_m": 1.5,
+        "trunk_m": 0.5,
+    },
     {"id": "hahn", "kind": "tap", "points": [[-1, -10.8]]},
 ]
 NAMEN = {

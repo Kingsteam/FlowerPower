@@ -276,3 +276,18 @@ def test_hose_area_and_contains() -> None:
 def test_hose_validation(zone: Zone, message: str) -> None:
     with pytest.raises(ValueError, match=message):
         GardenModel(zones=[zone]).validate()
+
+
+def test_tree_trunk() -> None:
+    tree = {
+        "id": "b",
+        "kind": "tree",
+        "points": [[0, 0]],
+        "radius_m": 2,
+        "trunk_m": 0.6,
+    }
+    garden = _features(tree)
+    GardenModel(garden=garden).validate()
+    assert garden_from_dict(garden_to_dict(garden)).features[0].trunk_m == 0.6
+    with pytest.raises(ValueError, match="Stamm"):
+        GardenModel(garden=_features({**tree, "trunk_m": 5})).validate()
