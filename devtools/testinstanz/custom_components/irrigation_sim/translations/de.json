@@ -1,0 +1,11 @@
+{
+  "config": {
+    "step": {"user": {"title": "Ventil-Simulator", "description": "Legt 10 simulierte Ventile an. Nur zum Testen."}},
+    "abort": {"single_instance_allowed": "Der Simulator ist schon eingerichtet."}
+  },
+  "services": {
+    "open_for": {"name": "Zone für N Sekunden öffnen", "description": "Öffnet eine simulierte Zone. Zonen mit Gerätetimer schließen danach von selbst.", "fields": {"zone": {"name": "Zone", "description": "Nummer der Zone (1–10)"}, "duration": {"name": "Dauer", "description": "Sekunden"}}},
+    "set_fault": {"name": "Störung auslösen", "description": "Simuliert eine Störung an einer Zone.", "fields": {"zone": {"name": "Zone", "description": "Nummer der Zone (1–10)"}, "fault": {"name": "Störung", "description": "none = keine Störung"}}},
+    "set_battery": {"name": "Batteriestand setzen", "description": "Setzt den Batteriestand einer Zone.", "fields": {"zone": {"name": "Zone", "description": "Nummer der Zone (1–10)"}, "level": {"name": "Batterie", "description": "Prozent"}}}
+  }
+}

@@ -40,6 +40,7 @@ Das Wissen über die konkrete Anlage des Besitzers liegt im separaten privaten R
 | `strings.json`, `translations/` | Texte (en = `strings.json`, de) |
 | `tests/` | pytest mit `pytest-homeassistant-custom-component` |
 | `docs/` | `KONZEPT.md`, `HANDBUCH.md`, `bilder/`, `entwuerfe.html` |
+| `devtools/testinstanz/` | simulierte Test-Home-Assistant-Instanz: `start.py`, Simulator `irrigation_sim` (10 Ventile, Bodenfeuchte, Wasserzähler, Störungen); nicht Teil der Auslieferung |
 
 Noch nicht angelegt (siehe Konzept Abschnitt 3): weitere Treiber (`ha_valve`, `ha_switch`, `zigbee2mqtt`, `service_call`), `profiles/`, `discovery.py`, Plattformen (`sensor`, `switch`, `binary_sensor`, `button`, `select`), `frontend/`, `frontend-src/`. Sobald es Plattformen gibt: `PLATFORMS` definieren und `async_forward_entry_setups`/`async_unload_platforms` verwenden.
 
@@ -53,6 +54,8 @@ uv pip install -r requirements_test.txt
 pytest
 ruff check . && ruff format --check .
 ```
+
+Zum Ausprobieren von Hand: `python devtools/testinstanz/start.py` (siehe `devtools/testinstanz/README.md`). Diese Instanz ist komplett simuliert; nie eine Kopie der echten Installation verwenden.
 
 `requirements_test.txt` pinnt `pytest-homeassistant-custom-component`; die Version bestimmt, gegen welche Home-Assistant-Version getestet wird (0.13.375 → HA 2026.10.4). Bei neuen HA-Versionen anheben. Auf GitHub laufen zusätzlich `hassfest` und die HACS-Prüfung (`.github/workflows/`).
 
