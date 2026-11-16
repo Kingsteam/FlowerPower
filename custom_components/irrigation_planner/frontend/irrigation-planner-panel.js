@@ -856,6 +856,15 @@ const We = Bt`
     flex-shrink: 0;
     box-sizing: border-box;
   }
+  header .logo {
+    width: 32px;
+    height: 32px;
+    margin-right: 8px;
+    flex: none;
+  }
+  :host([narrow]) header .logo {
+    display: none;
+  }
   header .title {
     font-size: 20px;
     font-weight: 400;
@@ -5096,6 +5105,7 @@ let k = class extends Q {
         >
           <ha-icon icon="mdi:menu"></ha-icon>
         </button>
+        <img class="logo" src="/irrigation_planner_static/logo.png" alt="" width="32" height="32" />
         <div class="title">Bewässerung</div>
         ${this.plan ? c`<nav class="pages">
               <button class=${this.page === "plan" ? "active" : ""} title="Plan" @click=${() => this.page = "plan"}>

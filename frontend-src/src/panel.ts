@@ -1863,6 +1863,7 @@ export class IrrigationPlannerPanel extends LitElement {
         >
           <ha-icon icon="mdi:menu"></ha-icon>
         </button>
+        <img class="logo" src="/irrigation_planner_static/logo.png" alt="" width="32" height="32" />
         <div class="title">Bewässerung</div>
         ${this.plan
           ? html`<nav class="pages">

@@ -37,6 +37,15 @@ export const styles = css`
     flex-shrink: 0;
     box-sizing: border-box;
   }
+  header .logo {
+    width: 32px;
+    height: 32px;
+    margin-right: 8px;
+    flex: none;
+  }
+  :host([narrow]) header .logo {
+    display: none;
+  }
   header .title {
     font-size: 20px;
     font-weight: 400;

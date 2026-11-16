@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/bilder/logo.png" alt="FlowerPower" width="200"></p>
+
 # Bewässerungsplaner
 
 Eine Erweiterung (Integration) für Home Assistant, die den Garten automatisch und sicher bewässern soll: mit Gartenplan, berechneter Gießdauer pro Zone, Überwachung des Durchflusses und Winterpause. Sie soll mit beliebiger Bewässerungs-Hardware funktionieren.
