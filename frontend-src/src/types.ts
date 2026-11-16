@@ -52,7 +52,10 @@ export interface PlanSensor {
 
 export interface Provider {
   name: string;
+  short?: string;
+  kind?: "photo" | "map";
   url: string;
+  overlay?: string;
   attribution: string;
   max_zoom: number;
 }

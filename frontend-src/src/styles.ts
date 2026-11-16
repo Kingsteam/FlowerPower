@@ -642,6 +642,41 @@ export const styles = css`
     color: var(--accent);
     background: color-mix(in srgb, var(--accent) 12%, transparent);
   }
+  .layers {
+    position: absolute;
+    top: 152px;
+    left: 68px;
+    display: flex;
+    flex-direction: column;
+    min-width: 220px;
+    padding: 6px;
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.28);
+    z-index: 3;
+  }
+  .layers button {
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    color: var(--primary-text-color);
+    font-size: 14px;
+  }
+  .layers button ha-icon {
+    color: var(--muted);
+  }
+  .layers button:hover {
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+  .layers button.active {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    font-weight: 500;
+  }
+  .layers button.active ha-icon {
+    color: var(--accent);
+  }
   .search {
     position: absolute;
     top: 12px;
@@ -838,6 +873,14 @@ export const styles = css`
     font-size: 14px;
     z-index: 10;
     max-width: 90vw;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .toast button.text {
+    color: #90caf9;
+    padding: 4px 8px;
+    margin: -4px -8px -4px 0;
   }
   .empty {
     flex: 1;

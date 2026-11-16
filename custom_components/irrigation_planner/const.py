@@ -94,15 +94,57 @@ SERVICE_RESET_BALANCE: Final = "reset_balance"
 
 # Phase 3: Kartendienste für das Luftbild unter dem Plan. Die Kacheln lädt
 # der Browser direkt vom Dienst; gespeichert werden nur Mitte und Zoom.
+# Je Ansicht: Name, kurzer Name für den Umschalter auf der Karte, Art
+# ("photo" oder "map"), Kachel-Adresse, optional eine Beschriftungsebene
+# darüber ("overlay"), Quellenangabe und höchste Zoomstufe.
+_BASEMAP: Final = "https://mapsneu.wien.gv.at/basemap"
+_BASEMAP_ATTRIBUTION: Final = "Datenquelle: basemap.at (CC BY 4.0)"
 MAP_PROVIDERS: Final = {
     "basemap_at": {
         "name": "basemap.at Orthofoto (nur Österreich)",
-        "url": "https://mapsneu.wien.gv.at/basemap/bmaporthofoto30cm/normal/google3857/{z}/{y}/{x}.jpeg",
-        "attribution": "Datenquelle: basemap.at (CC BY 4.0)",
+        "short": "Luftbild",
+        "kind": "photo",
+        "url": f"{_BASEMAP}/bmaporthofoto30cm/normal/google3857/{{z}}/{{y}}/{{x}}.jpeg",
+        "attribution": _BASEMAP_ATTRIBUTION,
+        "max_zoom": 19,
+    },
+    "basemap_at_labels": {
+        "name": "basemap.at Orthofoto mit Beschriftung (nur Österreich)",
+        "short": "Luftbild mit Straßen",
+        "kind": "photo",
+        "url": f"{_BASEMAP}/bmaporthofoto30cm/normal/google3857/{{z}}/{{y}}/{{x}}.jpeg",
+        "overlay": f"{_BASEMAP}/bmapoverlay/normal/google3857/{{z}}/{{y}}/{{x}}.png",
+        "attribution": _BASEMAP_ATTRIBUTION,
+        "max_zoom": 19,
+    },
+    "basemap_at_map": {
+        "name": "basemap.at Karte (nur Österreich)",
+        "short": "Karte",
+        "kind": "map",
+        "url": f"{_BASEMAP}/geolandbasemap/normal/google3857/{{z}}/{{y}}/{{x}}.png",
+        "attribution": _BASEMAP_ATTRIBUTION,
+        "max_zoom": 19,
+    },
+    "basemap_at_grey": {
+        "name": "basemap.at Karte grau (nur Österreich)",
+        "short": "Karte grau",
+        "kind": "map",
+        "url": f"{_BASEMAP}/bmapgrau/normal/google3857/{{z}}/{{y}}/{{x}}.png",
+        "attribution": _BASEMAP_ATTRIBUTION,
+        "max_zoom": 19,
+    },
+    "osm": {
+        "name": "OpenStreetMap (weltweit)",
+        "short": "OpenStreetMap",
+        "kind": "map",
+        "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "attribution": "© OpenStreetMap-Mitwirkende",
         "max_zoom": 19,
     },
     "esri": {
         "name": "Esri World Imagery (Nutzungsbedingungen beachten)",
+        "short": "Esri Satellit",
+        "kind": "photo",
         "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         "attribution": "Tiles © Esri, Maxar, Earthstar Geographics, GIS User Community",
         "max_zoom": 19,

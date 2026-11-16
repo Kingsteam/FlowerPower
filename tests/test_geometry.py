@@ -175,3 +175,17 @@ def test_calculated_zone_with_drawing_needs_no_area() -> None:
     zone = sprinkler("z", (0.0, 0.0), 2.0)
     zone.duration_mode = DurationMode.CALCULATED
     GardenModel(zones=[zone]).validate()
+
+
+def test_map_providers_are_complete() -> None:
+    from custom_components.irrigation_planner.const import MAP_PROVIDERS
+
+    assert "basemap_at" in MAP_PROVIDERS
+    for key, provider in MAP_PROVIDERS.items():
+        for url in filter(None, (provider["url"], provider.get("overlay"))):
+            assert url.startswith("https://"), key
+            assert all(p in url for p in ("{z}", "{x}", "{y}")), key
+        assert provider["short"], key
+        assert provider["kind"] in ("photo", "map"), key
+        assert provider["attribution"], key
+        assert 1 <= provider["max_zoom"] <= 22, key

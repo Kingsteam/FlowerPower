@@ -116,6 +116,8 @@ export class IrrigationPlannerPanel extends LitElement {
   private unsub?: () => void;
   private resizer?: ResizeObserver;
   private toastTimer?: number;
+  @state() private toastUndo = false;
+  @state() private layersOpen = false;
   private autoFit = true;
 
   // `hass` ändert sich bei jedem Zustandswechsel im Haus; das Panel braucht
@@ -188,11 +190,12 @@ export class IrrigationPlannerPanel extends LitElement {
     );
   }
 
-  private setPlan(plan: PlanData, fit: boolean): void {
+  /** Neuer Stand vom Server. Nach dem Speichern bleibt „Rückgängig“ möglich. */
+  private setPlan(plan: PlanData, fit: boolean, keepHistory = false): void {
     this.plan = plan;
     this.savedJson = JSON.stringify(this.editable());
     this.dirty = false;
-    this.history = [];
+    if (!keepHistory) this.history = [];
     void this.loadImage();
     if (fit) this.fitView();
   }
@@ -223,8 +226,8 @@ export class IrrigationPlannerPanel extends LitElement {
 
   private discard(): void {
     if (!this.dirty) return;
+    this.remember(); // auch „Verwerfen“ lässt sich rückgängig machen
     this.plan = { ...this.plan!, ...(JSON.parse(this.savedJson) as Editable) };
-    this.history = [];
     this.dirty = false;
     this.cancelTool();
     void this.loadImage();
@@ -252,7 +255,7 @@ export class IrrigationPlannerPanel extends LitElement {
         valves: plan.valves.map((v) => ({ id: v.id, position: v.position })),
         sensors: plan.sensors.map((s) => ({ id: s.id, position: s.position })),
       });
-      this.setPlan(result, false);
+      this.setPlan(result, false, true);
       this.showToast("Plan gespeichert");
     } catch (err) {
       this.showToast(`Nicht gespeichert: ${this.message(err)}`, true);
@@ -266,10 +269,22 @@ export class IrrigationPlannerPanel extends LitElement {
     return String(err);
   }
 
-  private showToast(text: string, isError = false): void {
+  private showToast(text: string, isError = false, withUndo = false): void {
     this.toast = (isError ? "⚠ " : "") + text;
+    this.toastUndo = withUndo;
     window.clearTimeout(this.toastTimer);
-    this.toastTimer = window.setTimeout(() => (this.toast = ""), isError ? 8000 : 3000);
+    this.toastTimer = window.setTimeout(
+      () => {
+        this.toast = "";
+        this.toastUndo = false;
+      },
+      isError || withUndo ? 8000 : 3000,
+    );
+  }
+
+  /** Entfernen mit Hinweis und „Rückgängig“-Knopf. */
+  private removed(text: string): void {
+    this.showToast(text, false, true);
   }
 
   // Hintergrundbild ------------------------------------------------------------
@@ -470,6 +485,7 @@ export class IrrigationPlannerPanel extends LitElement {
     zone.radius_m = null;
     zone.polygon = [];
     this.changed();
+    this.removed(`${zone.name}: Zeichnung entfernt`);
   }
 
   private onPointerDown = (event: PointerEvent): void => {
@@ -819,6 +835,33 @@ export class IrrigationPlannerPanel extends LitElement {
     `;
   }
 
+  /** Umschalter für die Kartenansicht (Luftbild, Karte, …) direkt auf dem Plan. */
+  private renderLayers(): TemplateResult | typeof nothing {
+    const g = this.plan!.garden;
+    if (!this.layersOpen || g.background !== "map") return nothing;
+    const entries: [string, string, string][] = Object.entries(this.plan!.providers).map(
+      ([key, p]) => [key, p.short ?? p.name, p.kind === "map" ? "mdi:map-outline" : "mdi:satellite-variant"],
+    );
+    if (g.map_url) entries.push(["custom", "Eigene Adresse", "mdi:web"]);
+    return html`
+      <div class="layers" role="menu" @pointerdown=${(e: Event) => e.stopPropagation()}>
+        ${entries.map(
+          ([key, label, icon]) => html`<button
+            role="menuitemradio"
+            aria-checked=${g.map_provider === key ? "true" : "false"}
+            class=${g.map_provider === key ? "active" : ""}
+            @click=${() => {
+              if (g.map_provider !== key) this.updateGarden({ map_provider: key });
+              this.layersOpen = false;
+            }}
+          >
+            <ha-icon icon=${icon}></ha-icon>${label}
+          </button>`,
+        )}
+      </div>
+    `;
+  }
+
   private moveToHome(): void {
     const g = this.plan!.garden;
     const home = this.plan!.home;
@@ -902,7 +945,23 @@ export class IrrigationPlannerPanel extends LitElement {
           </div>
         </aside>
       </div>
-      ${this.toast ? html`<div class="toast">${this.toast}</div>` : nothing}
+      ${this.toast
+        ? html`<div class="toast" role="status">
+            <span>${this.toast}</span>
+            ${this.toastUndo
+              ? html`<button
+                  class="text"
+                  @click=${() => {
+                    this.undo();
+                    this.toast = "";
+                    this.toastUndo = false;
+                  }}
+                >
+                  Rückgängig
+                </button>`
+              : nothing}
+          </div>`
+        : nothing}
     `;
   }
 
@@ -1020,10 +1079,15 @@ export class IrrigationPlannerPanel extends LitElement {
         parts.push(svg`<rect x=${box.x0} y=${box.y0} width=${box.x1 - box.x0} height=${box.y1 - box.y0} class="map-fill"></rect>`);
         // Kacheln leicht überlappen lassen, sonst sieht man feine Fugen.
         const pad = px * 0.5;
-        for (const t of tiles) {
-          parts.push(
-            svg`<image href=${t.url} x=${t.x - pad} y=${t.y - pad} width=${t.size + 2 * pad} height=${t.size + 2 * pad} preserveAspectRatio="none" crossorigin="anonymous"></image>`,
+        const layer = (list: typeof tiles) =>
+          list.map(
+            (t) =>
+              svg`<image href=${t.url} x=${t.x - pad} y=${t.y - pad} width=${t.size + 2 * pad} height=${t.size + 2 * pad} preserveAspectRatio="none" crossorigin="anonymous"></image>`,
           );
+        parts.push(...layer(tiles));
+        // Beschriftung (Straßennamen, Hausnummern) über dem Luftbild
+        if (provider?.overlay && g.map_provider !== "custom") {
+          parts.push(...layer(tilesFor(provider.overlay, [g.latitude, g.longitude], box, zoom)));
         }
       }
     } else if (g.background === "image" && this.imageUrl && this.imageSize) {
@@ -1201,13 +1265,19 @@ export class IrrigationPlannerPanel extends LitElement {
         <button class="icon" title="Verkleinern" @click=${() => this.zoomBy(1 / 1.4)}><ha-icon icon="mdi:minus"></ha-icon></button>
         <button class="icon" title="Alles zeigen" @click=${this.fitView}><ha-icon icon="mdi:fit-to-screen-outline"></ha-icon></button>
         ${g.background === "map"
+          ? html`<button class="icon ${this.layersOpen ? "on" : ""}" title="Kartenansicht wechseln"
+              @click=${() => (this.layersOpen = !this.layersOpen)}>
+              <ha-icon icon="mdi:layers-outline"></ha-icon>
+            </button>`
+          : nothing}
+        ${g.background === "map"
           ? html`<button class="icon ${this.searchOpen ? "on" : ""}" title="Adresse suchen"
               @click=${() => (this.searchOpen ? this.closeSearch() : this.openSearch())}>
               <ha-icon icon="mdi:magnify"></ha-icon>
             </button>`
           : nothing}
       </div>
-      ${banner} ${this.renderSearch()}
+      ${banner} ${this.renderSearch()} ${this.renderLayers()}
       <div class="compass" style="transform: rotate(${g.background === "image" ? -g.north_deg : 0}deg)" title="Norden">
         <svg viewBox="-12 -12 24 24"><path d="M0 -10 L4 2 L0 0 L-4 2 Z" class="n"></path><path d="M0 10 L4 2 L0 0 L-4 2 Z" class="s"></path></svg>
         <span>N</span>
@@ -1411,6 +1481,7 @@ export class IrrigationPlannerPanel extends LitElement {
                 this.remember();
                 item.position = null;
                 this.changed();
+                this.removed(`${item.name}: vom Plan genommen`);
               }}><ha-icon icon="mdi:close"></ha-icon></button>`
             : nothing}
         </div>
@@ -1455,9 +1526,15 @@ export class IrrigationPlannerPanel extends LitElement {
             meist in Ordnung; prüfe es bitte selbst.
           </p>`
         : nothing}
-      ${g.map_provider === "basemap_at"
-        ? html`<p class="note">Orthofoto von basemap.at, nur in Österreich. Lizenz CC BY 4.0.</p>`
+      ${g.map_provider?.startsWith("basemap_at")
+        ? html`<p class="note">Von basemap.at, nur in Österreich. Lizenz CC BY 4.0.</p>`
         : nothing}
+      ${g.map_provider === "osm"
+        ? html`<p class="note">
+            OpenStreetMap-Karte, weltweit. Bitte nur gelegentlich nutzen (Regeln der OpenStreetMap-Kacheln).
+          </p>`
+        : nothing}
+      <p class="hint small">Schneller umschalten: Ebenen-Knopf links auf der Karte.</p>
       ${g.map_provider === "custom"
         ? html`<label class="field wide">
               <span>Adresse mit {z}, {x}, {y}</span>

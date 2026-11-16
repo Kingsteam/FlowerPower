@@ -13,6 +13,8 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 - WebSocket-Befehle `irrigation_planner/plan/get`, `plan/save`, `plan/subscribe`; Hochladen von Hintergrundbildern.
 
 - Adresssuche für das Luftbild (Lupe auf der Karte, öffnet sich beim ersten Einrichten von selbst): Home Assistant fragt OpenStreetMap (Nominatim), der Treffer wird zur Kartenmitte oder angezeigt; die Adresse wird nicht gespeichert.
+- Kartenansicht umschalten (Ebenen-Knopf auf der Karte): Luftbild, Luftbild mit Straßen, Karte, Karte grau (basemap.at), OpenStreetMap, Esri Satellit.
+- Entfernen einer Zeichnung oder eines Ventils/Sensors zeigt einen Hinweis mit „Rückgängig“; „Rückgängig“ geht auch nach dem Speichern und nach „Verwerfen“.
 - Testinstanz auf dem eigenen Mac mit einer Zeile im Terminal (`devtools/testinstanz/mac-start.sh`).
 
 ### Behoben
