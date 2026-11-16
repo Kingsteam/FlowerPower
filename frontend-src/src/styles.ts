@@ -638,6 +638,100 @@ export const styles = css`
   .tools button.icon {
     border-radius: 0;
   }
+  .tools button.on {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  .search {
+    position: absolute;
+    top: 12px;
+    left: 68px;
+    width: min(420px, calc(100% - 140px));
+    background: var(--card);
+    border-radius: 14px;
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.28);
+    padding: 6px;
+    z-index: 2;
+  }
+  .search form {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .search form > ha-icon {
+    color: var(--muted);
+    margin-left: 6px;
+  }
+  .search input {
+    flex: 1;
+    border: none;
+    background: none;
+    padding: 8px 6px;
+    font-size: 15px;
+  }
+  .search input:focus {
+    outline: none;
+  }
+  .search-error {
+    margin: 6px 10px;
+    font-size: 13px;
+    color: var(--bad);
+  }
+  .search-note {
+    margin: 6px 10px 4px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .results {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 4px 0 0;
+    border-top: 1px solid var(--line);
+  }
+  .results button {
+    width: 100%;
+    border-radius: 8px;
+    padding: 8px 10px;
+    gap: 10px;
+    text-align: left;
+    color: var(--primary-text-color);
+  }
+  .results button:hover,
+  .results button:focus-visible {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+  .results ha-icon {
+    color: var(--bad);
+    flex-shrink: 0;
+  }
+  .results span {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .results small {
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  :host([narrow]) .search {
+    left: 60px;
+    width: calc(100% - 72px);
+  }
+  .pin path {
+    fill: var(--bad);
+    stroke: #fff;
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+  .pin circle {
+    fill: #fff;
+  }
+  .pin {
+    pointer-events: none;
+  }
   .banner {
     position: absolute;
     top: 12px;

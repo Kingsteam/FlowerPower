@@ -15,6 +15,7 @@ import {
   compass,
   distance,
   metersPerPixel,
+  latLonToPlan,
   planToLatLon,
   polar,
   polygonArea,
@@ -23,6 +24,7 @@ import {
   tilesFor,
   zoomForScale,
 } from "./geometry";
+import { type Place, SEARCH_ATTRIBUTION, searchAddress } from "./geocode";
 import { styles } from "./styles";
 import type {
   Garden,
@@ -99,6 +101,13 @@ export class IrrigationPlannerPanel extends LitElement {
   @state() private imageSize: [number, number] | null = null;
   @state() private saving = false;
   @state() private dirty = false;
+  // Adresssuche (nur beim Luftbild, aufklappbar)
+  @state() private searchOpen = false;
+  @state() private searchQuery = "";
+  @state() private searchResults: Place[] | null = null;
+  @state() private searching = false;
+  @state() private searchError = "";
+  @state() private searchPin: { point: Point; name: string } | null = null;
 
   private _hass?: Hass;
   private savedJson = "";
@@ -654,6 +663,8 @@ export class IrrigationPlannerPanel extends LitElement {
       if (g.latitude == null || g.longitude == null) {
         g.latitude = this.plan!.home.latitude;
         g.longitude = this.plan!.home.longitude;
+        // Erstes Einrichten: gleich die Adresssuche anbieten.
+        this.openSearch();
       }
       g.map_provider ??= "basemap_at";
       g.map_zoom ??= 19;
@@ -689,8 +700,123 @@ export class IrrigationPlannerPanel extends LitElement {
       if (m.position) m.position = shift(m.position);
     }
     this.view = { ...this.view, cx: 0, cy: 0 };
+    if (this.searchPin) {
+      this.searchPin = { ...this.searchPin, point: shift(this.searchPin.point) };
+    }
     this.changed();
     this.showToast("Kartenmitte gesetzt");
+  }
+
+  // Adresssuche ------------------------------------------------------------------
+
+  private openSearch(): void {
+    this.searchOpen = true;
+    void this.updateComplete.then(() =>
+      (this.renderRoot.querySelector("#address") as HTMLInputElement | null)?.focus(),
+    );
+  }
+
+  private closeSearch(): void {
+    this.searchOpen = false;
+    this.searchResults = null;
+    this.searchError = "";
+    this.searchPin = null;
+  }
+
+  private async runSearch(): Promise<void> {
+    if (this.searching) return;
+    this.searching = true;
+    this.searchError = "";
+    try {
+      const lang = (this._hass as { language?: string } | undefined)?.language ?? "de";
+      this.searchResults = await searchAddress(
+        (msg) => this._hass!.callWS(msg),
+        this.searchQuery,
+        lang,
+      );
+      if (!this.searchResults.length) this.searchError = "Nichts gefunden. Probiere Straße, Hausnummer und Ort.";
+    } catch (err) {
+      this.searchResults = null;
+      this.searchError = this.message(err);
+    } finally {
+      this.searching = false;
+    }
+  }
+
+  /**
+   * Zum gefundenen Ort springen. Ist noch nichts gezeichnet, wird der Ort
+   * gleich zur Kartenmitte. Sonst bleibt die Zeichnung, wo sie ist, und nur
+   * die Ansicht springt.
+   */
+  private goToPlace(place: Place): void {
+    const g = this.plan!.garden;
+    const scale = 1 / metersPerPixel(place.latitude, 19);
+    this.autoFit = false;
+    const empty =
+      !this.hasAnyDrawing() &&
+      ![...this.plan!.valves, ...this.plan!.sensors].some((m) => m.position);
+    if (empty || g.latitude == null || g.longitude == null) {
+      this.remember();
+      g.latitude = Math.round(place.latitude * 1e7) / 1e7;
+      g.longitude = Math.round(place.longitude * 1e7) / 1e7;
+      this.view = { cx: 0, cy: 0, scale };
+      this.searchPin = { point: [0, 0], name: place.name };
+      this.changed();
+      this.showToast(`${place.name}: Kartenmitte gesetzt. Fein ausrichten mit „Mitte hier festlegen“.`);
+    } else {
+      const point = latLonToPlan(place.latitude, place.longitude, [g.latitude, g.longitude]);
+      this.view = { cx: point[0], cy: point[1], scale };
+      this.searchPin = { point, name: place.name };
+      this.showToast(`${place.name} angezeigt. „Mitte hier festlegen“ übernimmt die Stelle.`);
+    }
+    this.searchResults = null;
+  }
+
+  private renderSearch(): TemplateResult | typeof nothing {
+    if (!this.searchOpen || this.tool !== "select" || this.plan!.garden.background !== "map") {
+      return nothing;
+    }
+    return html`
+      <div class="search" @pointerdown=${(e: Event) => e.stopPropagation()}>
+        <form
+          @submit=${(e: Event) => {
+            e.preventDefault();
+            void this.runSearch();
+          }}
+        >
+          <ha-icon icon="mdi:magnify"></ha-icon>
+          <input
+            id="address"
+            type="search"
+            placeholder="Adresse, z. B. Hauptstraße 5, Ort"
+            autocomplete="street-address"
+            .value=${this.searchQuery}
+            @input=${(e: Event) => (this.searchQuery = (e.target as HTMLInputElement).value)}
+            @keydown=${(e: KeyboardEvent) => e.key === "Escape" && this.closeSearch()}
+          />
+          <button class="text" type="submit" ?disabled=${this.searching}>
+            ${this.searching ? "Sucht …" : "Suchen"}
+          </button>
+          <button class="icon small" type="button" title="Suche schließen" @click=${this.closeSearch}>
+            <ha-icon icon="mdi:close"></ha-icon>
+          </button>
+        </form>
+        ${this.searchError ? html`<p class="search-error">${this.searchError}</p>` : nothing}
+        ${this.searchResults?.length
+          ? html`<ul class="results">
+              ${this.searchResults.map(
+                (p) => html`<li>
+                  <button type="button" @click=${() => this.goToPlace(p)}>
+                    <ha-icon icon="mdi:map-marker"></ha-icon>
+                    <span><strong>${p.name}</strong><small>${p.detail}</small></span>
+                  </button>
+                </li>`,
+              )}
+            </ul>`
+          : nothing}
+        <p class="search-note">${SEARCH_ATTRIBUTION}. Die Adresse geht nur an die Suche und wird nicht gespeichert.</p>
+      </div>
+    `;
   }
 
   private moveToHome(): void {
@@ -858,6 +984,13 @@ export class IrrigationPlannerPanel extends LitElement {
           ${this.renderSelectedHandles(px)} ${this.renderDraft(px)} ${this.renderScaleDraft(px)}
           ${this.plan!.valves.map((v) => this.renderMarker("valve", v, px))}
           ${this.plan!.sensors.map((s) => this.renderMarker("sensor", s, px))}
+          ${this.searchPin && this.plan!.garden.background === "map"
+            ? svg`<g class="pin" transform="translate(${this.searchPin.point[0]} ${this.searchPin.point[1]}) scale(${px})">
+                <path d="M0 0 C-3 -9 -11 -13 -11 -22 A11 11 0 1 1 11 -22 C11 -13 3 -9 0 0 Z"></path>
+                <circle cx="0" cy="-22" r="4"></circle>
+                <title>${this.searchPin.name}</title>
+              </g>`
+            : nothing}
         </g>
       </svg>
     `;
@@ -1067,8 +1200,14 @@ export class IrrigationPlannerPanel extends LitElement {
         <button class="icon" title="Vergrößern" @click=${() => this.zoomBy(1.4)}><ha-icon icon="mdi:plus"></ha-icon></button>
         <button class="icon" title="Verkleinern" @click=${() => this.zoomBy(1 / 1.4)}><ha-icon icon="mdi:minus"></ha-icon></button>
         <button class="icon" title="Alles zeigen" @click=${this.fitView}><ha-icon icon="mdi:fit-to-screen-outline"></ha-icon></button>
+        ${g.background === "map"
+          ? html`<button class="icon ${this.searchOpen ? "on" : ""}" title="Adresse suchen"
+              @click=${() => (this.searchOpen ? this.closeSearch() : this.openSearch())}>
+              <ha-icon icon="mdi:magnify"></ha-icon>
+            </button>`
+          : nothing}
       </div>
-      ${banner}
+      ${banner} ${this.renderSearch()}
       <div class="compass" style="transform: rotate(${g.background === "image" ? -g.north_deg : 0}deg)" title="Norden">
         <svg viewBox="-12 -12 24 24"><path d="M0 -10 L4 2 L0 0 L-4 2 Z" class="n"></path><path d="M0 10 L4 2 L0 0 L-4 2 Z" class="s"></path></svg>
         <span>N</span>
@@ -1328,10 +1467,12 @@ export class IrrigationPlannerPanel extends LitElement {
         : nothing}
       <h3>Ausschnitt</h3>
       <p class="hint small">
-        Verschiebe die Karte, bis dein Garten in der Mitte liegt, und lege dort die Kartenmitte fest.
-        Deine Zeichnung wandert mit. Gespeichert werden nur Mitte und Zoom, keine Bilder.
+        Such deine Adresse oder verschiebe die Karte, bis dein Garten in der Mitte liegt, und lege dort
+        die Kartenmitte fest. Deine Zeichnung wandert mit. Gespeichert werden nur Mitte und Zoom, keine
+        Bilder.
       </p>
       <div class="actions">
+        <button class="text" @click=${this.openSearch}><ha-icon icon="mdi:magnify"></ha-icon>Adresse suchen</button>
         <button class="text" @click=${this.recenterMap}><ha-icon icon="mdi:crosshairs-gps"></ha-icon>Mitte hier festlegen</button>
         <button class="text" @click=${this.moveToHome}><ha-icon icon="mdi:home-map-marker"></ha-icon>Zum Zuhause</button>
       </div>

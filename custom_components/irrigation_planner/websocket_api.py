@@ -10,6 +10,8 @@ Befehle:
   Gespeichert wird erst, wenn das ganze Modell gültig ist.
 - ``irrigation_planner/plan/subscribe``: Zustand je Zone (läuft, wartet,
   gesperrt, Bedarf, geplante Dauer), bei jeder Änderung neu.
+- ``irrigation_planner/geocode`` (nur Admin): Adresssuche über Nominatim
+  (siehe ``geocode.py``).
 
 Keiner dieser Befehle öffnet ein Ventil; gegossen wird weiter nur über die
 Warteschlange (Dienst ``run_zone``).
@@ -27,6 +29,7 @@ from homeassistant.core import HomeAssistant, callback
 import voluptuous as vol
 
 from .const import DOMAIN, MAP_PROVIDER_CUSTOM, MAP_PROVIDERS
+from .geocode import GeocodeError, async_search
 from .geometry import geometry_area, overlaps, zone_area
 from .model import GardenModel, Point
 from .scheduler import RunState
@@ -65,6 +68,28 @@ def async_register(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_plan_get)
     websocket_api.async_register_command(hass, ws_plan_save)
     websocket_api.async_register_command(hass, ws_plan_subscribe)
+    websocket_api.async_register_command(hass, ws_geocode)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/geocode",
+        vol.Required("query"): vol.All(str, vol.Length(max=200)),
+        vol.Optional("language", default="de"): vol.All(str, vol.Length(max=10)),
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def ws_geocode(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Adresse suchen (für das Ausrichten des Luftbilds)."""
+    try:
+        places = await async_search(hass, msg["query"], msg["language"])
+    except GeocodeError as err:
+        connection.send_error(msg["id"], "geocode_failed", str(err))
+        return
+    connection.send_result(msg["id"], {"places": places})
 
 
 def _data(hass: HomeAssistant) -> IrrigationPlannerData | None:

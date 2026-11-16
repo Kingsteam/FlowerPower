@@ -12,6 +12,7 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 - Panel „Bewässerung“ in der Seitenleiste (Plan-Editor): Luftbild von basemap.at oder Esri (live im Browser geladen, gespeichert werden nur Mitte und Zoom), eigene Kartenadresse, eigenes Bild mit Maßstab aus zwei Punkten oder Raster; Sprinkler (Mittelpunkt, Reichweite, Richtung und Bogen mit Anfassern) und Beete (Ecken) zeichnen, Ventile und Sensoren platzieren, Rückgängig, Zustand der Zonen live (läuft, wartet, gesperrt), „Jetzt gießen“ (reiht nur ein).
 - WebSocket-Befehle `irrigation_planner/plan/get`, `plan/save`, `plan/subscribe`; Hochladen von Hintergrundbildern.
 
+- Adresssuche für das Luftbild (Lupe auf der Karte, öffnet sich beim ersten Einrichten von selbst): Home Assistant fragt OpenStreetMap (Nominatim), der Treffer wird zur Kartenmitte oder angezeigt; die Adresse wird nicht gespeichert.
 - Testinstanz auf dem eigenen Mac mit einer Zeile im Terminal (`devtools/testinstanz/mac-start.sh`).
 
 ### Behoben
