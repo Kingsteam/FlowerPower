@@ -61,6 +61,16 @@
           "description": "ID des Programms."
         }
       }
+    },
+    "release_zone": {
+      "name": "Zone freigeben",
+      "description": "Gibt eine nach einem Alarm gesperrte Zone wieder frei. Vorher die Zone kontrollieren.",
+      "fields": {
+        "zone_id": {
+          "name": "Zonen-ID",
+          "description": "ID der Zone."
+        }
+      }
     }
   },
   "entity": {
@@ -81,6 +91,9 @@
       },
       "program_start": {
         "name": "Programm starten"
+      },
+      "release_zone": {
+        "name": "Zone freigeben (nach Kontrolle)"
       }
     },
     "number": {

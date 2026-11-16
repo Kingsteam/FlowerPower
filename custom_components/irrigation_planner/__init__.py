@@ -14,10 +14,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_WEATHER_ENTITY, CONF_WINDOW_END, DOMAIN, LOGGER
+from .const import CONF_WEATHER_ENTITY, CONF_WINDOW_END, DOMAIN, LOGGER, NAME
 from .drivers.ha import HassValveDriver
 from .drivers.registry import create_driver
 from .profiles import Profile, async_load_builtin_profiles
@@ -25,6 +25,7 @@ from .programs import ProgramManager
 from .scheduler import IrrigationScheduler
 from .services import async_setup_services
 from .store import IrrigationPlannerStore
+from .watchdog import Watchdog
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -47,15 +48,19 @@ class IrrigationPlannerData:
     drivers: dict[str, HassValveDriver]
     scheduler: IrrigationScheduler
     programs: ProgramManager
+    watchdog: Watchdog
+    # Geräte-ID des Hauptgeräts (Zonen und Programme hängen daran).
+    main_device_id: str = ""
 
     @property
     def problems(self) -> list[str]:
         """Alle aktuellen Probleme im Klartext."""
-        problems = list(self.scheduler.errors)
+        problems = list(self.scheduler.errors) + self.watchdog.messages
         names = {z.id: z.name for z in self.store.model.zones}
         problems += [
             f"Zone {names.get(zone_id, zone_id)} gesperrt: {reason}"
             for zone_id, reason in self.scheduler.locked_zones.items()
+            if reason not in problems
         ]
         return problems
 
@@ -117,15 +122,26 @@ async def async_setup_entry(
         weather_entity=entry.data.get(CONF_WEATHER_ENTITY),
         window_end=entry.data.get(CONF_WINDOW_END),
     )
+    watchdog = Watchdog(hass, store, scheduler, drivers)
     entry.runtime_data = IrrigationPlannerData(
         store=store,
         profiles=profiles,
         drivers=drivers,
         scheduler=scheduler,
         programs=programs,
+        watchdog=watchdog,
     )
+    main_device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        name=NAME,
+        manufacturer=NAME,
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+    entry.runtime_data.main_device_id = main_device.id
     await scheduler.async_start()
     programs.async_start()
+    watchdog.async_start()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     LOGGER.debug(
         "Bewässerungsplaner eingerichtet: %s Zonen, %s steuerbare Ventile",
@@ -141,5 +157,6 @@ async def async_unload_entry(
     """Entlädt den Config-Entry und schließt dabei offene Ventile."""
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     entry.runtime_data.programs.async_stop()
+    entry.runtime_data.watchdog.async_stop()
     await entry.runtime_data.scheduler.async_shutdown()
     return unloaded

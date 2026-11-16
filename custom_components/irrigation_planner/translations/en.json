@@ -61,6 +61,16 @@
           "description": "ID of the program."
         }
       }
+    },
+    "release_zone": {
+      "name": "Release zone",
+      "description": "Releases a zone that was locked after an alarm. Check the zone first.",
+      "fields": {
+        "zone_id": {
+          "name": "Zone ID",
+          "description": "ID of the zone."
+        }
+      }
     }
   },
   "entity": {
@@ -81,6 +91,9 @@
       },
       "program_start": {
         "name": "Start program"
+      },
+      "release_zone": {
+        "name": "Release zone (after check)"
       }
     },
     "number": {

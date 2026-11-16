@@ -21,6 +21,7 @@ from .const import (
     DOMAIN,
     MAX_VALVE_DURATION_S,
     MIN_VALVE_DURATION_S,
+    SERVICE_RELEASE_ZONE,
     SERVICE_RUN_PROGRAM,
     SERVICE_RUN_ZONE,
     SERVICE_SKIP_NEXT,
@@ -76,6 +77,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def stop_all(call: ServiceCall) -> None:
         await _scheduler(hass).async_stop_all()
 
+    async def release_zone(call: ServiceCall) -> None:
+        if not _data(hass).watchdog.async_release_zone(call.data[ATTR_ZONE_ID]):
+            raise ServiceValidationError(
+                f"Zone {call.data[ATTR_ZONE_ID]} ist nicht gesperrt"
+            )
+
     async def run_program(call: ServiceCall) -> None:
         try:
             _data(hass).programs.async_run(call.data[ATTR_PROGRAM_ID])
@@ -94,6 +101,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(DOMAIN, SERVICE_STOP_ALL, stop_all)
     hass.services.async_register(
         DOMAIN, SERVICE_RUN_PROGRAM, run_program, schema=PROGRAM_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RELEASE_ZONE,
+        release_zone,
+        schema=vol.Schema(
+            {vol.Required(ATTR_ZONE_ID): vol.All(str, vol.Length(min=1))}
+        ),
     )
     hass.services.async_register(
         DOMAIN, SERVICE_SKIP_NEXT, skip_next, schema=PROGRAM_SCHEMA

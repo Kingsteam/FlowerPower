@@ -220,3 +220,14 @@ async def test_unload_removes_entities(
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert state(hass, status) == "unavailable"
+
+
+async def test_no_deprecated_device_warning(
+    hass: HomeAssistant,
+    setup: Any,
+    sim: SimValves,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Zonen hängen über via_device_id am Hauptgerät (ohne Warnung)."""
+    await setup(model_with_program())
+    assert "deprecated" not in caplog.text

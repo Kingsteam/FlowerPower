@@ -6,6 +6,8 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 ## [Unveröffentlicht]
 
 ### Neu
+- Überwachung des Durchflusses (`watchdog.py`): Leck, Durchfluss zu hoch (Schlauch gelöst), kein Durchfluss oder Wassermangel, Durchfluss zu niedrig, Durchfluss bei geschlossenem Ventil, zu viele Ventile offen. Reaktion: Ventil schließen, Benachrichtigung, Ereignis `irrigation_planner_alarm`; bei Leck und zu hohem Durchfluss bleibt die Zone gesperrt, bis sie mit „Zone freigeben“ (Knopf oder Dienst `release_zone`) wieder freigegeben wird. In der Winterpause ruht die Überwachung.
+- Der Durchfluss jedes Ventils wird aus ungestörten Läufen gelernt (gleitender Mittelwert).
 - Entitäten: Status, aktive Zone, Ende des Laufs, Warteschlange, Problem-Melder, Schalter Automatik und Winterpause, Knöpfe Alles stoppen und Zone überspringen; je Zone Zustand, letzter Lauf, Zone aktiv, Gießdauer, Jetzt gießen; je Programm nächster Lauf, geschätzte Dauer, Programm aktiv, Ablauf, Programm starten. Änderungen werden gespeichert.
 - Winterpause-Schalter beendet alle Läufe und schließt alle Ventile.
 - Programme (`programs.py`): Abläufe „Nacheinander“, „Abwechselnd“ (Gießphasen reihum, mit Einziehzeit) und „Nach Priorität“; Pause zwischen den Ventilen. Zeitplan mit Startzeit oder „fertig bis“, Wochentagen oder „alle N Tage“. Überspringen bei Regen, Frost oder Wind (Wetter-Entität). Automatisch nur, wenn „Automatik“ an und keine Winterpause ist.
@@ -20,6 +22,7 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 - `devtools/testinstanz/`: simulierte Test-Home-Assistant-Instanz mit Ventil-Simulator (10 Ventile mit und ohne Gerätetimer, Durchfluss, Bodenfeuchte, Wasserzähler, auslösbare Störungen) und Startskript.
 
 ### Geändert
+- Zonen- und Programmgeräte hängen über `via_device_id` am Hauptgerät (die alte Schreibweise ist in Home Assistant veraltet).
 - Repo ist öffentlich: MIT-Lizenz ergänzt, damit die HACS-Prüfung durchläuft.
 - `docs/`: echte Entitätsnamen und Wetterstation durch neutrale Angaben ersetzt; Dashboard-Entwurf neu gerendert.
 

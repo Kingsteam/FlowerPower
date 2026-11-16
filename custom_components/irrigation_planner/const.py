@@ -69,3 +69,19 @@ RAIN_CONDITIONS: Final = frozenset(
 SERVICE_RUN_PROGRAM: Final = "run_program"
 SERVICE_SKIP_NEXT: Final = "skip_next"
 ATTR_PROGRAM_ID: Final = "program_id"
+
+# Überwachung des Durchflusses (Konzept, Abschnitt 7)
+WATCHDOG_INTERVAL_S: Final = 10  # so oft wird geprüft (zusätzlich bei Änderungen)
+FLOW_ZERO_L_MIN: Final = 0.1  # darunter gilt: kein Durchfluss
+NO_FLOW_GRACE_S: Final = 60  # so lange darf ein offenes Ventil ohne Durchfluss sein
+NO_FLOW_HOLD_S: Final = 20  # ... und so lange muss „kein Durchfluss“ am Stück gelten
+CLOSED_FLOW_L_MIN: Final = 0.2  # Durchfluss bei geschlossenem Ventil ab hier
+CLOSED_FLOW_S: Final = 60  # ... und so lange: Ventil dichtet nicht
+HIGH_FLOW_FACTOR: Final = 1.8  # mehr als 1,8-fach gelernt: Schlauch gelöst?
+HIGH_FLOW_S: Final = 15
+LOW_FLOW_FACTOR: Final = 0.4  # weniger als 0,4-fach gelernt: Knick/Verstopfung
+LOW_FLOW_S: Final = 120
+LEARN_MIN_RUN_S: Final = 60  # nur aus Läufen ab dieser Länge lernen
+LEARN_WEIGHT: Final = 0.3  # Gewicht eines neuen Laufs im gleitenden Mittel
+EVENT_ALARM: Final = "irrigation_planner_alarm"
+SERVICE_RELEASE_ZONE: Final = "release_zone"

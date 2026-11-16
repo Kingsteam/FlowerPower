@@ -132,6 +132,8 @@ class IrrigationScheduler:
         self.locked_zones: dict[str, str] = {}
         # Letzter beendeter Lauf je Zone.
         self.last_runs: dict[str, Run] = {}
+        # Ventile, die gerade außerhalb eines Laufs geschlossen werden.
+        self._closing: set[str] = set()
 
         for supply in model.water_supplies:
             members = set(supply.valve_ids) | {
@@ -330,6 +332,29 @@ class IrrigationScheduler:
             for run in supply.active.values():
                 run.interrupt()
 
+    @callback
+    def async_close_valve(self, valve_id: str, reason: str) -> None:
+        """Schließt ein Ventil sofort (z. B. nach einem Alarm).
+
+        Läuft dort ein Lauf, wird er beendet und gilt als fehlgeschlagen; die
+        Warteschlange macht danach mit dem Nächsten weiter. Ist das Ventil
+        von außen offen, wird es geschlossen und bestätigt.
+        """
+        supply = self.supply_of(valve_id)
+        if supply is None:
+            return
+        run = supply.active.get(valve_id)
+        if run is not None:
+            run.error = reason
+            run.interrupt()
+            return
+        if valve_id not in supply.stuck and valve_id not in self._closing:
+            self._spawn(self._close_or_mark(supply, valve_id), f"Alarm {valve_id}")
+
+    def supply_of(self, valve_id: str) -> SupplyQueue | None:
+        """Wasserversorgung eines Ventils."""
+        return self.supplies.get(self._supply_of_valve.get(valve_id, ""))
+
     async def async_stop_all(self) -> None:
         """Leert alle Warteschlangen und schließt alle Ventile."""
         for supply in self.supplies.values():
@@ -455,7 +480,12 @@ class IrrigationScheduler:
                 self._notify()
                 if not run.stop_requested:
                     await self._sleep(run, run.duration_s)
-                run.state = RunState.SKIPPED if run.stop_requested else RunState.CLOSING
+                if not run.stop_requested:
+                    run.state = RunState.CLOSING
+                elif run.error:
+                    run.state = RunState.FAILED
+                else:
+                    run.state = RunState.SKIPPED
             self._notify()
             # Auch nach einem Fehler beim Öffnen: sicherheitshalber schließen.
             confirmed_closed = await self._close_confirmed(run.valve_id)
@@ -521,8 +551,12 @@ class IrrigationScheduler:
         return False
 
     async def _close_or_mark(self, supply: SupplyQueue, valve_id: str) -> None:
-        if not await self._close_confirmed(valve_id):
-            self._mark_stuck(supply, valve_id)
+        self._closing.add(valve_id)
+        try:
+            if not await self._close_confirmed(valve_id):
+                self._mark_stuck(supply, valve_id)
+        finally:
+            self._closing.discard(valve_id)
         self._kick(supply)
 
     @callback

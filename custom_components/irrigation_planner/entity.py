@@ -37,7 +37,7 @@ def zone_device(entry: IrrigationPlannerConfigEntry, zone: Zone) -> DeviceInfo:
         manufacturer=NAME,
         model="Zone",
         entry_type=DeviceEntryType.SERVICE,
-        via_device=(DOMAIN, entry.entry_id),
+        via_device_id=entry.runtime_data.main_device_id,
     )
 
 
@@ -49,7 +49,7 @@ def program_device(entry: IrrigationPlannerConfigEntry, program: Program) -> Dev
         manufacturer=NAME,
         model="Programm",
         entry_type=DeviceEntryType.SERVICE,
-        via_device=(DOMAIN, entry.entry_id),
+        via_device_id=entry.runtime_data.main_device_id,
     )
 
 

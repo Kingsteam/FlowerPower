@@ -29,3 +29,10 @@ skip_next:
       example: morgens
       selector:
         text:
+release_zone:
+  fields:
+    zone_id:
+      required: true
+      example: rasen_vorne
+      selector:
+        text:

@@ -10,7 +10,7 @@ Eigene Home-Assistant-Integration (HACS) für die Gartenbewässerung. Der Besitz
 
 Gartenplan, berechnete Gießdauer je Zone, ausfallsichere Ventilsteuerung, Überwachung des Durchflusses und Winterpause, unabhängig von der Hardware. Ziel und Architektur: `docs/KONZEPT.md`. Geplante Bedienung: `docs/HANDBUCH.md`.
 
-Stand: Phase 1, Schritte 1–5 fertig (Speichern, Treiber und Profile, Warteschlange, Programme mit Zeitplan, Entitäten). **Die Integration steuert Ventile** über Dienste, Knöpfe und den Zeitplan. Ventile und Zonen lassen sich noch nicht in der Oberfläche anlegen (Schritt 7); Durchflussüberwachung fehlt noch (Schritt 6).
+Stand: Phase 1, Schritte 1–6 fertig (Speichern, Treiber und Profile, Warteschlange, Programme mit Zeitplan, Entitäten, Durchflussüberwachung). **Die Integration steuert Ventile** über Dienste, Knöpfe und den Zeitplan. Ventile und Zonen lassen sich noch nicht in der Oberfläche anlegen (Schritt 7).
 
 ## Sicherheitsregeln (nicht verhandelbar)
 
@@ -44,9 +44,10 @@ Das Wissen über die konkrete Anlage des Besitzers liegt im separaten privaten R
 | `scheduler.py` | Warteschlange je Wasserversorgung (`IrrigationScheduler`): Platz erst frei, wenn das Ventil **nachweislich zu** ist; klemmt es, bleibt die Versorgung gesperrt und OFF wird jede Minute wiederholt; von außen offene Ventile zählen mit; Startprüfung schließt offene Ventile; Höchstdauer je Zone |
 | `programs.py` | Ablaufplan (`build_plan`: Nacheinander, Abwechselnd mit Einziehzeit, Priorität), Zeitplan (`next_start`: Startzeit oder „fertig bis“, Wochentage oder alle N Tage; ohne Zeiten = Ende des Zeitfensters), Wetter-Überspringen, `ProgramManager` (prüft jede Minute, nur bei Automatik an und ohne Winterpause) |
 | `services.py`, `services.yaml` | Dienste `run_zone` (reiht nur ein), `run_program`, `skip_next`, `stop_all` |
-| `geometry.py`, `water_balance.py`, `watchdog.py`, `season.py`, `websocket_api.py` | nur Platzhalter mit Docstring |
+| `watchdog.py` | Durchflussüberwachung (Konzept Abschnitt 7): Leck, zu hoch, kein Durchfluss/Wassermangel, zu niedrig, Durchfluss bei geschlossenem Ventil, zu viele offen; Alarme als Benachrichtigung + Ereignis `irrigation_planner_alarm`; Sperre bis `release_zone`; lernt den Durchfluss; ruht in der Winterpause. Grenzwerte in `const.py` |
+| `geometry.py`, `water_balance.py`, `season.py`, `websocket_api.py` | nur Platzhalter mit Docstring |
 | `strings.json`, `translations/` | Texte (en = `strings.json`, de) |
-| `tests/` | pytest mit `pytest-homeassistant-custom-component`; `helpers.py` (simulierte Ventile `SimValves`, `make_model`), Fixtures `sim`, `setup`, `advance` in `conftest.py` |
+| `tests/` | pytest mit `pytest-homeassistant-custom-component`; `helpers.py` (simulierte Ventile `SimValves`, `make_model`), Fixtures `sim`, `setup`, `advance` in `conftest.py`; simulierte Ventile sind echte `switch`-Entitäten der Plattform `test`, mit Durchfluss- und Statussensor (`make_model(sensors=True)`) |
 | `docs/` | `KONZEPT.md`, `HANDBUCH.md`, `bilder/`, `entwuerfe.html` |
 | `devtools/testinstanz/` | simulierte Test-Home-Assistant-Instanz: `start.py`, Simulator `irrigation_sim` (10 Ventile, Bodenfeuchte, Wasserzähler, Störungen); nicht Teil der Auslieferung |
 

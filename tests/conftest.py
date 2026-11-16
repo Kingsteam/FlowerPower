@@ -69,7 +69,10 @@ def setup(
     ) -> IrrigationScheduler:
         for valve in model["valves"]:
             sim.add(
-                valve["id"], "on" if valve["id"] in (open_at_start or set()) else "off"
+                valve["id"],
+                "on" if valve["id"] in (open_at_start or set()) else "off",
+                flow="flow" in valve["entities"],
+                status="status" in valve["entities"],
             )
         await sim.async_install()
         hass_storage[STORAGE_KEY] = {
