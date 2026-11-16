@@ -20,6 +20,7 @@ import copy
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult, OptionsFlow
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -53,10 +54,13 @@ from .discovery import Suggestion, suggest
 from .drivers.base import Capability, SafetyLevel
 from .drivers.registry import DRIVERS, create_driver
 from .model import (
+    DurationMode,
     EntityRef,
     GardenModel,
     Program,
     ProgramMode,
+    Sensor,
+    SensorKind,
     Valve,
     ValveRole,
     WaterSupply,
@@ -66,6 +70,7 @@ from .model import (
 from .scheduler import HardwareTestResult, QueueError
 from .serialize import model_from_dict, model_to_dict
 from .watchdog import Watchdog
+from .water_balance import DEFAULT_SOIL, PLANTS, SOILS
 
 NEW = "__new__"
 NONE = "__none__"
@@ -98,6 +103,17 @@ def _translated(key: str, values: list[str], **kwargs: Any) -> SelectSelector:
             **kwargs,
         )
     )
+
+
+def _number(
+    minimum: float, maximum: float, step: float, unit: str | None = None
+) -> NumberSelector:
+    config = NumberSelectorConfig(
+        min=minimum, max=maximum, step=step, mode=NumberSelectorMode.BOX
+    )
+    if unit:
+        config["unit_of_measurement"] = unit
+    return NumberSelector(config)
 
 
 def _minutes(max_minutes: float = MAX_VALVE_DURATION_S / 60) -> NumberSelector:
@@ -199,7 +215,14 @@ class IrrigationPlannerOptionsFlow(OptionsFlow):
             return self.async_abort(reason="not_loaded")
         return self.async_show_menu(
             step_id="init",
-            menu_options=["valves", "zones", "programs", "supplies", "settings"],
+            menu_options=[
+                "valves",
+                "zones",
+                "programs",
+                "supplies",
+                "sensors",
+                "settings",
+            ],
         )
 
     async def async_step_valves(self, user_input: Any = None) -> ConfigFlowResult:
@@ -280,6 +303,14 @@ class IrrigationPlannerOptionsFlow(OptionsFlow):
         self._valve = copy.deepcopy(valve)
         self._suggestion = None
         return await self.async_step_valve_entities()
+
+    def _ref(self, entity_id: str) -> EntityRef | None:
+        entry = er.async_get(self.hass).async_get(entity_id)
+        if entry is None:
+            return None
+        return EntityRef(
+            domain=entry.domain, platform=entry.platform, unique_id=entry.unique_id
+        )
 
     def _entity_id(self, ref: EntityRef | None) -> str | None:
         if ref is None:
@@ -633,6 +664,40 @@ class IrrigationPlannerOptionsFlow(OptionsFlow):
 
     def _zone_schema(self, zone: Zone) -> vol.Schema:
         valves = [(NONE, "(keins)"), *self._choices(self.model.valves)]
+        calc_schema = vol.Schema(
+            {
+                vol.Required("zone_type", default=zone.type.value): _translated(
+                    "zone_type", [t.value for t in ZoneType]
+                ),
+                vol.Required("area_m2", default=zone.area_m2 or 0): _number(
+                    0, 2000, 0.1, "m²"
+                ),
+                vol.Required(
+                    "plant_type", default=zone.plant_type or NONE
+                ): _translated("plant_type", [NONE, *PLANTS]),
+                vol.Required("kc", default=self._kc_default(zone)): _number(
+                    0, 1.5, 0.05
+                ),
+                vol.Required(
+                    "soil_type", default=zone.soil_type or DEFAULT_SOIL
+                ): _translated("soil_type", list(SOILS)),
+                vol.Required(
+                    "root_depth_cm", default=round((zone.root_depth_m or 0) * 100)
+                ): _number(0, 150, 5, "cm"),
+                vol.Required(
+                    "efficiency_pct", default=round((zone.efficiency or 0) * 100)
+                ): _number(0, 100, 5, "%"),
+                vol.Required(
+                    "duration_mode", default=zone.duration_mode.value
+                ): _translated("duration_mode", [m.value for m in DurationMode]),
+                vol.Optional("duration_entity"): EntitySelector(
+                    EntitySelectorConfig(domain=["sensor", "input_number", "number"])
+                ),
+            }
+        )
+        calc_defaults = {}
+        if (entity_id := self._entity_id(zone.duration_entity)) is not None:
+            calc_defaults["duration_entity"] = entity_id
         return vol.Schema(
             {
                 vol.Required("name", default=zone.name): TextSelector(),
@@ -647,8 +712,18 @@ class IrrigationPlannerOptionsFlow(OptionsFlow):
                     NumberSelectorConfig(min=0, max=10, mode=NumberSelectorMode.BOX)
                 ),
                 vol.Required("enabled", default=zone.enabled): BooleanSelector(),
+                vol.Optional("calculation"): section(
+                    self.add_suggested_values_to_schema(calc_schema, calc_defaults),
+                    {"collapsed": zone.duration_mode is DurationMode.MANUAL},
+                ),
             }
         )
+
+    @staticmethod
+    def _kc_default(zone: Zone) -> float:
+        """0 = „automatisch nach Pflanzenart“, sonst der eigene Wert."""
+        automatic = PLANTS[zone.plant_type][0] if zone.plant_type in PLANTS else 1.0
+        return 0 if zone.kc == automatic else zone.kc
 
     def _apply_zone(self, zone: Zone, user_input: dict[str, Any]) -> None:
         old_valve = zone.valve_id
@@ -658,6 +733,21 @@ class IrrigationPlannerOptionsFlow(OptionsFlow):
         zone.max_duration_s = round(float(user_input["max_duration"]) * 60) or None
         zone.priority = int(user_input["priority"])
         zone.enabled = bool(user_input["enabled"])
+        calc = user_input.get("calculation") or {}
+        if calc:
+            zone.type = ZoneType(calc["zone_type"])
+            zone.area_m2 = float(calc["area_m2"]) or None
+            plant = calc["plant_type"]
+            zone.plant_type = None if plant == NONE else plant
+            kc = float(calc["kc"])
+            # 0 = Pflanzenfaktor der gewählten Pflanzenart übernehmen.
+            zone.kc = kc or (PLANTS[plant][0] if plant in PLANTS else 1.0)
+            zone.soil_type = calc["soil_type"]
+            zone.root_depth_m = (float(calc["root_depth_cm"]) / 100) or None
+            zone.efficiency = (float(calc["efficiency_pct"]) / 100) or None
+            zone.duration_mode = DurationMode(calc["duration_mode"])
+            entity_id = calc.get("duration_entity")
+            zone.duration_entity = self._ref(entity_id) if entity_id else None
         for valve in self.model.valves:
             if valve.id == old_valve and zone.id in valve.zone_ids:
                 valve.zone_ids.remove(zone.id)
@@ -923,6 +1013,80 @@ class IrrigationPlannerOptionsFlow(OptionsFlow):
         for valve in model.valves:
             if valve.water_supply_id == supply_id:
                 valve.water_supply_id = None
+        return await self._save()
+
+    # Sensoren ---------------------------------------------------------------
+
+    async def async_step_sensors(self, user_input: Any = None) -> ConfigFlowResult:
+        """Menü Sensoren (Regen, Bodenfeuchte)."""
+        return self.async_show_menu(
+            step_id="sensors", menu_options=["add_sensor", "remove_sensor"]
+        )
+
+    async def async_step_add_sensor(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Regen- oder Bodenfeuchtesensor hinzufügen."""
+        errors: dict[str, str] = {}
+        placeholders = {"error": ""}
+        if user_input is not None:
+            ref = self._ref(user_input["entity"])
+            if ref is None:
+                errors["entity"] = "entity_no_unique_id"
+            else:
+                kind = SensorKind(user_input["kind"])
+                sensor = Sensor(
+                    id=_unique_id(user_input["name"], self._taken()),
+                    name=user_input["name"],
+                    kind=kind,
+                    entity=ref,
+                    zone_ids=list(user_input.get("zones", [])),
+                    field_capacity_pct=float(user_input["field_capacity_pct"]),
+                    wilting_point_pct=float(user_input["wilting_point_pct"]),
+                )
+                entry = er.async_get(self.hass).async_get(user_input["entity"])
+                sensor.device_id = entry.device_id if entry else None
+                self.model.sensors.append(sensor)
+                if (error := self._valid()) is None:
+                    return await self._save()
+                errors["base"] = "invalid"
+                placeholders["error"] = error
+                self._model = None
+        schema = vol.Schema(
+            {
+                vol.Required("name"): TextSelector(),
+                vol.Required(
+                    "kind", default=SensorKind.SOIL_MOISTURE.value
+                ): _translated(
+                    "sensor_kind",
+                    [SensorKind.SOIL_MOISTURE.value, SensorKind.RAIN_MM.value],
+                ),
+                vol.Required("entity"): EntitySelector(
+                    EntitySelectorConfig(domain="sensor")
+                ),
+                vol.Optional("zones", default=[]): _select(
+                    self._choices(self.model.zones), multiple=True
+                ),
+                vol.Required("field_capacity_pct", default=35): _number(1, 100, 1, "%"),
+                vol.Required("wilting_point_pct", default=12): _number(0, 99, 1, "%"),
+            }
+        )
+        return self.async_show_form(
+            step_id="add_sensor",
+            data_schema=self.add_suggested_values_to_schema(schema, user_input or {}),
+            errors=errors,
+            description_placeholders=placeholders,
+        )
+
+    async def async_step_remove_sensor(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Sensor entfernen."""
+        if user_input is None:
+            return self._pick_form("remove_sensor", self.model.sensors)
+        self.model.sensors = [
+            s for s in self.model.sensors if s.id != user_input["item"]
+        ]
         return await self._save()
 
     # Einstellungen ----------------------------------------------------------

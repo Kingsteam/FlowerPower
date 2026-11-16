@@ -10,7 +10,7 @@ Eigene Home-Assistant-Integration (HACS) für die Gartenbewässerung. Der Besitz
 
 Gartenplan, berechnete Gießdauer je Zone, ausfallsichere Ventilsteuerung, Überwachung des Durchflusses und Winterpause, unabhängig von der Hardware. Ziel und Architektur: `docs/KONZEPT.md`. Geplante Bedienung: `docs/HANDBUCH.md`.
 
-Stand 0.2.0: **Phase 1 (MVP Backend) fertig.** Die Integration steuert Ventile über Dienste, Knöpfe und den Zeitplan; Ventile, Zonen, Programme und Wasserversorgungen werden in der Oberfläche eingerichtet (Options-Flow mit Ventil-Assistent und Testlauf); Winterpause und Durchflussüberwachung sind eingebaut. Noch nicht: Berechnung der Gießdauer (Phase 2), Plan-Editor/Panel (Phase 3), Dashboard-Karte (Phase 4).
+Stand 0.3.0: **Phase 1 (MVP Backend) und Phase 2 (Berechnung) fertig.** Die Integration steuert Ventile über Dienste, Knöpfe und den Zeitplan; alles wird in der Oberfläche eingerichtet (Options-Flow mit Ventil-Assistent und Testlauf); Winterpause und Durchflussüberwachung sind eingebaut; die Gießdauer kann je Zone von Hand, berechnet (Wasserhaushalt nach FAO-56) oder aus einer Entität (z. B. Smart Irrigation) kommen. Noch nicht: Plan-Editor/Panel (Phase 3; bis dahin Fläche je Zone von Hand), Dashboard-Karte (Phase 4).
 
 ## Sicherheitsregeln (nicht verhandelbar)
 
@@ -31,7 +31,7 @@ Das Wissen über die konkrete Anlage des Besitzers liegt im separaten privaten R
 |---|---|
 | `custom_components/irrigation_planner/__init__.py` | `async_setup_entry`/`async_unload_entry`, `entry.runtime_data` (`IrrigationPlannerData`), Typ `IrrigationPlannerConfigEntry` |
 | `config_flow.py` | Einrichtung: Wetterquelle (optional), Zeitfenster; nur eine Instanz |
-| `options_flow.py` | Einrichtung über die Oberfläche: Menü Ventile/Zonen/Programme/Wasserversorgungen/Einstellungen; Ventil-Assistent (Gerät → Entitäten/Treiber/Profil → Treiber-Einstellungen → Zuordnen, optional Testlauf über `scheduler.async_hardware_test`). Jede Aktion: Kopie des Modells, `validate`, speichern, Neuladen. Speichern erst, nachdem das Testergebnis angezeigt wurde |
+| `options_flow.py` | Einrichtung über die Oberfläche: Menü Ventile/Zonen/Programme/Wasserversorgungen/Sensoren/Einstellungen; Zonen-Dialog mit Abschnitt „Berechnung“ (`section`, 0 = automatisch); Ventil-Assistent (Gerät → Entitäten/Treiber/Profil → Treiber-Einstellungen → Zuordnen, optional Testlauf über `scheduler.async_hardware_test`). Jede Aktion: Kopie des Modells, `validate`, speichern, Neuladen. Speichern erst, nachdem das Testergebnis angezeigt wurde |
 | `discovery.py` | Vorschlag für ein Gerät: Profil, Treiber, Entitäten je Rolle |
 | `const.py` | Konstanten und Sicherheitsgrenzen |
 | `model.py` | Datenklassen (Konzept Abschnitt 4), `GardenModel.validate()` prüft IDs und Bezüge; Bezüge über `device_id` + `EntityRef` (unique_id), nie über `entity_id` |

@@ -112,7 +112,7 @@
     },
     "number": {
       "duration": {
-        "name": "Gießdauer"
+        "name": "Gießdauer von Hand"
       }
     },
     "select": {
@@ -206,7 +206,8 @@
           "zones": "Zonen",
           "programs": "Programme",
           "supplies": "Wasserversorgungen",
-          "settings": "Einstellungen"
+          "settings": "Einstellungen",
+          "sensors": "Sensoren"
         }
       },
       "valves": {
@@ -351,15 +352,37 @@
         "data": {
           "name": "Name",
           "valve": "Ventil",
-          "duration": "Gießdauer",
+          "duration": "Gießdauer von Hand",
           "max_duration": "Höchstdauer (0 = keine)",
           "priority": "Priorität",
           "enabled": "Zone aktiv"
         },
         "data_description": {
-          "duration": "Wie lange die Zone gießt (vorerst von Hand; ab Phase 2 berechnet). 0 = keine Dauer, wird in Programmen übersprungen.",
+          "duration": "Gilt bei der Dauer-Art „von Hand“ und als Rückfall, solange für die Berechnung Werte fehlen (z. B. noch kein Durchfluss gelernt). 0 = keine.",
           "max_duration": "Obergrenze für jeden Lauf dieser Zone. Fängt Fehler ab.",
           "priority": "Für den Ablauf „Nach Priorität“: höhere Zahl zuerst."
+        },
+        "sections": {
+          "calculation": {
+            "name": "Berechnung der Gießdauer",
+            "description": "Für die berechnete Dauer braucht die Zone mindestens die Fläche. 0 bei Pflanzenfaktor, Wurzeltiefe oder Effizienz heißt: automatisch nach Pflanzen- bzw. Zonenart.",
+            "data": {
+              "zone_type": "Art der Bewässerung",
+              "area_m2": "Fläche",
+              "plant_type": "Pflanzen",
+              "kc": "Pflanzenfaktor Kc (0 = automatisch)",
+              "soil_type": "Boden",
+              "root_depth_cm": "Wurzeltiefe (0 = automatisch)",
+              "efficiency_pct": "Effizienz (0 = automatisch)",
+              "duration_mode": "Gießdauer",
+              "duration_entity": "Entität mit der Dauer"
+            },
+            "data_description": {
+              "area_m2": "Bis zum Gartenplan von Hand; später aus der Zeichnung.",
+              "efficiency_pct": "Anteil des Wassers, der bei den Pflanzen ankommt. Automatisch: Tropfschlauch 90 %, Sprinkler 75 %.",
+              "duration_entity": "Nur für „aus Entität“, z. B. ein Sensor von Smart Irrigation (Sekunden)."
+            }
+          }
         }
       },
       "edit_zone_form": {
@@ -367,15 +390,37 @@
         "data": {
           "name": "Name",
           "valve": "Ventil",
-          "duration": "Gießdauer",
+          "duration": "Gießdauer von Hand",
           "max_duration": "Höchstdauer (0 = keine)",
           "priority": "Priorität",
           "enabled": "Zone aktiv"
         },
         "data_description": {
-          "duration": "Wie lange die Zone gießt (vorerst von Hand; ab Phase 2 berechnet). 0 = keine Dauer, wird in Programmen übersprungen.",
+          "duration": "Gilt bei der Dauer-Art „von Hand“ und als Rückfall, solange für die Berechnung Werte fehlen (z. B. noch kein Durchfluss gelernt). 0 = keine.",
           "max_duration": "Obergrenze für jeden Lauf dieser Zone. Fängt Fehler ab.",
           "priority": "Für den Ablauf „Nach Priorität“: höhere Zahl zuerst."
+        },
+        "sections": {
+          "calculation": {
+            "name": "Berechnung der Gießdauer",
+            "description": "Für die berechnete Dauer braucht die Zone mindestens die Fläche. 0 bei Pflanzenfaktor, Wurzeltiefe oder Effizienz heißt: automatisch nach Pflanzen- bzw. Zonenart.",
+            "data": {
+              "zone_type": "Art der Bewässerung",
+              "area_m2": "Fläche",
+              "plant_type": "Pflanzen",
+              "kc": "Pflanzenfaktor Kc (0 = automatisch)",
+              "soil_type": "Boden",
+              "root_depth_cm": "Wurzeltiefe (0 = automatisch)",
+              "efficiency_pct": "Effizienz (0 = automatisch)",
+              "duration_mode": "Gießdauer",
+              "duration_entity": "Entität mit der Dauer"
+            },
+            "data_description": {
+              "area_m2": "Bis zum Gartenplan von Hand; später aus der Zeichnung.",
+              "efficiency_pct": "Anteil des Wassers, der bei den Pflanzen ankommt. Automatisch: Tropfschlauch 90 %, Sprinkler 75 %.",
+              "duration_entity": "Nur für „aus Entität“, z. B. ein Sensor von Smart Irrigation (Sekunden)."
+            }
+          }
         }
       },
       "add_program": {
@@ -459,6 +504,35 @@
           "winter_start": "Optional, z. B. 11-01. An diesem Tag beginnt die Winterpause automatisch.",
           "winter_end": "Optional, z. B. 04-01. An diesem Tag endet sie automatisch."
         }
+      },
+      "sensors": {
+        "title": "Sensoren",
+        "menu_options": {
+          "add_sensor": "Sensor hinzufügen",
+          "remove_sensor": "Sensor entfernen"
+        }
+      },
+      "add_sensor": {
+        "title": "Sensor hinzufügen",
+        "description": "Regensensor: ohne Zonen gilt er für alle (Tagessumme in mm oder ein Zähler). Bodenfeuchte: ersetzt die Schätzung der zugeordneten Zonen.",
+        "data": {
+          "name": "Name",
+          "kind": "Art",
+          "entity": "Entität",
+          "zones": "Zonen",
+          "field_capacity_pct": "Messwert bei nassem Boden (Feldkapazität)",
+          "wilting_point_pct": "Messwert bei trockenem Boden (Welkepunkt)"
+        },
+        "data_description": {
+          "field_capacity_pct": "Nur Bodenfeuchte: Wert einen Tag nach kräftigem Gießen.",
+          "wilting_point_pct": "Nur Bodenfeuchte: Wert, bei dem die Pflanzen welken."
+        }
+      },
+      "remove_sensor": {
+        "title": "Sensor entfernen",
+        "data": {
+          "item": "Auswahl"
+        }
       }
     },
     "error": {
@@ -515,6 +589,49 @@
         "4": "Freitag",
         "5": "Samstag",
         "6": "Sonntag"
+      }
+    },
+    "zone_type": {
+      "options": {
+        "drip": "Tropfschlauch",
+        "sprinkler": "Sprinkler"
+      }
+    },
+    "plant_type": {
+      "options": {
+        "__none__": "(keine Angabe)",
+        "lawn": "Rasen",
+        "flower_bed": "Blumenbeet",
+        "raised_bed": "Hochbeet",
+        "vegetables": "Gemüse",
+        "roses": "Rosen",
+        "shrubs": "Sträucher",
+        "trees": "Bäume",
+        "pots": "Töpfe"
+      }
+    },
+    "soil_type": {
+      "options": {
+        "sand": "Sand",
+        "loamy_sand": "lehmiger Sand",
+        "sandy_loam": "sandiger Lehm",
+        "loam": "Lehm",
+        "silt_loam": "Schluff/Löss",
+        "clay_loam": "toniger Lehm",
+        "clay": "Ton"
+      }
+    },
+    "duration_mode": {
+      "options": {
+        "manual": "von Hand",
+        "calculated": "berechnet (Wasserhaushalt)",
+        "entity": "aus Entität (z. B. Smart Irrigation)"
+      }
+    },
+    "sensor_kind": {
+      "options": {
+        "soil_moisture": "Bodenfeuchte",
+        "rain_mm": "Regen (mm)"
       }
     }
   }

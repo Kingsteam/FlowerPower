@@ -112,7 +112,7 @@
     },
     "number": {
       "duration": {
-        "name": "Watering duration"
+        "name": "Manual watering duration"
       }
     },
     "select": {
@@ -206,7 +206,8 @@
           "zones": "Zones",
           "programs": "Programs",
           "supplies": "Water supplies",
-          "settings": "Settings"
+          "settings": "Settings",
+          "sensors": "Sensors"
         }
       },
       "valves": {
@@ -351,15 +352,37 @@
         "data": {
           "name": "Name",
           "valve": "Valve",
-          "duration": "Watering duration",
+          "duration": "Manual watering duration",
           "max_duration": "Maximum duration (0 = none)",
           "priority": "Priority",
           "enabled": "Zone enabled"
         },
         "data_description": {
-          "duration": "How long the zone waters (manual for now). 0 = none, skipped in programs.",
+          "duration": "Used for manual mode and as fallback while the calculation lacks data. 0 = none.",
           "max_duration": "Upper limit for every run of this zone.",
           "priority": "For mode 'by priority': higher first."
+        },
+        "sections": {
+          "calculation": {
+            "name": "Watering calculation",
+            "description": "For calculated duration the zone needs at least its area. 0 means automatic.",
+            "data": {
+              "zone_type": "Irrigation type",
+              "area_m2": "Area",
+              "plant_type": "Plants",
+              "kc": "Crop coefficient Kc (0 = automatic)",
+              "soil_type": "Soil",
+              "root_depth_cm": "Root depth (0 = automatic)",
+              "efficiency_pct": "Efficiency (0 = automatic)",
+              "duration_mode": "Watering duration",
+              "duration_entity": "Entity with duration"
+            },
+            "data_description": {
+              "area_m2": "Manual until the garden plan exists.",
+              "efficiency_pct": "Share of water reaching the plants.",
+              "duration_entity": "Only for 'from entity', e.g. Smart Irrigation (seconds)."
+            }
+          }
         }
       },
       "edit_zone_form": {
@@ -367,15 +390,37 @@
         "data": {
           "name": "Name",
           "valve": "Valve",
-          "duration": "Watering duration",
+          "duration": "Manual watering duration",
           "max_duration": "Maximum duration (0 = none)",
           "priority": "Priority",
           "enabled": "Zone enabled"
         },
         "data_description": {
-          "duration": "How long the zone waters (manual for now). 0 = none, skipped in programs.",
+          "duration": "Used for manual mode and as fallback while the calculation lacks data. 0 = none.",
           "max_duration": "Upper limit for every run of this zone.",
           "priority": "For mode 'by priority': higher first."
+        },
+        "sections": {
+          "calculation": {
+            "name": "Watering calculation",
+            "description": "For calculated duration the zone needs at least its area. 0 means automatic.",
+            "data": {
+              "zone_type": "Irrigation type",
+              "area_m2": "Area",
+              "plant_type": "Plants",
+              "kc": "Crop coefficient Kc (0 = automatic)",
+              "soil_type": "Soil",
+              "root_depth_cm": "Root depth (0 = automatic)",
+              "efficiency_pct": "Efficiency (0 = automatic)",
+              "duration_mode": "Watering duration",
+              "duration_entity": "Entity with duration"
+            },
+            "data_description": {
+              "area_m2": "Manual until the garden plan exists.",
+              "efficiency_pct": "Share of water reaching the plants.",
+              "duration_entity": "Only for 'from entity', e.g. Smart Irrigation (seconds)."
+            }
+          }
         }
       },
       "add_program": {
@@ -459,6 +504,35 @@
           "winter_start": "Optional, e.g. 11-01.",
           "winter_end": "Optional, e.g. 04-01."
         }
+      },
+      "sensors": {
+        "title": "Sensors",
+        "menu_options": {
+          "add_sensor": "Add sensor",
+          "remove_sensor": "Remove sensor"
+        }
+      },
+      "add_sensor": {
+        "title": "Add sensor",
+        "description": "Rain sensor without zones applies to all.",
+        "data": {
+          "name": "Name",
+          "kind": "Kind",
+          "entity": "Entity",
+          "zones": "Zones",
+          "field_capacity_pct": "Reading when wet (field capacity)",
+          "wilting_point_pct": "Reading when dry (wilting point)"
+        },
+        "data_description": {
+          "field_capacity_pct": "Soil moisture only.",
+          "wilting_point_pct": "Soil moisture only."
+        }
+      },
+      "remove_sensor": {
+        "title": "Remove sensor",
+        "data": {
+          "item": "Selection"
+        }
       }
     },
     "error": {
@@ -515,6 +589,49 @@
         "4": "Friday",
         "5": "Saturday",
         "6": "Sunday"
+      }
+    },
+    "zone_type": {
+      "options": {
+        "drip": "Drip",
+        "sprinkler": "Sprinkler"
+      }
+    },
+    "plant_type": {
+      "options": {
+        "__none__": "(not set)",
+        "lawn": "Lawn",
+        "flower_bed": "Flower bed",
+        "raised_bed": "Raised bed",
+        "vegetables": "Vegetables",
+        "roses": "Roses",
+        "shrubs": "Shrubs",
+        "trees": "Trees",
+        "pots": "Pots"
+      }
+    },
+    "soil_type": {
+      "options": {
+        "sand": "Sand",
+        "loamy_sand": "Loamy sand",
+        "sandy_loam": "Sandy loam",
+        "loam": "Loam",
+        "silt_loam": "Silt loam",
+        "clay_loam": "Clay loam",
+        "clay": "Clay"
+      }
+    },
+    "duration_mode": {
+      "options": {
+        "manual": "Manual",
+        "calculated": "Calculated (water balance)",
+        "entity": "From entity (e.g. Smart Irrigation)"
+      }
+    },
+    "sensor_kind": {
+      "options": {
+        "soil_moisture": "Soil moisture",
+        "rain_mm": "Rain (mm)"
       }
     }
   }

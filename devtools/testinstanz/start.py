@@ -119,6 +119,18 @@ def _sim_ref(domain: str, unique_id: str) -> dict[str, str]:
     return {"domain": domain, "platform": "irrigation_sim", "unique_id": unique_id}
 
 
+FLUSS = (4.5, 9.5, 6.0, 12.0, 12.0, 11.0, 10.0, 7.5, 5.0, 8.0)
+BERECHNUNG = {
+    1: {"area_m2": 12.6, "plant_type": "flower_bed", "kc": 0.9},
+    2: {"area_m2": 9.0, "plant_type": "roses", "kc": 0.9},
+    3: {"area_m2": 6.0, "plant_type": "pots", "kc": 1.1},
+    4: {"area_m2": 47.5, "plant_type": "lawn", "kc": 0.8, "type": "sprinkler"},
+    5: {"area_m2": 47.5, "plant_type": "lawn", "kc": 0.8, "type": "sprinkler"},
+}
+for _werte in BERECHNUNG.values():
+    _werte["duration_mode"] = "calculated"
+
+
 def _beispielgarten() -> dict:
     """Gartenmodell mit den 10 simulierten Zonen.
 
@@ -156,6 +168,8 @@ def _beispielgarten() -> dict:
                 "valve_id": f"ventil_{n}",
                 "max_duration_s": 1800,
                 "duration_s": 120 + 30 * n,
+                # Phase 2: Zonen 1 bis 5 mit berechneter Dauer.
+                **(BERECHNUNG.get(n, {})),
             }
         )
         ventile.append(
@@ -168,6 +182,8 @@ def _beispielgarten() -> dict:
                 "entities": rollen,
                 "zone_ids": [f"zone_{n}"],
                 "water_supply_id": "hauswasser",
+                # Durchfluss wie im Simulator (sonst erst nach dem ersten Lauf).
+                "learned_flow_l_min": FLUSS[n - 1],
             }
         )
     return {
@@ -203,7 +219,30 @@ def _beispielgarten() -> dict:
                 "weekdays": [0, 2, 4],
             },
         ],
-        "sensors": [],
+        "sensors": [
+            {
+                "id": f"boden_{n}",
+                "name": f"Bodenfeuchte Zone {n}",
+                "kind": "soil_moisture",
+                "entity": _sim_ref("sensor", f"soil_{n}"),
+                "zone_ids": [f"zone_{n}"],
+                "field_capacity_pct": 45,
+                "wilting_point_pct": 12,
+            }
+            for n in (1, 2, 3)
+        ]
+        + [
+            {
+                "id": "regen",
+                "name": "Simulierter Regen",
+                "kind": "rain_mm",
+                "entity": {
+                    "domain": "sensor",
+                    "platform": "template",
+                    "unique_id": "sim_rain",
+                },
+            }
+        ],
     }
 
 

@@ -2,11 +2,11 @@
 
 Eine Erweiterung (Integration) für Home Assistant, die den Garten automatisch und sicher bewässern soll: mit Gartenplan, berechneter Gießdauer pro Zone, Überwachung des Durchflusses und Winterpause. Sie soll mit beliebiger Bewässerungs-Hardware funktionieren.
 
-Domain: `irrigation_planner` · Version: 0.2.0
+Domain: `irrigation_planner` · Version: 0.3.0
 
 ## Stand
 
-> **Phase 1 fertig: Die Erweiterung steuert Ventile.** Sie ist noch nicht an echter Hardware erprobt. Vor dem ersten echten Einsatz: Testlauf je Ventil (10 s) im Assistenten.
+> **Phase 1 und 2 fertig: Die Erweiterung steuert Ventile und berechnet die Gießdauer.** Sie ist noch nicht an echter Hardware erprobt. Vor dem ersten echten Einsatz: Testlauf je Ventil (10 s) im Assistenten.
 
 Was es gibt:
 - **Einrichtung über die Oberfläche:** Ventile (Assistent mit Geräteerkennung und Testlauf), Zonen, Programme, Wasserversorgungen
@@ -15,9 +15,10 @@ Was es gibt:
 - **Programme** (nacheinander, abwechselnd, nach Priorität) mit Zeitplan und Überspringen bei Regen, Frost oder Wind
 - **Überwachung des Durchflusses:** Leck, Schlauch gelöst, kein Wasser, Ventil dichtet nicht, mit Alarm und Sperre der Zone
 - **Winterpause**, von Hand oder nach Datum
-- Anzeigen, Schalter und Knöpfe in Home Assistant; Dienste `run_zone`, `run_program`, `skip_next`, `stop_all`, `release_zone`
+- **Berechnete Gießdauer** je Zone: Verdunstung (FAO-56) aus dem Wetter, Wasserhaushalt mit Regen und Bodenfeuchte, Bedarf → Liter → Dauer; Regenvorhersage verschiebt Läufe; alternativ die Dauer aus Smart Irrigation
+- Anzeigen, Schalter und Knöpfe in Home Assistant; Dienste `run_zone`, `run_program`, `skip_next`, `stop_all`, `release_zone`, `recalculate`, `reset_balance`
 
-Noch nicht: Berechnung der Gießdauer aus Wetter und Fläche (Phase 2; bis dahin stellst du die Dauer je Zone ein), Gartenplan-Editor (Phase 3), Dashboard-Karte (Phase 4). Details im [Konzept](docs/KONZEPT.md) und im [Handbuch (Entwurf)](docs/HANDBUCH.md).
+Noch nicht: Gartenplan-Editor (Phase 3; bis dahin trägst du die Fläche je Zone von Hand ein), Dashboard-Karte (Phase 4). Details im [Konzept](docs/KONZEPT.md) und im [Handbuch (Entwurf)](docs/HANDBUCH.md).
 
 ## Installation (später, über HACS)
 

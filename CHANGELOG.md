@@ -5,7 +5,16 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 
 ## [Unveröffentlicht]
 
+## [0.3.0] – 2026-11-16
+
+Phase 2 (Berechnung) fertig.
+
 ### Neu
+- Oberfläche: Zonen-Dialog mit Abschnitt „Berechnung der Gießdauer“ (Art, Fläche, Pflanzen, Pflanzenfaktor, Boden, Wurzeltiefe, Effizienz, Dauer-Art, Entität); neues Menü „Sensoren“ (Regen, Bodenfeuchte).
+- Testinstanz: Beispielgarten mit berechneten Zonen, Bodenfeuchte- und Regensensor.
+
+### Geändert
+- „Gießdauer“ heißt jetzt „Gießdauer von Hand“ (gilt bei Dauer-Art „von Hand“ und als Rückfall).
 - Berechnete Dauer wird angewendet: Programme und „Jetzt gießen“ nutzen je Zone die Dauer nach ihrer Dauer-Art (von Hand, berechnet, aus Entität wie Smart Irrigation). Zonen unter 1 mm Bedarf entfallen; ohne gelernten Durchfluss gilt die Dauer von Hand. „Nach Priorität“ sortiert bei Gleichstand nach Bedarf.
 - Regenvorhersage: Sind in den nächsten 24 h mindestens 5 mm angesagt, wird ein geplanter Lauf übersprungen.
 - Anzeigen je Zone „Wasserbedarf“ (mm) und „Geplante Dauer“, dazu „Verdunstung (ET0) gestern“. Dienste `recalculate` und `reset_balance`.

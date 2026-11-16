@@ -561,3 +561,142 @@ async def test_discovery_generic_valve(
     assert suggestion.profile is None
     assert suggestion.driver == "ha_valve"
     assert suggestion.entities == {ValveRole.VALVE: valve.entity_id}
+
+
+# Phase 2: Berechnung und Sensoren ---------------------------------------------
+
+
+async def test_zone_calculation_section(
+    hass: HomeAssistant,
+    setup: Any,
+    sim: SimValves,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    smart = entity_registry.async_get_or_create("sensor", "smart_irrigation", "rasen")
+    await setup(make_model(1))
+    result = await _menu(hass, mock_config_entry, "zones", "edit_zone")
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"item": "z1"}
+    )
+    base = {
+        "name": "Rasen",
+        "valve": "v1",
+        "duration": 10,
+        "max_duration": 30,
+        "priority": 0,
+        "enabled": True,
+    }
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            **base,
+            "calculation": {
+                "zone_type": "sprinkler",
+                "area_m2": 47.5,
+                "plant_type": "lawn",
+                "kc": 0,
+                "soil_type": "clay_loam",
+                "root_depth_cm": 0,
+                "efficiency_pct": 0,
+                "duration_mode": "calculated",
+            },
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    zone = _model(hass, mock_config_entry).zones[0]
+    assert zone.type.value == "sprinkler"
+    assert zone.area_m2 == 47.5
+    assert (zone.plant_type, zone.kc) == ("lawn", 0.8)  # 0 = nach Pflanzenart
+    assert (zone.root_depth_m, zone.efficiency) == (None, None)
+    assert zone.duration_mode.value == "calculated"
+
+    # Dauer aus Smart Irrigation; ohne Entität gibt es einen Fehler.
+    result = await _menu(hass, mock_config_entry, "zones", "edit_zone")
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"item": "z1"}
+    )
+    calc = {
+        "zone_type": "sprinkler",
+        "area_m2": 47.5,
+        "plant_type": "lawn",
+        "kc": 0.9,
+        "soil_type": "loam",
+        "root_depth_cm": 25,
+        "efficiency_pct": 70,
+        "duration_mode": "entity",
+    }
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {**base, "calculation": calc}
+    )
+    assert result["errors"] == {"base": "invalid"}
+    assert "Entität" in result["description_placeholders"]["error"]
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {**base, "calculation": {**calc, "duration_entity": smart.entity_id}},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    zone = _model(hass, mock_config_entry).zones[0]
+    assert (zone.kc, zone.root_depth_m, zone.efficiency) == (0.9, 0.25, 0.7)
+    assert zone.duration_entity is not None
+    assert zone.duration_entity.unique_id == "rasen"
+
+
+async def test_add_and_remove_sensors(
+    hass: HomeAssistant,
+    setup: Any,
+    sim: SimValves,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    soil = entity_registry.async_get_or_create("sensor", "test", "soil")
+    rain = entity_registry.async_get_or_create("sensor", "test", "rain")
+    await setup(make_model(1))
+    for name, kind, entity_id, zones in (
+        ("Boden Beet", "soil_moisture", soil.entity_id, ["z1"]),
+        ("Regen", "rain_mm", rain.entity_id, []),
+    ):
+        result = await _menu(hass, mock_config_entry, "sensors", "add_sensor")
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                "name": name,
+                "kind": kind,
+                "entity": entity_id,
+                "zones": zones,
+                "field_capacity_pct": 38,
+                "wilting_point_pct": 14,
+            },
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        await hass.async_block_till_done()
+    sensors = _model(hass, mock_config_entry).sensors
+    assert [(s.id, s.kind.value, s.zone_ids) for s in sensors] == [
+        ("boden_beet", "soil_moisture", ["z1"]),
+        ("regen", "rain_mm", []),
+    ]
+    assert sensors[0].field_capacity_pct == 38
+
+    # Feldkapazität unter dem Welkepunkt: Fehler.
+    result = await _menu(hass, mock_config_entry, "sensors", "add_sensor")
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "name": "Falsch",
+            "kind": "soil_moisture",
+            "entity": soil.entity_id,
+            "zones": ["z1"],
+            "field_capacity_pct": 10,
+            "wilting_point_pct": 20,
+        },
+    )
+    assert result["errors"] == {"base": "invalid"}
+
+    result = await _menu(hass, mock_config_entry, "sensors", "remove_sensor")
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"item": "regen"}
+    )
+    await hass.async_block_till_done()
+    assert [s.id for s in _model(hass, mock_config_entry).sensors] == ["boden_beet"]
