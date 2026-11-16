@@ -27,6 +27,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import webbrowser
 
 HIER = Path(__file__).resolve().parent
 REPO = HIER.parents[1]
@@ -291,6 +292,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--daten", type=Path, default=REPO.parent / "testinstanz-daten")
     parser.add_argument("--port", type=int, default=8123)
+    parser.add_argument(
+        "--oeffnen", action="store_true", help="danach den Browser öffnen"
+    )
     args = parser.parse_args()
 
     daten: Path = args.daten.resolve()
@@ -329,6 +333,10 @@ def main() -> None:
         raise
     print(f"Testinstanz läuft: {basis}")
     print(f"Zugang: {daten / 'zugang.txt'}")
+    print((daten / "zugang.txt").read_text().strip())
+    print("Beenden mit Ctrl+C.")
+    if args.oeffnen:
+        webbrowser.open(basis)
     try:
         prozess.wait()
     except KeyboardInterrupt:
