@@ -139,6 +139,10 @@ PLAN = {
     3: {"polygon": [[4, -8], [10, -8], [10, -7], [4, -7]]},
     4: {"center": [-6.5, 0.5], "radius_m": 5.5, "start_angle_deg": 90, "arc_deg": 180},
     5: {"center": [4, 1], "radius_m": 5.5, "start_angle_deg": 270, "arc_deg": 180},
+    # Gießschlauch an der Hecke entlang (0,4 m je Seite)
+    7: {"type": "hose", "polygon": [[-13, 8.6], [12, 8.6]], "radius_m": 0.4},
+    # Gießschlauch zum Selberzeichnen
+    8: {"type": "hose"},
 }
 # Abgepauster Grundriss (nur Orientierung): Haus, Terrasse, Hecke, Baum, Hahn.
 GRUNDRISS = [
@@ -163,6 +167,8 @@ GRUNDRISS = [
     {"id": "hahn", "kind": "tap", "points": [[-1, -10.8]]},
 ]
 NAMEN = {
+    7: "Schlauch Hecke",
+    8: "Schlauch Gemüse",
     1: "Blumenbeet Süd",
     2: "Rosen",
     3: "Töpfe Terrasse",

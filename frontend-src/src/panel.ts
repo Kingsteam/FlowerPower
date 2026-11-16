@@ -15,6 +15,8 @@ import {
   compass,
   distance,
   edgeLengths,
+  hoseArea,
+  pointAlong,
   metersPerPixel,
   pathLength,
   setEdgeLength,
@@ -67,7 +69,7 @@ const STATE_LABEL: Record<string, string> = {
 };
 const DEFAULT_IMAGE_MPP = 0.05;
 
-type Tool = "select" | "sprinkler" | "bed" | "place" | "scale" | "feature" | "measure";
+type Tool = "select" | "sprinkler" | "bed" | "hose" | "place" | "scale" | "feature" | "measure";
 type Selection = { kind: "zone" | "valve" | "sensor" | "feature"; id: string } | null;
 type Drag =
   | { type: "pan"; sx: number; sy: number; cx: number; cy: number; moved: boolean }
@@ -270,6 +272,7 @@ export class IrrigationPlannerPanel extends LitElement {
           start_angle_deg: z.start_angle_deg,
           arc_deg: z.arc_deg,
           polygon: z.polygon,
+          valve_id: z.valve_id,
         })),
         valves: plan.valves.map((v) => ({ id: v.id, position: v.position })),
         sensors: plan.sensors.map((s) => ({ id: s.id, position: s.position })),
@@ -471,7 +474,7 @@ export class IrrigationPlannerPanel extends LitElement {
     this.hover = null;
     this.snapHint = null;
     if (tool === "feature") this.featureKind = target;
-    if (target && (tool === "sprinkler" || tool === "bed")) {
+    if (target && (tool === "sprinkler" || tool === "bed" || tool === "hose")) {
       this.selected = { kind: "zone", id: target };
     }
   }
@@ -555,6 +558,7 @@ export class IrrigationPlannerPanel extends LitElement {
     if (event.key === "Escape") this.cancelTool();
     if (event.key === "Enter" && this.tool === "bed") this.finishBed();
     if (event.key === "Enter" && this.tool === "feature") this.finishFeature();
+    if (event.key === "Enter" && this.tool === "hose") this.finishHose();
     if ((event.ctrlKey || event.metaKey) && event.key === "z") {
       event.preventDefault();
       this.undo();
@@ -579,6 +583,21 @@ export class IrrigationPlannerPanel extends LitElement {
     this.remember();
     this.zone(this.toolTarget).polygon = this.draft.map((p) => [round(p[0]), round(p[1])]);
     this.selected = { kind: "zone", id: this.toolTarget };
+    this.changed();
+    this.cancelTool();
+  }
+
+  private finishHose(): void {
+    if (this.draft.length < 2) {
+      this.showToast("Ein Schlauch braucht mindestens 2 Punkte", true);
+      return;
+    }
+    this.remember();
+    const zone = this.zone(this.toolTarget);
+    zone.polygon = this.draft.map((p) => [round(p[0]), round(p[1])]);
+    zone.center = null;
+    if (!zone.radius_m || zone.radius_m > 3) zone.radius_m = 0.3;
+    this.selected = { kind: "zone", id: zone.id };
     this.changed();
     this.cancelTool();
   }
@@ -627,6 +646,13 @@ export class IrrigationPlannerPanel extends LitElement {
     }
     if (this.tool === "measure") {
       this.measurePts = [...this.measurePts, this.snap(p, event)];
+      return;
+    }
+    if (this.tool === "hose") {
+      const q = this.snap(p, event);
+      const last = this.draft[this.draft.length - 1];
+      if (this.draft.length >= 2 && distance(q, last) * this.view.scale < 12) this.finishHose();
+      else this.draft = [...this.draft, q];
       return;
     }
     if (this.tool === "sprinkler") {
@@ -690,7 +716,7 @@ export class IrrigationPlannerPanel extends LitElement {
   private onPointerMove = (event: PointerEvent): void => {
     const drag = this.drag;
     if (!drag) {
-      if (["bed", "feature", "measure", "sprinkler"].includes(this.tool)) {
+      if (["bed", "hose", "feature", "measure", "sprinkler"].includes(this.tool)) {
         this.hover = this.snap(this.toPlan(event), event);
       }
       return;
@@ -834,8 +860,9 @@ export class IrrigationPlannerPanel extends LitElement {
   private removeVertex(event: MouseEvent, zone: PlanZone, index: number): void {
     event.preventDefault();
     event.stopPropagation();
-    if (zone.polygon.length <= 3) {
-      this.showToast("Ein Beet braucht mindestens 3 Punkte", true);
+    const min = zone.type === "hose" ? 2 : 3;
+    if (zone.polygon.length <= min) {
+      this.showToast(`Mindestens ${min} Punkte`, true);
       return;
     }
     this.remember();
@@ -1347,6 +1374,11 @@ export class IrrigationPlannerPanel extends LitElement {
             this.draft = this.draft.slice(0, -1);
             this.finishBed();
           }
+          if (this.tool === "hose") {
+            e.preventDefault();
+            this.draft = this.draft.slice(0, -1);
+            this.finishHose();
+          }
           if (this.tool === "feature" && family(this.featureKind) !== "point") {
             e.preventDefault();
             this.draft = this.draft.slice(0, -1);
@@ -1360,6 +1392,7 @@ export class IrrigationPlannerPanel extends LitElement {
           ${this.plan!.zones.map((z, i) => this.renderZone(z, i, px))}
           ${this.renderSelectedHandles(px)} ${this.renderFeatureHandles(px)}
           ${this.renderDraft(px)} ${this.renderScaleDraft(px)} ${this.renderMeasure(px)}
+          ${this.renderValveLinks(px)}
           ${this.plan!.valves.map((v) => this.renderMarker("valve", v, px))}
           ${this.plan!.sensors.map((s) => this.renderMarker("sensor", s, px))}
           ${this.renderSnapHint(px)}
@@ -1460,7 +1493,13 @@ export class IrrigationPlannerPanel extends LitElement {
     if (zone.type === "sprinkler" && zone.center && zone.radius_m) {
       shape = svg`<path d=${sectorPath(zone.center, zone.radius_m, zone.start_angle_deg, zone.arc_deg)}></path>`;
       label = zone.arc_deg >= 360 ? zone.center : polar(zone.center, zone.radius_m * 0.55, zone.start_angle_deg + zone.arc_deg / 2);
-    } else if (zone.type !== "sprinkler" && zone.polygon.length >= 3) {
+    } else if (zone.type === "hose" && zone.polygon.length >= 2 && zone.radius_m) {
+      // Breiter Streifen (2 × Radius) mit runden Enden, darin die Schlauchlinie.
+      const pts = zone.polygon.map((p) => p.join(",")).join(" ");
+      shape = svg`<polyline class="hose-band" points=${pts} stroke-width=${2 * zone.radius_m}></polyline>
+        <polyline class="hose-line" points=${pts}></polyline>`;
+      label = this.zoneAnchor(zone);
+    } else if (zone.type === "drip" && zone.polygon.length >= 3) {
       shape = svg`<polygon points=${zone.polygon.map((p) => p.join(",")).join(" ")}></polygon>`;
       label = centroid(zone.polygon);
     }
@@ -1514,10 +1553,12 @@ export class IrrigationPlannerPanel extends LitElement {
       }
       return parts;
     }
-    if (zone.type !== "sprinkler" && zone.polygon.length >= 3) {
+    const minPts = zone.type === "hose" ? 2 : 3;
+    if (zone.type !== "sprinkler" && zone.polygon.length >= minPts) {
       const pts = zone.polygon;
+      const segments = zone.type === "hose" ? pts.slice(0, -1) : pts;
       return [
-        ...pts.map((p, i) => {
+        ...segments.map((p, i) => {
           const q = pts[(i + 1) % pts.length];
           const m: Point = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
           return svg`<circle class="handle mid" cx=${m[0]} cy=${m[1]} r=${r * 0.7}
@@ -1657,6 +1698,28 @@ export class IrrigationPlannerPanel extends LitElement {
     </g>`;
   }
 
+  /** Mittelpunkt einer gezeichneten Zone (für Beschriftung und Verbindungslinie). */
+  private zoneAnchor(zone: PlanZone): Point | null {
+    if (zone.type === "sprinkler") return zone.center && zone.radius_m ? zone.center : null;
+    if (zone.type === "hose") return zone.polygon.length >= 2 ? pointAlong(zone.polygon, 0.5) : null;
+    return zone.polygon.length >= 3 ? centroid(zone.polygon) : null;
+  }
+
+  /** Gestrichelte Linie von jeder Zone zu ihrem Ventil (wenn beide im Plan sind). */
+  private renderValveLinks(px: number) {
+    return this.plan!.zones.map((zone, index) => {
+      const valve = this.plan!.valves.find((v) => v.id === zone.valve_id);
+      const from = this.zoneAnchor(zone);
+      if (!valve?.position || !from) return nothing;
+      const selected =
+        (this.selected?.kind === "zone" && this.selected.id === zone.id) ||
+        (this.selected?.kind === "valve" && this.selected.id === valve.id);
+      const [x2, y2] = valve.position;
+      return svg`<line class="valve-link ${selected ? "selected" : ""}" style="--zone:${this.zoneColor(index)}"
+        x1=${from[0]} y1=${from[1]} x2=${x2} y2=${y2} stroke-dasharray=${`${6 * px} ${4 * px}`}></line>`;
+    });
+  }
+
   private renderSnapHint(px: number) {
     if (!this.snapHint) return nothing;
     return svg`<circle class="snap-hint" cx=${this.snapHint[0]} cy=${this.snapHint[1]} r=${9 * px}></circle>`;
@@ -1671,6 +1734,13 @@ export class IrrigationPlannerPanel extends LitElement {
           <polyline points=${[...pts, ...(closed && pts.length > 2 ? [pts[0]] : [])].map((p) => p.join(",")).join(" ")}></polyline>
           ${this.draft.map((p, i) => svg`<circle cx=${p[0]} cy=${p[1]} r=${(i === 0 ? 7 : 5) * px}></circle>`)}
         </g>`;
+    }
+    if (this.tool === "hose" && this.draft.length) {
+      const pts = this.hover ? [...this.draft, this.hover] : this.draft;
+      return svg`<g class="draft">
+        <polyline points=${pts.map((p) => p.join(",")).join(" ")} style="fill:none"></polyline>
+        ${this.draft.map((p) => svg`<circle cx=${p[0]} cy=${p[1]} r=${5 * px}></circle>`)}
+      </g>`;
     }
     if (this.tool !== "bed" || !this.draft.length) return nothing;
     const pts = this.hover ? [...this.draft, this.hover] : this.draft;
@@ -1774,6 +1844,10 @@ export class IrrigationPlannerPanel extends LitElement {
     let actions: TemplateResult | typeof nothing = nothing;
     const name = this.toolTarget ? this.zoneOrMarkerName(this.toolTarget) : "";
     if (this.tool === "sprinkler") text = `${name}: Am Sprinkler drücken und bis zum Rand ziehen.`;
+    if (this.tool === "hose") {
+      text = `${name}: Den Verlauf des Schlauchs anklicken, Doppelklick beendet.`;
+      actions = html`<button class="text" ?disabled=${this.draft.length < 2} @click=${this.finishHose}>Fertig</button>`;
+    }
     if (this.tool === "bed") {
       text = `${name}: Ecken anklicken, zum Schließen den ersten Punkt.`;
       actions = html`<button class="text" ?disabled=${this.draft.length < 3} @click=${this.finishBed}>Fertig</button>`;
@@ -1883,7 +1957,7 @@ export class IrrigationPlannerPanel extends LitElement {
           this.selected = open ? null : { kind: "zone", id: zone.id };
         }}>
           <span class="dot"></span>
-          <ha-icon icon=${isSprinkler ? "mdi:sprinkler-variant" : "mdi:water-outline"}></ha-icon>
+          <ha-icon icon=${isSprinkler ? "mdi:sprinkler-variant" : zone.type === "hose" ? "mdi:pipe" : "mdi:water-outline"}></ha-icon>
           <span class="name">${zone.name}</span>
           ${st && st.state !== "idle" ? html`<span class="badge ${st.state}">${STATE_LABEL[st.state]}</span>` : nothing}
           <span class="meta">${drawn ? fmtArea(area) : html`<em>nicht gezeichnet</em>`}</span>
@@ -1897,7 +1971,7 @@ export class IrrigationPlannerPanel extends LitElement {
     const isSprinkler = zone.type === "sprinkler";
     const area = liveArea(zone);
     const drawn = area !== null;
-    const drawTool: Tool = isSprinkler ? "sprinkler" : "bed";
+    const drawTool: Tool = isSprinkler ? "sprinkler" : zone.type === "hose" ? "hose" : "bed";
     const num = (label: string, value: number | null, unit: string, set: (v: number) => void, step = 0.1) =>
       html`<label class="field">
         <span>${label}</span>
@@ -1913,6 +1987,31 @@ export class IrrigationPlannerPanel extends LitElement {
       </label>`;
     return html`
       <div class="inspector">
+        <label class="field wide">
+          <span>Ventil</span>
+          <select
+            @change=${(e: Event) => {
+              const value = (e.target as HTMLSelectElement).value;
+              this.remember();
+              zone.valve_id = value || null;
+              for (const v of this.plan!.valves) {
+                v.zone_ids = v.zone_ids.filter((id) => id !== zone.id);
+                if (v.id === zone.valve_id) v.zone_ids.push(zone.id);
+              }
+              this.changed();
+            }}
+          >
+            <option value="" ?selected=${!zone.valve_id}>kein Ventil</option>
+            ${this.plan!.valves.map(
+              (v) => html`<option value=${v.id} ?selected=${zone.valve_id === v.id}>
+                ${v.name}${v.zone_ids.some((id) => id !== zone.id) ? " (auch andere Zonen)" : ""}
+              </option>`,
+            )}
+          </select>
+        </label>
+        ${!this.plan!.valves.find((v) => v.id === zone.valve_id)?.position && zone.valve_id
+          ? html`<p class="hint small">Setze das Ventil im Plan (unten „Platzieren“), dann siehst du die Verbindung.</p>`
+          : nothing}
         <dl>
           <dt>Fläche gezeichnet</dt>
           <dd>${drawn ? fmtArea(area) : "–"}</dd>
@@ -1936,7 +2035,14 @@ export class IrrigationPlannerPanel extends LitElement {
             </div>
             <p class="hint small">Richtung: Anfang des Bogens, 0° = Norden (oben), 90° = Osten.</p>`
           : nothing}
-        ${!isSprinkler && drawn
+        ${zone.type === "hose" && drawn
+          ? html`<div class="fields">
+                ${num("Bewässert je Seite", zone.radius_m, "m", (v) => (zone.radius_m = Math.max(0.05, v)), 0.05)}
+              </div>
+              <p class="hint small">Länge ${fmtLength(pathLength(zone.polygon))}, bewässert ${fmtLength(2 * (zone.radius_m ?? 0))} breit.</p>
+              ${this.renderEdges(zone.polygon, false, (pts) => (zone.polygon = pts))}`
+          : nothing}
+        ${zone.type === "drip" && drawn
           ? this.renderEdges(zone.polygon, true, (pts) => (zone.polygon = pts))
           : nothing}
         <div class="actions">
@@ -2288,6 +2394,9 @@ function snapAngle(deg: number): number {
 function liveArea(zone: PlanZone): number | null {
   if (zone.type === "sprinkler") {
     return zone.center && zone.radius_m ? sectorArea(zone.radius_m, zone.arc_deg) : null;
+  }
+  if (zone.type === "hose") {
+    return zone.polygon.length >= 2 && zone.radius_m ? hoseArea(zone.polygon, zone.radius_m) : null;
   }
   return zone.polygon.length >= 3 ? polygonArea(zone.polygon) : null;
 }

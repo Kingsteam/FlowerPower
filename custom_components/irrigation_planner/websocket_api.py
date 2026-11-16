@@ -58,6 +58,8 @@ ZONE_GEOMETRY = vol.Schema(
         vol.Optional("start_angle_deg"): _number,
         vol.Optional("arc_deg"): _number,
         vol.Optional("polygon"): [POINT],
+        # Zuordnung zum Ventil (None = keins)
+        vol.Optional("valve_id"): vol.Any(None, str),
     }
 )
 POSITION = vol.Schema({vol.Required("id"): str, vol.Required("position"): OPT_POINT})
@@ -143,6 +145,7 @@ def plan_payload(hass: HomeAssistant, data: IrrigationPlannerData) -> dict[str, 
                 "name": v.name,
                 "position": _point(v.position),
                 "zone_ids": list(v.zone_ids),
+                "learned_flow_l_min": v.learned_flow_l_min,
                 "safety_level": v.safety_level.value,
             }
             for v in model.valves
@@ -201,6 +204,15 @@ def ws_plan_get(
     connection.send_result(msg["id"], plan_payload(hass, data))
 
 
+def _sync_valve_zones(model: GardenModel) -> None:
+    """Ventil → Zonen passend zu Zone → Ventil halten (Reihenfolge bleibt)."""
+    for valve in model.valves:
+        mine = [z.id for z in model.zones if z.valve_id == valve.id]
+        valve.zone_ids = [z for z in valve.zone_ids if z in mine] + [
+            z for z in mine if z not in valve.zone_ids
+        ]
+
+
 def _apply_garden(model: GardenModel, raw: dict[str, Any]) -> None:
     garden = garden_from_dict({**garden_to_dict(model.garden), **raw})
     if garden.map_provider and garden.map_provider not in (
@@ -246,6 +258,9 @@ async def ws_plan_save(
                     setattr(zone, key, raw[key])
             if "polygon" in raw:
                 zone.polygon = list(raw["polygon"])
+            if "valve_id" in raw:
+                zone.valve_id = raw["valve_id"]
+        _sync_valve_zones(model)
         for items, raws, what in (
             (valves, msg["valves"], "Ventil"),
             (sensors, msg["sensors"], "Sensor"),
@@ -265,8 +280,10 @@ async def ws_plan_save(
         zone.center, zone.radius_m = new.center, new.radius_m
         zone.start_angle_deg, zone.arc_deg = new.start_angle_deg, new.arc_deg
         zone.polygon = new.polygon
+        zone.valve_id = new.valve_id
     for valve in data.store.model.valves:
         valve.position = valves[valve.id].position
+        valve.zone_ids = list(valves[valve.id].zone_ids)
     for sensor in data.store.model.sensors:
         sensor.position = sensors[sensor.id].position
     await data.store.async_save()

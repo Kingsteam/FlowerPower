@@ -602,7 +602,8 @@
     "zone_type": {
       "options": {
         "drip": "Drip",
-        "sprinkler": "Sprinkler"
+        "sprinkler": "Sprinkler",
+        "hose": "Soaker / watering hose (line)"
       }
     },
     "plant_type": {

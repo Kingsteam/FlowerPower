@@ -53,6 +53,7 @@ class ZoneType(StrEnum):
 
     SPRINKLER = "sprinkler"  # Kreissegment
     DRIP = "drip"  # Polygon (Tropfschlauch-Beet)
+    HOSE = "hose"  # Linie mit Radius (Gieß-/Perlschlauch): Punkte + radius_m
 
 
 class DurationMode(StrEnum):
@@ -326,7 +327,16 @@ class GardenModel:
                 raise ValueError(
                     f"Zone {zone.id}: Öffnungswinkel liegt über 0 bis 360°"
                 )
-            if 0 < len(zone.polygon) < 3:
+            if zone.type is ZoneType.HOSE:
+                if 0 < len(zone.polygon) < 2:
+                    raise ValueError(
+                        f"Zone {zone.id}: Ein Schlauch braucht mindestens 2 Punkte"
+                    )
+                if zone.polygon and not zone.radius_m:
+                    raise ValueError(
+                        f"Zone {zone.id}: Beim Schlauch fehlt die Breite (Radius)"
+                    )
+            elif 0 < len(zone.polygon) < 3:
                 raise ValueError(
                     f"Zone {zone.id}: Ein Beet braucht mindestens 3 Punkte"
                 )

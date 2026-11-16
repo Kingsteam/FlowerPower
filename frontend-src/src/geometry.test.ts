@@ -84,3 +84,14 @@ describe("Grundriss", () => {
     expect(setEdgeLength(pts, 0, 0)).toBe(pts);
   });
 });
+
+import { hoseArea, pointAlong } from "./geometry";
+
+describe("Gießschlauch", () => {
+  it("Fläche wie im Backend", () => {
+    expect(hoseArea([[0, 0], [10, 0]], 0.5)).toBeCloseTo(10 + Math.PI * 0.25);
+    expect(hoseArea([[0, 0]], 0.5)).toBe(0);
+    expect(pointAlong([[0, 0], [10, 0], [10, 10]], 0.5)).toEqual([10, 0]);
+    expect(pointAlong([[0, 0], [4, 0]], 0.25)).toEqual([1, 0]);
+  });
+});

@@ -78,6 +78,36 @@ async def test_save_geometry(
     assert msg["result"]["zones"][0]["effective_area_m2"] == pytest.approx(6)
 
 
+async def test_assign_valve(
+    hass: HomeAssistant,
+    setup: Any,
+    sim: SimValves,
+    hass_ws_client: Any,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    await setup(make_model(2))
+    client = await _ws(hass_ws_client, hass)
+    # Zone 1 bekommt Ventil 2, Zone 2 gar keins
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/plan/save",
+            "zones": [{"id": "z1", "valve_id": "v2"}, {"id": "z2", "valve_id": None}],
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"], msg
+    model = mock_config_entry.runtime_data.store.model
+    assert [z.valve_id for z in model.zones] == ["v2", None]
+    assert {v.id: v.zone_ids for v in model.valves} == {"v1": [], "v2": ["z1"]}
+
+    await client.send_json_auto_id(
+        {"type": f"{DOMAIN}/plan/save", "zones": [{"id": "z1", "valve_id": "fehlt"}]}
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert model.zones[0].valve_id == "v2"
+
+
 async def test_save_features(
     hass: HomeAssistant,
     setup: Any,

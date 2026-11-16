@@ -243,3 +243,36 @@ def test_feature_ids_unique_and_opacity_range() -> None:
     garden.background_opacity = 1.5
     with pytest.raises(ValueError, match="Deckkraft"):
         GardenModel(garden=garden).validate()
+
+
+# Gießschlauch -----------------------------------------------------------------
+
+
+def hose(zone_id: str, points, radius) -> Zone:
+    return Zone(
+        id=zone_id, name=zone_id, type=ZoneType.HOSE, polygon=points, radius_m=radius
+    )
+
+
+def test_hose_area_and_contains() -> None:
+    zone = hose("s", [(0.0, 0.0), (10.0, 0.0)], 0.5)
+    # 10 m mal 1 m plus zwei Halbkreise (= ein Kreis mit 0,5 m)
+    assert geo.zone_area(zone) == pytest.approx(10 + math.pi * 0.25)
+    assert geo.contains(zone, (5.0, 0.4))
+    assert not geo.contains(zone, (5.0, 0.6))
+    assert geo.contains(zone, (10.4, 0.0))  # rundes Ende
+    assert geo.bounds(zone) == (-0.5, -0.5, 10.5, 0.5)
+    overlap = geo.overlaps([zone, hose("t", [(5.0, -5.0), (5.0, 5.0)], 0.5)])
+    assert overlap["s"] == pytest.approx(1.0, rel=0.15)
+
+
+@pytest.mark.parametrize(
+    ("zone", "message"),
+    [
+        (hose("s", [(0.0, 0.0)], 0.5), "2 Punkte"),
+        (hose("s", [(0.0, 0.0), (1.0, 0.0)], None), "Breite"),
+    ],
+)
+def test_hose_validation(zone: Zone, message: str) -> None:
+    with pytest.raises(ValueError, match=message):
+        GardenModel(zones=[zone]).validate()

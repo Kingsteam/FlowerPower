@@ -19,6 +19,9 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 - Grundriss zum Abpausen (Reiter „Grundriss“): Flächen (Gebäude, Terrasse/Weg, Teich/Pool, sonstige), Linien (Zaun, Hecke, Grundstücksgrenze, Leitung), Baum/Strauch, Wasserhahn, Beschriftung. Gespeichert in Metern, scharf in jeder Zoomstufe; nur zur Orientierung.
 - Regler „Luftbild sichtbar“ (0–100 %), Einrasten an Ecken (Alt-Taste: aus), Messwerkzeug, Seitenlängen als Zahl eintippen (auch bei Beeten), näherer Zoom nach der Adresssuche.
 - Sichern und Wiederherstellen (Menü ⋮ im Plan-Editor): Sicherung als JSON-Datei herunterladen und wieder einspielen, wahlweise nur die Zeichnung oder alles. Wird vorher vollständig geprüft.
+- Neue Zonenart „Gießschlauch“: eine Linie mit bewässerter Breite je Seite; Fläche = Länge mal Breite plus runde Enden. Im Editor zeichnen wie eine Linie.
+- Ventil einer Zone direkt im Plan-Editor wählen; gestrichelte Verbindungslinie von der Zone zum Ventil.
+- Grundriss-Flächen nur noch leicht eingefärbt, damit das Luftbild sichtbar bleibt.
 - Testinstanz auf dem eigenen Mac mit einer Zeile im Terminal (`devtools/testinstanz/mac-start.sh`).
 
 ### Behoben

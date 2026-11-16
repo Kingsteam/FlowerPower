@@ -191,3 +191,26 @@ export function setEdgeLength(points: Point[], index: number, length: number): P
   const moved: Point = [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
   return points.map((p, i) => (i === next ? moved : p));
 }
+
+/** Fläche um einen Schlauch (Streifen mit halber Breite r, runde Enden), wie geometry.py. */
+export function hoseArea(points: Point[], radius: number): number {
+  if (points.length < 2 || radius <= 0) return 0;
+  return pathLength(points) * 2 * radius + Math.PI * radius * radius;
+}
+
+/** Punkt bei `fraction` (0..1) der Länge eines Linienzugs. */
+export function pointAlong(points: Point[], fraction: number): Point {
+  let rest = pathLength(points) * Math.max(0, Math.min(1, fraction));
+  for (let i = 1; i < points.length; i++) {
+    const d = distance(points[i - 1], points[i]);
+    if (rest <= d && d > 0) {
+      const k = rest / d;
+      return [
+        points[i - 1][0] + (points[i][0] - points[i - 1][0]) * k,
+        points[i - 1][1] + (points[i][1] - points[i - 1][1]) * k,
+      ];
+    }
+    rest -= d;
+  }
+  return points[points.length - 1];
+}

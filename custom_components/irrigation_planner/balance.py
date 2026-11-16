@@ -95,6 +95,7 @@ def zone_efficiency(zone: Zone) -> float:
     """Effizienz: eingestellt, sonst nach Zonenart."""
     if zone.efficiency:
         return zone.efficiency
+    # Gießschlauch gibt wie Tropfschlauch nah am Boden ab.
     return EFFICIENCY_SPRINKLER if zone.type is ZoneType.SPRINKLER else EFFICIENCY_DRIP
 
 

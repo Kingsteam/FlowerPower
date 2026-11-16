@@ -556,16 +556,17 @@ export const styles = css`
     stroke-width: 1.5;
     stroke-linejoin: round;
   }
+  /* Nur leicht eingefärbt: Das Luftbild darunter bleibt sichtbar. */
   polygon.feature.building {
-    fill: #b0a9a1;
-    stroke: #6d655d;
+    fill: rgba(109, 101, 93, 0.22);
+    stroke: #5d554d;
   }
   polygon.feature.paving {
-    fill: #e8dfd2;
-    stroke: #a8998a;
+    fill: rgba(196, 170, 140, 0.22);
+    stroke: #8d7b68;
   }
   polygon.feature.water {
-    fill: #9ccbea;
+    fill: rgba(63, 143, 196, 0.25);
     stroke: #3f8fc4;
   }
   polygon.feature.area {
@@ -604,7 +605,7 @@ export const styles = css`
     stroke-dasharray: 2 4;
   }
   g.feature.tree circle {
-    fill: rgba(67, 160, 71, 0.35);
+    fill: rgba(67, 160, 71, 0.2);
     stroke: #2e7d32;
     stroke-width: 1.5;
     vector-effect: non-scaling-stroke;
@@ -650,8 +651,43 @@ export const styles = css`
   text.feature.selected {
     fill: var(--accent);
   }
+  .zone polyline.hose-band {
+    fill: none;
+    stroke: color-mix(in srgb, var(--zone) 35%, transparent);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    cursor: pointer;
+  }
+  .zone:hover polyline.hose-band,
+  .zone.selected polyline.hose-band {
+    stroke: color-mix(in srgb, var(--zone) 50%, transparent);
+  }
+  .zone polyline.hose-line {
+    fill: none;
+    stroke: var(--zone);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
+  .zone.running polyline.hose-line {
+    stroke-dasharray: 10 6;
+    animation: flow 0.9s linear infinite;
+  }
+  .valve-link {
+    stroke: var(--zone);
+    stroke-width: 1.5;
+    opacity: 0.55;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
+  .valve-link.selected {
+    stroke-width: 3;
+    opacity: 1;
+  }
   .feature-draft polyline {
-    fill: rgba(120, 120, 120, 0.15);
+    fill: rgba(120, 120, 120, 0.06);
     stroke: var(--accent);
     stroke-width: 2;
     stroke-dasharray: 6 4;

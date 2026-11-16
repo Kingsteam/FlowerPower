@@ -22,7 +22,7 @@ export interface Garden {
 export interface PlanZone {
   id: string;
   name: string;
-  type: "sprinkler" | "drip";
+  type: "sprinkler" | "drip" | "hose";
   center: Point | null;
   radius_m: number | null;
   start_angle_deg: number;
@@ -45,6 +45,7 @@ export interface PlanValve {
   position: Point | null;
   zone_ids: string[];
   safety_level: string;
+  learned_flow_l_min: number | null;
 }
 
 export interface PlanSensor {

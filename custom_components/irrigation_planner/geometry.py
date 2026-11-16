@@ -14,6 +14,7 @@ Reine Rechnungen ohne Home Assistant.
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
+import itertools
 import math
 from typing import Final
 
@@ -44,10 +45,41 @@ def polygon_area(points: Sequence[Point]) -> float:
     return abs(total) / 2
 
 
+def polyline_length(points: Sequence[Point]) -> float:
+    """Länge eines Linienzugs."""
+    return sum(math.dist(a, b) for a, b in itertools.pairwise(points))
+
+
+def hose_area(points: Sequence[Point], radius_m: float) -> float:
+    """Fläche um einen Schlauch: Streifen mit halber Breite ``radius_m``.
+
+    Länge mal Breite plus die runden Enden. Überschneidungen in engen Kurven
+    werden nicht abgezogen (für Gartenschläuche vernachlässigbar).
+    """
+    if len(points) < 2 or radius_m <= 0:
+        return 0.0
+    return polyline_length(points) * 2 * radius_m + math.pi * radius_m**2
+
+
+def distance_to_segment(point: Point, a: Point, b: Point) -> float:
+    """Abstand eines Punkts zu einer Strecke."""
+    (px, py), (ax, ay), (bx, by) = point, a, b
+    dx, dy = bx - ax, by - ay
+    length2 = dx * dx + dy * dy
+    t = (
+        0.0
+        if length2 == 0
+        else max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / length2))
+    )
+    return math.hypot(px - (ax + t * dx), py - (ay + t * dy))
+
+
 def has_geometry(zone: Zone) -> bool:
     """Gibt an, ob die Zone auf dem Plan gezeichnet ist."""
     if zone.type is ZoneType.SPRINKLER:
         return zone.center is not None and bool(zone.radius_m)
+    if zone.type is ZoneType.HOSE:
+        return len(zone.polygon) >= 2 and bool(zone.radius_m)
     return len(zone.polygon) >= 3
 
 
@@ -57,6 +89,8 @@ def geometry_area(zone: Zone) -> float | None:
         return None
     if zone.type is ZoneType.SPRINKLER:
         return sector_area(zone.radius_m or 0.0, zone.arc_deg)
+    if zone.type is ZoneType.HOSE:
+        return hose_area(zone.polygon, zone.radius_m or 0.0)
     return polygon_area(zone.polygon)
 
 
@@ -111,6 +145,12 @@ def contains(zone: Zone, point: Point) -> bool:
         return in_sector(
             point, zone.center, zone.radius_m or 0.0, zone.start_angle_deg, zone.arc_deg
         )
+    if zone.type is ZoneType.HOSE:
+        r = zone.radius_m or 0.0
+        return any(
+            distance_to_segment(point, a, b) <= r
+            for a, b in zip(zone.polygon, zone.polygon[1:], strict=False)
+        )
     return in_polygon(point, zone.polygon)
 
 
@@ -125,7 +165,8 @@ def bounds(zone: Zone) -> tuple[float, float, float, float] | None:
         return cx - r, cy - r, cx + r, cy + r
     xs = [p[0] for p in zone.polygon]
     ys = [p[1] for p in zone.polygon]
-    return min(xs), min(ys), max(xs), max(ys)
+    pad = (zone.radius_m or 0.0) if zone.type is ZoneType.HOSE else 0.0
+    return min(xs) - pad, min(ys) - pad, max(xs) + pad, max(ys) + pad
 
 
 def overlaps(zones: Iterable[Zone]) -> dict[str, float]:
