@@ -18,6 +18,7 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 - Zeitplan mit Sonnenaufgang oder Sonnenuntergang: „Start bei Sonnenereignis“ oder „Fertig bis Sonnenereignis“, mit Versatz in Minuten (z. B. fertig 60 min vor Sonnenaufgang). Die Sonnenzeiten kommen vom Standort in Home Assistant.
 - Grundriss zum Abpausen (Reiter „Grundriss“): Flächen (Gebäude, Terrasse/Weg, Teich/Pool, sonstige), Linien (Zaun, Hecke, Grundstücksgrenze, Leitung), Baum/Strauch, Wasserhahn, Beschriftung. Gespeichert in Metern, scharf in jeder Zoomstufe; nur zur Orientierung.
 - Regler „Luftbild sichtbar“ (0–100 %), Einrasten an Ecken (Alt-Taste: aus), Messwerkzeug, Seitenlängen als Zahl eintippen (auch bei Beeten), näherer Zoom nach der Adresssuche.
+- Sichern und Wiederherstellen (Menü ⋮ im Plan-Editor): Sicherung als JSON-Datei herunterladen und wieder einspielen, wahlweise nur die Zeichnung oder alles. Wird vorher vollständig geprüft.
 - Testinstanz auf dem eigenen Mac mit einer Zeile im Terminal (`devtools/testinstanz/mac-start.sh`).
 
 ### Behoben

@@ -134,6 +134,9 @@ export class IrrigationPlannerPanel extends LitElement {
   private toastTimer?: number;
   @state() private toastUndo = false;
   @state() private layersOpen = false;
+  // Sichern und Wiederherstellen
+  @state() private menuOpen = false;
+  @state() private pendingImport: { name: string; data: unknown } | null = null;
   private autoFit = true;
 
   // `hass` ändert sich bei jedem Zustandswechsel im Haus; das Panel braucht
@@ -1191,9 +1194,132 @@ export class IrrigationPlannerPanel extends LitElement {
               <button class="primary" ?disabled=${!this.dirty || this.saving} @click=${this.save}>
                 <ha-icon icon="mdi:content-save"></ha-icon>${this.saving ? "Speichert …" : "Speichern"}
               </button>
+              <div class="menu-wrap">
+                <button class="icon" title="Sichern und Wiederherstellen" @click=${() => (this.menuOpen = !this.menuOpen)}>
+                  <ha-icon icon="mdi:dots-vertical"></ha-icon>
+                </button>
+                ${this.menuOpen
+                  ? html`<div class="popup-menu" role="menu">
+                      <button role="menuitem" @click=${this.exportPlan}>
+                        <ha-icon icon="mdi:download"></ha-icon>Sicherung herunterladen
+                      </button>
+                      <label class="menu-item" role="menuitem">
+                        <ha-icon icon="mdi:upload"></ha-icon>Sicherung einspielen …
+                        <input type="file" accept="application/json,.json" @change=${this.pickImport} />
+                      </label>
+                    </div>`
+                  : nothing}
+              </div>
             `
           : nothing}
       </header>
+      ${this.renderImportDialog()}
+    `;
+  }
+
+  // Sichern und Wiederherstellen -------------------------------------------------
+
+  private async exportPlan(): Promise<void> {
+    this.menuOpen = false;
+    try {
+      const data = await this._hass!.callWS<unknown>({ type: `${DOMAIN}/export` });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `bewaesserung-sicherung-${new Date().toISOString().slice(0, 10)}.json`;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      this.showToast(
+        this.dirty
+          ? "Sicherung heruntergeladen (ohne die noch nicht gespeicherten Änderungen)"
+          : "Sicherung heruntergeladen",
+      );
+    } catch (err) {
+      this.showToast(`Sicherung fehlgeschlagen: ${this.message(err)}`, true);
+    }
+  }
+
+  private async pickImport(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = "";
+    this.menuOpen = false;
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      this.pendingImport = { name: file.name, data };
+    } catch {
+      this.showToast("Die Datei ist keine gültige Sicherung (kein JSON)", true);
+    }
+  }
+
+  private async runImport(mode: "drawing" | "all"): Promise<void> {
+    const pending = this.pendingImport;
+    if (!pending) return;
+    this.pendingImport = null;
+    try {
+      const result = await this._hass!.callWS<{ reloaded: boolean; notes: string[] }>({
+        type: `${DOMAIN}/import`,
+        mode,
+        data: pending.data,
+      });
+      const notes = result.notes.length ? ` ${result.notes.join(" ")}` : "";
+      if (result.reloaded) {
+        this.showToast(`Sicherung eingespielt, wird neu geladen …${notes}`);
+        // Die Integration lädt neu; danach den Plan frisch holen.
+        this.unsub?.();
+        this.unsub = undefined;
+        setTimeout(() => void this.load(), 4000);
+      } else {
+        this.showToast(`Zeichnung übernommen.${notes}`);
+        await this.load();
+      }
+    } catch (err) {
+      this.showToast(`Nicht eingespielt: ${this.message(err)}`, true);
+    }
+  }
+
+  private renderImportDialog(): TemplateResult | typeof nothing {
+    if (!this.pendingImport) return nothing;
+    const exported = (this.pendingImport.data as { exported_at?: string })?.exported_at;
+    return html`
+      <div class="dialog-backdrop" @click=${() => (this.pendingImport = null)}>
+        <div class="dialog" role="dialog" aria-modal="true" @click=${(e: Event) => e.stopPropagation()}>
+          <h2>Sicherung einspielen</h2>
+          <p>
+            <strong>${this.pendingImport.name}</strong>${exported
+              ? html`<br /><small>erstellt am ${new Date(exported).toLocaleString("de-DE")}</small>`
+              : nothing}
+          </p>
+          ${this.dirty
+            ? html`<p class="note warn">Nicht gespeicherte Änderungen gehen dabei verloren.</p>`
+            : nothing}
+          <button class="choice" @click=${() => this.runImport("drawing")}>
+            <ha-icon icon="mdi:draw"></ha-icon>
+            <span
+              ><strong>Nur die Zeichnung</strong
+              ><small>Hintergrund, Grundriss, Formen der Zonen, Positionen von Ventilen und Sensoren.
+                Ventile, Programme und Einstellungen bleiben, wie sie sind.</small></span
+            >
+          </button>
+          <button class="choice" @click=${() => this.runImport("all")}>
+            <ha-icon icon="mdi:backup-restore"></ha-icon>
+            <span
+              ><strong>Alles ersetzen</strong
+              ><small>Auch Zonen, Ventile, Programme und Einstellungen. Die Integration wird dabei neu
+                geladen; laufende Bewässerung wird beendet und alle Ventile werden geschlossen.</small></span
+            >
+          </button>
+          <div class="actions">
+            <span class="spacer"></span>
+            <button class="text" @click=${() => (this.pendingImport = null)}>Abbrechen</button>
+          </div>
+        </div>
+      </div>
     `;
   }
 

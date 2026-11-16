@@ -28,6 +28,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 import voluptuous as vol
 
+from .backup import ws_export, ws_import
 from .const import DOMAIN, MAP_PROVIDER_CUSTOM, MAP_PROVIDERS
 from .geocode import GeocodeError, async_search
 from .geometry import geometry_area, overlaps, zone_area
@@ -69,6 +70,8 @@ def async_register(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_plan_save)
     websocket_api.async_register_command(hass, ws_plan_subscribe)
     websocket_api.async_register_command(hass, ws_geocode)
+    websocket_api.async_register_command(hass, ws_export)
+    websocket_api.async_register_command(hass, ws_import)
 
 
 @websocket_api.websocket_command(

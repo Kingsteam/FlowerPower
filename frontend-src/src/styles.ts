@@ -67,6 +67,74 @@ export const styles = css`
     background: var(--card);
     color: var(--accent);
   }
+  .menu-wrap {
+    position: relative;
+  }
+  .popup-menu {
+    position: absolute;
+    right: 0;
+    top: 44px;
+    z-index: 20;
+    min-width: 250px;
+    padding: 6px;
+    background: var(--card);
+    color: var(--primary-text-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+  }
+  .popup-menu button,
+  .popup-menu .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--primary-text-color);
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .popup-menu button:hover,
+  .popup-menu .menu-item:hover {
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+  .menu-item input {
+    display: none;
+  }
+  .dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background: rgba(0, 0, 0, 0.4);
+    display: grid;
+    place-items: center;
+    padding: 16px;
+  }
+  .dialog {
+    width: min(480px, 100%);
+    background: var(--card);
+    color: var(--primary-text-color);
+    border-radius: 16px;
+    padding: 20px 20px 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .dialog h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+  }
+  .dialog p {
+    margin: 0;
+    line-height: 1.4;
+  }
+  .dialog small {
+    color: var(--muted);
+  }
   .chips {
     display: flex;
     gap: 6px;
