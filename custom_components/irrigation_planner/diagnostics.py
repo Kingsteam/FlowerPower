@@ -10,7 +10,8 @@ from homeassistant.core import HomeAssistant
 from . import IrrigationPlannerConfigEntry
 
 # Geokoordinaten des Gartens gehören nicht in einen Diagnose-Download.
-TO_REDACT = {"latitude", "longitude"}
+# Die eigene Kartenadresse kann einen Zugangsschlüssel enthalten.
+TO_REDACT = {"latitude", "longitude", "map_url"}
 
 
 async def async_get_config_entry_diagnostics(

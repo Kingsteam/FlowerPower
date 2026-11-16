@@ -91,3 +91,21 @@ MIN_NEED_MM: Final = 1.0  # darunter wird nicht gegossen
 FORECAST_RAIN_SKIP_MM: Final = 5.0  # so viel Regen in 24 h erwartet: überspringen
 SERVICE_RECALCULATE: Final = "recalculate"
 SERVICE_RESET_BALANCE: Final = "reset_balance"
+
+# Phase 3: Kartendienste für das Luftbild unter dem Plan. Die Kacheln lädt
+# der Browser direkt vom Dienst; gespeichert werden nur Mitte und Zoom.
+MAP_PROVIDERS: Final = {
+    "basemap_at": {
+        "name": "basemap.at Orthofoto (nur Österreich)",
+        "url": "https://mapsneu.wien.gv.at/basemap/bmaporthofoto30cm/normal/google3857/{z}/{y}/{x}.jpeg",
+        "attribution": "Datenquelle: basemap.at (CC BY 4.0)",
+        "max_zoom": 20,
+    },
+    "esri": {
+        "name": "Esri World Imagery (Nutzungsbedingungen beachten)",
+        "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        "attribution": "Tiles © Esri, Maxar, Earthstar Geographics, GIS User Community",
+        "max_zoom": 19,
+    },
+}
+MAP_PROVIDER_CUSTOM: Final = "custom"

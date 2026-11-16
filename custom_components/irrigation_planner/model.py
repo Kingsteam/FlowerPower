@@ -19,7 +19,7 @@ from .const import DEFAULT_MAX_OPEN_VALVES
 from .drivers.base import Capability, SafetyLevel
 
 type Point = tuple[float, float]
-"""Punkt auf dem Gartenplan in Pixeln des Hintergrundbilds."""
+"""Punkt auf dem Gartenplan in Metern (x nach Osten, y nach Süden)."""
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -32,6 +32,14 @@ class EntityRef:
     domain: str
     platform: str
     unique_id: str
+
+
+class BackgroundType(StrEnum):
+    """Was unter dem Plan liegt."""
+
+    NONE = "none"  # leeres Raster
+    IMAGE = "image"  # hochgeladenes Bild mit Maßstab
+    MAP = "map"  # Luftbild eines Kartendienstes
 
 
 class ZoneType(StrEnum):
@@ -80,13 +88,19 @@ class SensorKind(StrEnum):
 class Garden:
     """Der Gartenplan."""
 
+    background: BackgroundType = BackgroundType.NONE
+    # Hochgeladenes Bild (Dateiname) und Maßstab: zwei Punkte im Bild (Pixel)
+    # und ihr echter Abstand in Metern. Die linke obere Ecke ist (0, 0).
     background_image: str | None = None
-    # Maßstab: zwei Punkte im Bild und ihr echter Abstand in Metern.
     scale_points: tuple[Point, Point] | None = None
     scale_distance_m: float | None = None
     north_deg: float = 0.0
+    # Luftbild: Kartenmitte (= Ursprung des Plans), Zoomstufe, Dienst.
     latitude: float | None = None
     longitude: float | None = None
+    map_zoom: float | None = None
+    map_provider: str | None = None
+    map_url: str | None = None  # nur für eigenen Dienst ({z}, {x}, {y})
 
 
 @dataclass(slots=True, kw_only=True)
@@ -142,6 +156,8 @@ class Valve:
     zone_ids: list[str] = field(default_factory=list)
     water_supply_id: str | None = None
     learned_flow_l_min: float | None = None
+    # Position auf dem Plan (Orientierungshilfe).
+    position: Point | None = None
 
 
 @dataclass(slots=True, kw_only=True)
@@ -239,6 +255,9 @@ class GardenModel:
     programs: list[Program] = field(default_factory=list)
     sensors: list[Sensor] = field(default_factory=list)
 
+    def _validate_garden(self) -> None:
+        _check_garden(self.garden)
+
     def validate(self) -> None:
         """Prüft, ob IDs eindeutig sind und alle Bezüge existieren.
 
@@ -250,6 +269,7 @@ class GardenModel:
         ):
             if value is not None:
                 _check_month_day(label, value)
+        self._validate_garden()
         zone_ids = _unique_ids("Zone", self.zones)
         valve_ids = _unique_ids("Ventil", self.valves)
         supply_ids = _unique_ids("Wasserversorgung", self.water_supplies)
@@ -262,11 +282,23 @@ class GardenModel:
                 raise ValueError(f"Zone {zone.id}: Höchstdauer muss positiv sein")
             if zone.duration_s is not None and zone.duration_s < 1:
                 raise ValueError(f"Zone {zone.id}: Dauer muss positiv sein")
+            if zone.radius_m is not None and zone.radius_m <= 0:
+                raise ValueError(f"Zone {zone.id}: Radius muss positiv sein")
+            if not 0 < zone.arc_deg <= 360:
+                raise ValueError(
+                    f"Zone {zone.id}: Öffnungswinkel liegt über 0 bis 360°"
+                )
+            if 0 < len(zone.polygon) < 3:
+                raise ValueError(
+                    f"Zone {zone.id}: Ein Beet braucht mindestens 3 Punkte"
+                )
             if zone.area_m2 is not None and zone.area_m2 <= 0:
                 raise ValueError(f"Zone {zone.id}: Fläche muss positiv sein")
             if zone.efficiency is not None and not 0 < zone.efficiency <= 1:
                 raise ValueError(f"Zone {zone.id}: Effizienz liegt zwischen 0 und 1")
-            if zone.duration_mode is DurationMode.CALCULATED and not zone.area_m2:
+            if zone.duration_mode is DurationMode.CALCULATED and not (
+                zone.area_m2 or zone.polygon or (zone.center and zone.radius_m)
+            ):
                 raise ValueError(
                     f"Zone {zone.id}: Für die berechnete Dauer fehlt die Fläche"
                 )
@@ -329,6 +361,34 @@ class GardenModel:
                 raise ValueError(
                     f"Sensor {sensor.id}: Feldkapazität muss über dem Welkepunkt liegen"
                 )
+
+
+def _check_garden(garden: Garden) -> None:
+    if garden.background is BackgroundType.MAP:
+        if (
+            garden.latitude is None
+            or garden.longitude is None
+            or garden.map_zoom is None
+        ):
+            raise ValueError("Luftbild: Kartenmitte und Zoom fehlen")
+        if not garden.map_provider:
+            raise ValueError("Luftbild: Kartendienst fehlt")
+        if garden.map_provider == "custom" and not (
+            garden.map_url
+            and garden.map_url.startswith("https://")
+            and all(p in garden.map_url for p in ("{z}", "{x}", "{y}"))
+        ):
+            raise ValueError(
+                "Luftbild: Eigene Adresse muss mit https:// beginnen und {z}, {x}, {y} enthalten"
+            )
+    if garden.background is BackgroundType.IMAGE:
+        if not garden.background_image:
+            raise ValueError("Bild: Datei fehlt")
+        if garden.scale_points is None or not garden.scale_distance_m:
+            raise ValueError("Bild: Maßstab fehlt (zwei Punkte und ihr Abstand)")
+        (x1, y1), (x2, y2) = garden.scale_points
+        if garden.scale_distance_m <= 0 or (x1, y1) == (x2, y2):
+            raise ValueError("Bild: Maßstab ungültig")
 
 
 def _unique_ids(kind: str, items: list[Any]) -> set[str]:

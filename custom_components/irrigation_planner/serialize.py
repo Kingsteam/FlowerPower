@@ -11,6 +11,7 @@ from typing import Any
 
 from .drivers.base import Capability, SafetyLevel
 from .model import (
+    BackgroundType,
     DurationMode,
     EntityRef,
     Garden,
@@ -71,6 +72,7 @@ def _opt(raw: Data, key: str, default: Any) -> Any:
 def garden_to_dict(garden: Garden) -> Data:
     """Garten → dict."""
     return {
+        "background": garden.background.value,
         "background_image": garden.background_image,
         "scale_points": None
         if garden.scale_points is None
@@ -79,6 +81,9 @@ def garden_to_dict(garden: Garden) -> Data:
         "north_deg": garden.north_deg,
         "latitude": garden.latitude,
         "longitude": garden.longitude,
+        "map_zoom": garden.map_zoom,
+        "map_provider": garden.map_provider,
+        "map_url": garden.map_url,
     }
 
 
@@ -94,6 +99,10 @@ def garden_from_dict(raw: Data) -> Garden:
         north_deg=float(_opt(raw, "north_deg", 0.0)),
         latitude=raw.get("latitude"),
         longitude=raw.get("longitude"),
+        background=BackgroundType(_opt(raw, "background", BackgroundType.NONE)),
+        map_zoom=raw.get("map_zoom"),
+        map_provider=raw.get("map_provider"),
+        map_url=raw.get("map_url"),
     )
 
 
@@ -174,6 +183,7 @@ def valve_to_dict(valve: Valve) -> Data:
         "zone_ids": list(valve.zone_ids),
         "water_supply_id": valve.water_supply_id,
         "learned_flow_l_min": valve.learned_flow_l_min,
+        "position": _point_out(valve.position),
     }
 
 
@@ -195,6 +205,7 @@ def valve_from_dict(raw: Data) -> Valve:
         zone_ids=list(_opt(raw, "zone_ids", [])),
         water_supply_id=raw.get("water_supply_id"),
         learned_flow_l_min=raw.get("learned_flow_l_min"),
+        position=_point_in(raw.get("position")),
     )
 
 

@@ -5,6 +5,11 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 
 ## [Unveröffentlicht]
 
+### Neu
+- Geometrie des Gartenplans (`geometry.py`): Flächen von Sprinklern und Beeten, Überlappungen, Maßstab von Kartenkacheln.
+- Modell: Hintergrund des Plans (leer, Bild mit Maßstab oder Luftbild eines Kartendienstes), Position von Ventilen; Prüfung von Radius, Öffnungswinkel und Beet-Punkten.
+- Die Berechnung nimmt die Fläche aus der Zeichnung, sonst die Fläche von Hand.
+
 ## [0.3.0] – 2026-11-16
 
 Phase 2 (Berechnung) fertig.

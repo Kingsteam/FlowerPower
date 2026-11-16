@@ -221,6 +221,7 @@ def test_supply_rejects_zero_open_valves() -> None:
             lambda m: (
                 setattr(m.zones[1], "duration_mode", DurationMode.CALCULATED),
                 setattr(m.zones[1], "area_m2", None),
+                setattr(m.zones[1], "center", None),
             ),
             "Fläche",
         ),

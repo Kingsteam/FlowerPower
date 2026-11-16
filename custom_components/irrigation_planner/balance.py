@@ -44,6 +44,7 @@ from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConver
 
 from .const import DOMAIN, LOGGER, MIN_NEED_MM
 from .drivers.ha import resolve_entity_id
+from .geometry import zone_area
 from .model import DurationMode, GardenModel, Sensor, SensorKind, Zone, ZoneType
 from .scheduler import IrrigationScheduler, Run
 from .store import IrrigationPlannerStore
@@ -340,11 +341,12 @@ class BalanceManager:
             return Planned(0, "kein Bedarf", need_mm=need)
         valve = next((v for v in self.model.valves if v.id == zone.valve_id), None)
         flow = valve.learned_flow_l_min if valve else None
-        if not flow or not zone.area_m2:
+        area = zone_area(zone)
+        if not flow or not area:
             planned = self._manual(zone, "noch kein Durchfluss gelernt, Dauer von Hand")
             planned.need_mm = need
             return planned
-        liters = liters_for(need, zone.area_m2, zone_efficiency(zone))
+        liters = liters_for(need, area, zone_efficiency(zone))
         return Planned(
             duration_for(liters, flow), "berechnet", need_mm=need, liters=liters
         )
@@ -527,7 +529,8 @@ class BalanceManager:
     @callback
     def _on_run(self, run: Run, seconds: float) -> None:
         zone = next((z for z in self.model.zones if z.id == run.zone_id), None)
-        if zone is None or not zone.area_m2 or seconds <= 0:
+        area = zone_area(zone) if zone else None
+        if zone is None or not area or seconds <= 0:
             return
         valve = next((v for v in self.model.valves if v.id == run.valve_id), None)
         flow = valve.learned_flow_l_min if valve else None
@@ -535,7 +538,7 @@ class BalanceManager:
             LOGGER.debug("Zone %s: kein gelernter Durchfluss, nicht verbucht", zone.id)
             return
         liters = flow * seconds / 60
-        mm = mm_delivered(liters, zone.area_m2, zone_efficiency(zone))
+        mm = mm_delivered(liters, area, zone_efficiency(zone))
         balance = self.balance(zone.id)
         balance.deficit_mm = max(0.0, balance.deficit_mm - mm)
         balance.last_irrigation_mm = mm

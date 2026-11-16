@@ -34,7 +34,7 @@ Das Wissen über die konkrete Anlage des Besitzers liegt im separaten privaten R
 | `options_flow.py` | Einrichtung über die Oberfläche: Menü Ventile/Zonen/Programme/Wasserversorgungen/Sensoren/Einstellungen; Zonen-Dialog mit Abschnitt „Berechnung“ (`section`, 0 = automatisch); Ventil-Assistent (Gerät → Entitäten/Treiber/Profil → Treiber-Einstellungen → Zuordnen, optional Testlauf über `scheduler.async_hardware_test`). Jede Aktion: Kopie des Modells, `validate`, speichern, Neuladen. Speichern erst, nachdem das Testergebnis angezeigt wurde |
 | `discovery.py` | Vorschlag für ein Gerät: Profil, Treiber, Entitäten je Rolle |
 | `const.py` | Konstanten und Sicherheitsgrenzen |
-| `model.py` | Datenklassen (Konzept Abschnitt 4), `GardenModel.validate()` prüft IDs und Bezüge; Bezüge über `device_id` + `EntityRef` (unique_id), nie über `entity_id` |
+| `model.py` | Datenklassen (Konzept Abschnitt 4), `GardenModel.validate()` prüft IDs, Bezüge, Geometrie und Hintergrund (`Garden.background`: none/image/map; Karte: Mitte, Zoom, Dienst aus `MAP_PROVIDERS` oder eigene https-Adresse); Bezüge über `device_id` + `EntityRef` (unique_id), nie über `entity_id` |
 | `serialize.py` | Modell ↔ gespeichertes JSON, ausgeschrieben je Klasse; fehlende Felder bekommen Standardwerte |
 | `store.py` | `Store`-Hülle, Schlüssel `irrigation_planner`, versioniert |
 | `drivers/base.py` | `ValveDriver`, `Capability`, `SafetyLevel`, `validate_duration`, Haken `_async_after_open` |
@@ -50,7 +50,8 @@ Das Wissen über die konkrete Anlage des Besitzers liegt im separaten privaten R
 | `season.py` | Winterpause: alles schließen und bestätigen, Zeitpläne aus, Geräte deaktivieren (nur wenn alles zu ist; gemerkt in `Settings.winter_disabled_devices`), beim Ende genau diese wieder aktivieren; automatisch nach Datum (Start-/Endtag) |
 | `water_balance.py` | Rechenkern Phase 2, ohne Home Assistant: ET0 (FAO-56 Penman-Monteith, sonst Hargreaves), `PLANTS` (Kc, Wurzeltiefe), `SOILS` (nutzbare Feldkapazität), wirksamer Regen, Defizit, Liter, Dauer. Tests mit FAO-56-Beispielen |
 | `balance.py` | `BalanceManager`: Wetter sammeln (10 min), Tagesabschluss beim ersten Messwert eines neuen Tages, Läufe verbuchen (`scheduler.async_add_run_listener`), Bodenfeuchte ersetzt Schätzung, Winter ruht und setzt zurück; `planned(zone)` liefert die Dauer nach Dauer-Art (Programme über `ProgramManager.balance`); eigener Store `irrigation_planner.balance`. Regensensor = Sensor `rain_mm` ohne Zonen |
-| `geometry.py`, `websocket_api.py` | nur Platzhalter mit Docstring |
+| `geometry.py` | Plan in Metern (x Osten, y Süden), Winkel wie Kompass (0° Nord, im Uhrzeigersinn): Flächen (Kreissegment, Polygon), `zone_area` (Zeichnung vor Fläche von Hand, nutzt `balance.py`), Punkt-in-Zone, Überlappung (Raster), Karten-Maßstab (Web-Mercator) und Umrechnung Geo ↔ Plan |
+| `websocket_api.py` | nur Platzhalter mit Docstring |
 | `strings.json`, `translations/` | Texte (en = `strings.json`, de) |
 | `tests/` | pytest mit `pytest-homeassistant-custom-component`; `helpers.py` (simulierte Ventile `SimValves`, `make_model`), Fixtures `sim`, `setup`, `advance` in `conftest.py`; simulierte Ventile sind echte `switch`-Entitäten der Plattform `test`, mit Durchfluss- und Statussensor (`make_model(sensors=True)`) |
 | `docs/` | `KONZEPT.md`, `HANDBUCH.md`, `bilder/`, `entwuerfe.html` |
