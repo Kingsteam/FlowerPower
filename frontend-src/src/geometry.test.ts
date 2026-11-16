@@ -134,3 +134,15 @@ describe("Grundstück", () => {
     expect(plotArea([{ kind: "fence", points: [[0, 0], [20, 0], [20, 30]] }])).toBeNull();
   });
 });
+
+describe("Leitungsnetz", () => {
+  it("rastet mitten auf einer Leitung ein und findet Abzweige", async () => {
+    const { snapToLines, junctions } = await import("./geometry");
+    const main: [number, number][] = [[0, 0], [10, 0]];
+    expect(snapToLines([4, 0.3], [main], 0.5)).toEqual([4, 0]);
+    expect(snapToLines([4, 1], [main], 0.5)).toBeNull();
+    const branch: [number, number][] = [[4, 0], [4, 6]];
+    expect(junctions([main, branch])).toEqual([[4, 0]]);
+    expect(junctions([main, [[20, 0], [20, 5]]])).toEqual([]);
+  });
+});

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Feature, PlanValve, PlanZone } from "./types";
-import { computeWetGrid, inTrunkShadow, mmPerRun, wetColor, wetReason, zoneContains } from "./wetmap";
+import { computeRaster, inTrunkShadow, mmPerRun, moistColor, rasterStep, wetColor, wetReason, zoneContains } from "./wetmap";
 
 function zone(extra: Partial<PlanZone>): PlanZone {
   return {
@@ -55,15 +55,37 @@ describe("Nässekarte", () => {
     expect(inTrunkShadow([3, -5], [0, 0], [tree])).toBe(false); // daneben
   });
 
-  it("zählt Überlappungen doppelt", () => {
+  it("zählt Überlappungen doppelt (Raster)", () => {
     const a = zone({ id: "a", polygon: [[0, 0], [2, 0], [2, 2], [0, 2]] });
     const b = zone({ id: "b", polygon: [[1, 0], [3, 0], [3, 2], [1, 2]] });
-    const grid = computeWetGrid([a, b], valves, undefined, [], [0, 0, 3, 2], 30);
-    const at = (x: number, y: number) =>
-      grid.values[Math.floor(y / grid.step) * grid.cols + Math.floor(x / grid.step)];
-    expect(at(0.5, 1)).toBeCloseTo(25); // nur a: 100 L / 4 m²
-    expect(at(1.5, 1)).toBeCloseTo(50); // a + b
-    expect(grid.max).toBeCloseTo(50);
+    const raster = computeRaster("planned", [a, b], valves, undefined, [], [0, 0, 3, 2], 100);
+    expect(raster.step).toBe(0.25);
+    const at = (x: number, y: number) => raster.cells.find((c) => c.x <= x && x < c.x + raster.step && c.y <= y && y < c.y + raster.step);
+    expect(at(0.5, 1)?.v).toBeCloseTo(25); // nur a: 100 L / 4 m²
+    expect(at(1.5, 1)?.v).toBeCloseTo(50); // a + b
+  });
+
+  it("deckt mit Grenze das ganze Grundstück ab und rechnet die Bodenfeuchte", () => {
+    const bed = zone({ id: "z", polygon: [[0, 0], [4, 0], [4, 4], [0, 4]] });
+    const plot = { id: "g", kind: "boundary", points: [[0, 0], [8, 0], [8, 4], [0, 4]] as [number, number][], radius_m: null, label: null };
+    const status = {
+      zones: { z: { state: "idle" as const, ends_at: null, need_mm: 20, capacity_mm: 80, planned_s: 600, reason: "", locked_reason: null } },
+      winter_mode: false,
+      automatic: true,
+      problems: [],
+    };
+    const now = computeRaster("moisture", [bed], valves, status, [plot], [0, 0, 4, 4], 200);
+    expect(now.cells.filter((c) => c.kind === "none").length).toBeGreaterThan(0); // Rest des Grundstücks
+    expect(now.cells.find((c) => c.kind === "value")?.v).toBeCloseTo(0.75);
+    // 600 s × 10 L/min = 100 L auf 16 m² = 6,25 mm; 80 mm Kapazität
+    const after = computeRaster("after", [bed], valves, status, [plot], [0, 0, 4, 4], 200);
+    expect(after.cells.find((c) => c.kind === "value")?.v).toBeCloseTo(0.75 + 6.25 / 80);
+  });
+
+  it("wählt runde Kachelgrößen", () => {
+    expect(rasterStep(30, 20, 6000)).toBe(0.5);
+    expect(rasterStep(200, 100, 6000)).toBe(2);
+    expect(moistColor(0)).toEqual([166, 97, 26]);
   });
 
   it("nennt den Grund, wenn ein Wert fehlt", () => {

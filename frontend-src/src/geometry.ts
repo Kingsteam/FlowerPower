@@ -265,3 +265,46 @@ export function roundedPath(points: Point[], radius: number): string {
   const last = points[points.length - 1];
   return `${d} L${f(last[0])} ${f(last[1])}`;
 }
+
+/** Nächster Punkt auf der Strecke a–b. */
+export function projectOnSegment(p: Point, a: Point, b: Point): Point {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const len2 = dx * dx + dy * dy;
+  const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / len2));
+  return [a[0] + t * dx, a[1] + t * dy];
+}
+
+/** Nächster Punkt auf einer der Linien (oder null, wenn keiner näher als `tolerance`). */
+export function snapToLines(p: Point, lines: Point[][], tolerance: number): Point | null {
+  let best: Point | null = null;
+  let bestDist = tolerance;
+  for (const line of lines) {
+    for (let i = 1; i < line.length; i++) {
+      const q = projectOnSegment(p, line[i - 1], line[i]);
+      const d = distance(p, q);
+      if (d <= bestDist) {
+        bestDist = d;
+        best = q;
+      }
+    }
+  }
+  return best;
+}
+
+/**
+ * Abzweige im Leitungsnetz: Endpunkte einer Leitung, die auf einer anderen
+ * Leitung liegen (T-Stück).
+ */
+export function junctions(lines: Point[][], tolerance = 0.05): Point[] {
+  const found: Point[] = [];
+  lines.forEach((line, i) => {
+    for (const end of [line[0], line[line.length - 1]]) {
+      if (!end) continue;
+      const others = lines.filter((_, j) => j !== i);
+      const q = snapToLines(end, others, tolerance);
+      if (q && !found.some((f) => distance(f, end) < tolerance)) found.push(end);
+    }
+  });
+  return found;
+}

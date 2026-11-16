@@ -9,15 +9,6 @@
 import { type Point, compass, distance, hoseArea, polygonArea, sectorArea } from "./geometry";
 import type { Feature, PlanValve, PlanZone, Status } from "./types";
 
-export interface WetGrid {
-  x0: number;
-  y0: number;
-  step: number;
-  cols: number;
-  rows: number;
-  values: Float32Array; // mm je Zelle, NaN = nicht bewässert
-  max: number;
-}
 
 export function inSector(p: Point, c: Point, r: number, start: number, arc: number): boolean {
   if (distance(p, c) > r) return false;
@@ -83,9 +74,13 @@ export function inTrunkShadow(p: Point, c: Point, trees: Feature[]): boolean {
   return false;
 }
 
-/** Sekunden eines Laufs: geplant, sonst die Dauer von Hand. */
+/**
+ * Sekunden des nächsten geplanten Laufs: so, wie die Integration plant
+ * (berechnet: 0 bei keinem Bedarf). Ohne Zustand die Dauer von Hand.
+ */
 export function runSeconds(zone: PlanZone, status?: Status): number {
-  return status?.zones[zone.id]?.planned_s || zone.duration_s || 0;
+  const planned = status?.zones[zone.id]?.planned_s;
+  return planned ?? zone.duration_s ?? 0;
 }
 
 /** Millimeter pro Lauf auf der Fläche der Zone (null: Durchfluss oder Fläche fehlt). */
@@ -93,7 +88,8 @@ export function mmPerRun(zone: PlanZone, valves: PlanValve[], status?: Status): 
   const flow = valves.find((v) => v.id === zone.valve_id)?.learned_flow_l_min;
   const area = drawnArea(zone) ?? zone.area_m2;
   const seconds = runSeconds(zone, status);
-  if (!flow || !area || !seconds) return null;
+  if (!flow || !area) return null;
+  if (!seconds) return status?.zones[zone.id]?.planned_s === 0 ? 0 : null;
   return ((seconds / 60) * flow) / area;
 }
 
@@ -102,47 +98,8 @@ export function wetReason(zone: PlanZone, valves: PlanValve[], status?: Status):
   if (!zone.valve_id) return "kein Ventil";
   if (!valves.find((v) => v.id === zone.valve_id)?.learned_flow_l_min) return "Durchfluss unbekannt";
   if (!(drawnArea(zone) ?? zone.area_m2)) return "keine Fläche";
-  if (!runSeconds(zone, status)) return "keine Gießdauer";
+  if (!runSeconds(zone, status) && status?.zones[zone.id]?.planned_s === undefined) return "keine Gießdauer";
   return null;
-}
-
-export function computeWetGrid(
-  zones: PlanZone[],
-  valves: PlanValve[],
-  status: Status | undefined,
-  features: Feature[],
-  bounds: [number, number, number, number],
-  maxCells = 160,
-): WetGrid {
-  const [bx0, by0, bx1, by1] = bounds;
-  const step = Math.max(0.05, Math.max(bx1 - bx0, by1 - by0) / maxCells);
-  const cols = Math.max(1, Math.ceil((bx1 - bx0) / step));
-  const rows = Math.max(1, Math.ceil((by1 - by0) / step));
-  const values = new Float32Array(cols * rows).fill(Number.NaN);
-  const trees = features.filter((f) => f.kind === "tree" && (f.trunk_m ?? 0) > 0);
-  const active = zones
-    .filter((z) => z.enabled && drawnArea(z) !== null)
-    .map((z) => ({ zone: z, mm: mmPerRun(z, valves, status) }))
-    .filter((z): z is { zone: PlanZone; mm: number } => z.mm !== null);
-  let max = 0;
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const p: Point = [bx0 + (c + 0.5) * step, by0 + (r + 0.5) * step];
-      let sum = 0;
-      let hit = false;
-      for (const { zone, mm } of active) {
-        if (!zoneContains(zone, p)) continue;
-        if (zone.type === "sprinkler" && zone.center && inTrunkShadow(p, zone.center, trees)) continue;
-        sum += mm;
-        hit = true;
-      }
-      if (hit) {
-        values[r * cols + c] = sum;
-        max = Math.max(max, sum);
-      }
-    }
-  }
-  return { x0: bx0, y0: by0, step, cols, rows, values, max };
 }
 
 // Farben: kräftiges Hellblau (wenig) über Blau zu Violett (sehr viel). Skala in mm.
@@ -169,20 +126,128 @@ export function wetColor(mm: number): [number, number, number] {
   return WET_STOPS[WET_STOPS.length - 1][1];
 }
 
-/** Raster als Bild (Daten-URL) für das SVG. */
-export function gridImage(grid: WetGrid): string {
-  const canvas = document.createElement("canvas");
-  canvas.width = grid.cols;
-  canvas.height = grid.rows;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return "";
-  const img = ctx.createImageData(grid.cols, grid.rows);
-  for (let i = 0; i < grid.values.length; i++) {
-    const v = grid.values[i];
-    if (Number.isNaN(v)) continue;
-    const [r, g, b] = wetColor(v);
-    img.data.set([r, g, b, 230], i * 4);
+// Raster über das ganze Grundstück ---------------------------------------------
+
+export type RasterLayer = "planned" | "moisture" | "after";
+
+export interface RasterCell {
+  x: number; // linke obere Ecke in Planmetern
+  y: number;
+  /** "value": Wert in v; "none": nicht bewässert; "unknown": bewässert, aber ohne Wert */
+  kind: "value" | "none" | "unknown";
+  v: number;
+}
+
+export interface Raster {
+  step: number;
+  cells: RasterCell[];
+  max: number;
+}
+
+/** Kachelgröße so wählen, dass höchstens `maxCells` Kacheln entstehen (runde Werte). */
+export function rasterStep(width: number, height: number, maxCells: number): number {
+  for (const step of [0.25, 0.5, 1, 2, 5, 10, 20]) {
+    if (Math.ceil(width / step) * Math.ceil(height / step) <= maxCells) return step;
   }
-  ctx.putImageData(img, 0, 0);
-  return canvas.toDataURL();
+  return 50;
+}
+
+/** Füllstand des Bodens (1 = Feldkapazität erreicht, 0 = nutzbares Wasser aufgebraucht). */
+export function zoneFill(zone: PlanZone, status?: Status): number | null {
+  const s = status?.zones[zone.id];
+  if (!s || !s.capacity_mm) return null;
+  return Math.max(0, 1 - s.need_mm / s.capacity_mm);
+}
+
+/**
+ * Kachelraster: geplante Gießmenge (mm), Bodenfeuchte jetzt oder nach dem
+ * nächsten geplanten Gießen (Füllstand). Ist eine Grundstücksgrenze
+ * gezeichnet, deckt das Raster genau das Grundstück ab.
+ */
+export function computeRaster(
+  layer: RasterLayer,
+  zones: PlanZone[],
+  valves: PlanValve[],
+  status: Status | undefined,
+  features: Feature[],
+  bounds: [number, number, number, number],
+  maxCells = 6000,
+): Raster {
+  const plots = features.filter((f) => f.kind === "boundary" && f.points.length >= 3);
+  let [bx0, by0, bx1, by1] = bounds;
+  if (plots.length) {
+    const pts = plots.flatMap((f) => f.points);
+    bx0 = Math.min(...pts.map((p) => p[0]));
+    by0 = Math.min(...pts.map((p) => p[1]));
+    bx1 = Math.max(...pts.map((p) => p[0]));
+    by1 = Math.max(...pts.map((p) => p[1]));
+  }
+  const step = rasterStep(bx1 - bx0, by1 - by0, maxCells);
+  const x0 = Math.floor(bx0 / step) * step;
+  const y0 = Math.floor(by0 / step) * step;
+  const trees = features.filter((f) => f.kind === "tree" && (f.trunk_m ?? 0) > 0);
+  const active = zones
+    .filter((z) => z.enabled && drawnArea(z) !== null)
+    .map((z) => ({ zone: z, mm: mmPerRun(z, valves, status), fill: zoneFill(z, status), cap: status?.zones[z.id]?.capacity_mm ?? null }));
+  const cells: RasterCell[] = [];
+  let max = 0;
+  for (let y = y0; y < by1; y += step) {
+    for (let x = x0; x < bx1; x += step) {
+      const p: Point = [x + step / 2, y + step / 2];
+      if (plots.length && !plots.some((f) => inPolygon(p, f.points))) continue;
+      const here = active.filter(
+        ({ zone }) =>
+          zoneContains(zone, p) && !(zone.type === "sprinkler" && zone.center && inTrunkShadow(p, zone.center, trees)),
+      );
+      if (!here.length) {
+        if (plots.length) cells.push({ x, y, kind: "none", v: 0 });
+        continue;
+      }
+      let v: number | null = null;
+      if (layer === "planned") {
+        v = here.some((h) => h.mm === null) ? null : here.reduce((s, h) => s + (h.mm ?? 0), 0);
+      } else {
+        if (here.some((h) => h.fill === null || (layer === "after" && h.mm === null))) {
+          v = null;
+        } else {
+          const fill = here.reduce((s, h) => s + (h.fill ?? 0), 0) / here.length;
+          const cap = here.reduce((s, h) => s + (h.cap ?? 0), 0) / here.length;
+          const added = layer === "after" ? here.reduce((s, h) => s + (h.mm ?? 0), 0) : 0;
+          v = fill + (cap > 0 ? added / cap : 0);
+        }
+      }
+      if (v === null) {
+        cells.push({ x, y, kind: "unknown", v: 0 });
+      } else {
+        cells.push({ x, y, kind: "value", v });
+        max = Math.max(max, v);
+      }
+    }
+  }
+  return { step, cells, max };
+}
+
+// Bodenfeuchte: trocken (braun) über neutral zu feucht (blau), darüber zu nass (violett).
+export const MOIST_STOPS: [number, [number, number, number]][] = [
+  [0, [166, 97, 26]],
+  [0.5, [236, 226, 198]],
+  [1, [42, 120, 214]],
+  [1.25, [110, 40, 160]],
+];
+
+function interpolate(stops: [number, [number, number, number]][], value: number): [number, number, number] {
+  if (value <= stops[0][0]) return stops[0][1];
+  for (let i = 1; i < stops.length; i++) {
+    const [m1, c1] = stops[i];
+    const [m0, c0] = stops[i - 1];
+    if (value <= m1) {
+      const k = (value - m0) / (m1 - m0);
+      return [0, 1, 2].map((j) => Math.round(c0[j] + (c1[j] - c0[j]) * k)) as [number, number, number];
+    }
+  }
+  return stops[stops.length - 1][1];
+}
+
+export function moistColor(fill: number): [number, number, number] {
+  return interpolate(MOIST_STOPS, fill);
 }

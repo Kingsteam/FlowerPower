@@ -31,9 +31,14 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 - Seite „Zeitplan“ im Panel: Wochenansicht aller Programme (nächste 7 Tage, in der Zeitzone von Home Assistant), Programm-Karten mit Ablauf, nächstem Start und letztem Ergebnis; Programme bearbeiten (Zonen, Reihenfolge, Startzeit oder „fertig bis“ mit Sonnenzeit, Wochentage, Wetter-Überspringen), neu anlegen und löschen (nicht während gegossen wird); „Jetzt starten“ reiht nur ein.
 - Ereignisse für eigene Automationen: `irrigation_planner_run_started`, `irrigation_planner_run_finished` (mit Ergebnis und Sekunden), `irrigation_planner_program_started`, `irrigation_planner_program_skipped` (mit Grund). Die Zeitplan-Seite zeigt sie zusammen mit den Entitäten je Programm.
 - WebSocket-Befehle `irrigation_planner/programs/get`, `programs/save`, `programs/create`, `programs/delete` (Ändern nur für Admins).
+- Wasser-Ansichten als Kachelraster über das ganze Grundstück (Tropfen-Knopf): „Geplante Gießmenge“ (mm im nächsten geplanten Durchgang), „Bodenfeuchte jetzt“ und „Bodenfeuchte nach dem Gießen“ (Füllstand des Wasserkontos: trocken – halb – voll – zu nass). Nicht bewässerte Teile des Grundstücks grau, Zonen ohne Wert schraffiert; Legende mit Erklärung der Rechnung. Ersetzt die bisherige Nässekarte; gezeichnet als SVG-Kacheln statt als Bild.
+- Zustand je Zone enthält `capacity_mm` (nutzbare Feldkapazität).
+- „Geplante Gießmenge“ rechnet mit der wirklich geplanten Dauer (bei berechneter Dauer ohne Bedarf 0 mm statt der Dauer von Hand).
+- Zuleitungen vom Wasserhahn zu den Ventilen („Zuleitung“ im Grundriss): rastet an Hahn, Ventilen und überall auf bestehenden Zuleitungen ein; Abzweige (T-Stücke) werden als Punkt angezeigt.
+- Beim Öffnen und mit „Einpassen“ füllt das Grundstück (Grundstücksgrenze) den Plan mit etwas Rand; ohne Grenze alles Gezeichnete.
 - Grundriss-Formen sperren (Schloss in der Liste, „Alle sperren“): gesperrte Formen lassen sich im Plan nicht anfassen oder verschieben, Klicks gehen zum Plan darunter. Gespeichert als `Feature.locked`.
 - Leitung Ventil → Zone direkt anfassen: Zone oder Ventil auswählen, die Linie ziehen, dort entsteht ein Knick.
-- Der Plan öffnet sich wieder mit dem zuletzt gezeigten Ausschnitt (je Browser gemerkt); ohne gemerkte Ansicht in der Kartenmitte. Nach „Mitte hier festlegen“ erinnert der Hinweis ans Speichern.
+- Nach „Mitte hier festlegen“ erinnert der Hinweis ans Speichern.
 - Behoben: Beim Zeichnen von Grundriss-Linien (z. B. Grundstücksgrenze) war die Fläche schwarz gefüllt.
 - Nässekarte: Zonen ohne Wert sind schraffiert und nennen im Plan und in der Legende den Grund (kein Ventil, Durchfluss unbekannt, keine Fläche, keine Gießdauer).
 - Durchfluss eines Ventils von Hand eintragen (bei der Zone unter „Ventil“), z. B. ohne Durchflusssensor. Mit Sensor wird der Wert weiter gelernt.

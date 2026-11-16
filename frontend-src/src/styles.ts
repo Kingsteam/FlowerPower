@@ -627,8 +627,9 @@ export const styles = css`
   }
   g.feature.pipe polyline:not(.hit) {
     stroke: #1e88e5;
-    stroke-width: 2;
-    stroke-dasharray: 2 4;
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
   g.feature.tree circle {
     fill: rgba(67, 160, 71, 0.2);
@@ -777,12 +778,36 @@ export const styles = css`
   svg.plan.wet .zone.nowet .label .sub {
     fill: var(--bad);
   }
+  .wet-legend .keys {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .wet-legend .swatch.none {
+    display: inline-block;
+    width: 12px;
+    height: 10px;
+    background: rgba(150, 150, 150, 0.35);
+    border: 1px solid var(--muted);
+  }
+  .wet-legend .howto summary {
+    cursor: pointer;
+    font-size: 12.5px;
+    color: var(--accent);
+  }
+  .wet-legend .ticks span:last-of-type {
+    text-align: right;
+  }
+  .raster {
+    pointer-events: none;
+  }
   .wet-missing {
     display: flex;
     flex-direction: column;
     gap: 4px;
   }
-  .wet-missing .hatch {
+  .wet-legend .hatch {
     display: inline-block;
     width: 12px;
     height: 10px;
@@ -1206,6 +1231,13 @@ export const styles = css`
   .draft.feature-draft.fence polyline,
   .draft.feature-draft.hedge polyline,
   .draft.feature-draft.boundary polyline,
+  .junctions circle {
+    fill: #1565c0;
+    stroke: #fff;
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
   .draft.feature-draft.pipe polyline {
     fill: none;
   }

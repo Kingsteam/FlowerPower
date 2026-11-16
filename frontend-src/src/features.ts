@@ -19,7 +19,7 @@ export const FEATURE_META: Record<string, FeatureMeta> = {
   fence: { label: "Zaun", icon: "mdi:fence", family: "line" },
   hedge: { label: "Hecke", icon: "mdi:leaf", family: "line" },
   boundary: { label: "Grundstücksgrenze", icon: "mdi:vector-polyline", family: "line" },
-  pipe: { label: "Leitung", icon: "mdi:pipe", family: "line" },
+  pipe: { label: "Zuleitung", icon: "mdi:pipe", family: "line" },
   tree: { label: "Baum / Strauch", icon: "mdi:tree-outline", family: "point" },
   label: { label: "Beschriftung", icon: "mdi:format-text", family: "point" },
   tap: { label: "Wasserhahn", icon: "mdi:water-pump", family: "point" },

@@ -10,6 +10,8 @@
 import { LitElement, html, nothing, svg, type PropertyValues, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import {
+  junctions,
+  snapToLines,
   roundedPath,
   distanceToPolyline,
   hoseRadiusHandle,
@@ -40,16 +42,21 @@ import "./schedule";
 import { styles } from "./styles";
 import { type MyPosition, fmtAccuracy, locateErrorText, locateUnavailable } from "./locate";
 import {
+  MOIST_STOPS,
+  type Raster,
+  type RasterLayer,
   WET_STOPS,
-  computeWetGrid,
+  computeRaster,
   distanceToSegment,
   drawnArea,
-  gridImage,
   inPolygon,
   mmPerRun,
+  moistColor,
   runSeconds,
+  wetColor,
   wetReason,
 } from "./wetmap";
+import { guard } from "lit/directives/guard.js";
 import type {
   Feature,
   Garden,
@@ -162,9 +169,14 @@ export class IrrigationPlannerPanel extends LitElement {
   @state() private layersOpen = false;
   // Seite: Plan oder Übersicht; Nässekarte über dem Plan
   @state() private page: "plan" | "operation" | "overview" | "schedule" = "plan";
-  @state() private wetOn = false;
+  // Raster-Ansicht über dem Plan ("" = aus)
+  @state() private raster: RasterLayer | "" = "";
+  @state() private rasterMenu = false;
+  private get wetOn(): boolean {
+    return this.raster !== "";
+  }
   @state() private soilOn = false;
-  private wetCache: { key: string; url: string; grid: ReturnType<typeof computeWetGrid> } | null = null;
+  private rasterCache: { key: string; raster: Raster } | null = null;
   // Sichern und Wiederherstellen
   @state() private menuOpen = false;
   @state() private pendingImport: { name: string; data: unknown } | null = null;
@@ -200,8 +212,7 @@ export class IrrigationPlannerPanel extends LitElement {
     this.resizer.observe(this);
   }
 
-  protected updated(changed: PropertyValues): void {
-    if (changed.has("view") && this.plan && !this.autoFit) this.storeView();
+  protected updated(): void {
     const stage = this.renderRoot.querySelector(".stage");
     if (stage && !(stage as HTMLElement).dataset.observed) {
       (stage as HTMLElement).dataset.observed = "1";
@@ -221,43 +232,8 @@ export class IrrigationPlannerPanel extends LitElement {
     }
   }
 
-  // Ansicht merken: Beim nächsten Öffnen steht der Plan wieder da, wo er war
-  // (nur in diesem Browser; ändert sich die Kartenmitte, gilt das nicht mehr).
-  private static readonly VIEW_KEY = "irrigation_planner.view";
-
-  private viewKey(): string {
-    const g = this.plan?.garden;
-    return `${g?.background}|${g?.latitude}|${g?.longitude}`;
-  }
-
-  private storeView(): void {
-    try {
-      localStorage.setItem(IrrigationPlannerPanel.VIEW_KEY, JSON.stringify({ ...this.view, key: this.viewKey() }));
-    } catch {
-      // ohne Speicher im Browser: dann eben nicht merken
-    }
-  }
-
-  /** Erste Ansicht: gemerkte Ansicht, sonst die Kartenmitte, sonst alles zeigen. */
+  /** Erste Ansicht: das Grundstück (oder alles) bildschirmfüllend mit etwas Rand. */
   private initialView(): void {
-    try {
-      const raw = localStorage.getItem(IrrigationPlannerPanel.VIEW_KEY);
-      const v = raw ? (JSON.parse(raw) as { cx: number; cy: number; scale: number; key: string }) : null;
-      if (v && v.key === this.viewKey() && [v.cx, v.cy, v.scale].every(Number.isFinite) && v.scale > 0) {
-        this.view = { cx: v.cx, cy: v.cy, scale: v.scale };
-        return;
-      }
-    } catch {
-      // nichts gemerkt
-    }
-    const g = this.plan?.garden;
-    if (g?.background === "map" && g.latitude != null) {
-      // Die Kartenmitte ist die Stelle, die beim Einrichten gesetzt wurde.
-      const b = this.bounds();
-      this.fitView();
-      if (b) this.view = { ...this.view, cx: 0, cy: 0 };
-      return;
-    }
     this.fitView();
   }
 
@@ -503,9 +479,20 @@ export class IrrigationPlannerPanel extends LitElement {
     return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
   }
 
+  /** Umriss der Grundstücksgrenze(n), falls gezeichnet. */
+  private plotBounds(): [number, number, number, number] | null {
+    if (!this.plan) return null;
+    const pts = this.features.filter((f) => f.kind === "boundary" && f.points.length >= 2).flatMap((f) => f.points);
+    if (!pts.length) return null;
+    const xs = pts.map((p) => p[0]);
+    const ys = pts.map((p) => p[1]);
+    return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+  }
+
+  /** Einpassen: das Grundstück, wenn es eine Grenze gibt, sonst alles Gezeichnete. */
   private fitView(): void {
     const g = this.plan?.garden;
-    const b = this.bounds();
+    const b = this.plotBounds() ?? this.bounds();
     if (g?.background === "map" && g.latitude != null && !b) {
       const zoom = g.map_zoom ?? 19;
       this.view = { cx: 0, cy: 0, scale: 1 / metersPerPixel(g.latitude, zoom) };
@@ -518,7 +505,8 @@ export class IrrigationPlannerPanel extends LitElement {
     const [x0, y0, x1, y1] = b;
     const w = Math.max(x1 - x0, 4);
     const h = Math.max(y1 - y0, 4);
-    const scale = Math.min(this.size.w / (w * 1.15), this.size.h / (h * 1.15), 200);
+    // Etwa 5 % Rand rundum
+    const scale = Math.min(this.size.w / (w * 1.1), this.size.h / (h * 1.1), 200);
     this.view = { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, scale: Math.max(scale, 0.5) };
   }
 
@@ -592,9 +580,18 @@ export class IrrigationPlannerPanel extends LitElement {
       this.snapHint = null;
       return p;
     }
-    const hit = snapPoint(p, this.snapCandidates(skip), SNAP_PX / this.view.scale);
+    const tolerance = SNAP_PX / this.view.scale;
+    let hit = snapPoint(p, this.snapCandidates(skip), tolerance);
+    // Leitungen: auch mitten auf einer bestehenden Leitung einrasten (Abzweig).
+    if (!hit && this.tool === "feature" && this.featureKind === "pipe") {
+      hit = snapToLines(p, this.pipeLines(), tolerance);
+    }
     this.snapHint = hit;
     return hit ? [hit[0], hit[1]] : p;
+  }
+
+  private pipeLines(): Point[][] {
+    return this.features.filter((f) => f.kind === "pipe" && f.points.length >= 2).map((f) => f.points);
   }
 
   private finishFeature(): void {
@@ -1309,6 +1306,28 @@ export class IrrigationPlannerPanel extends LitElement {
   }
 
   /** Umschalter für die Kartenansicht (Luftbild, Karte, …) direkt auf dem Plan. */
+  private renderRasterMenu(): TemplateResult | typeof nothing {
+    if (!this.rasterMenu) return nothing;
+    const entries: [RasterLayer | "", string, string][] = [
+      ["", "Aus", "mdi:eye-off-outline"],
+      ["planned", "Geplante Gießmenge", "mdi:water-outline"],
+      ["moisture", "Bodenfeuchte jetzt", "mdi:water-percent"],
+      ["after", "Bodenfeuchte nach dem Gießen", "mdi:water-check-outline"],
+    ];
+    return html`
+      <div class="layers raster-menu" role="menu" @pointerdown=${(e: Event) => e.stopPropagation()}>
+        ${entries.map(
+          ([key, label, icon]) => html`<button role="menuitemradio" aria-checked=${this.raster === key ? "true" : "false"}
+            class=${this.raster === key ? "active" : ""}
+            @click=${() => {
+              this.raster = key;
+              this.rasterMenu = false;
+            }}><ha-icon icon=${icon}></ha-icon>${label}</button>`,
+        )}
+      </div>
+    `;
+  }
+
   private renderLayers(): TemplateResult | typeof nothing {
     const g = this.plan!.garden;
     if (!this.layersOpen || g.background !== "map") return nothing;
@@ -1474,35 +1493,48 @@ export class IrrigationPlannerPanel extends LitElement {
 
   // Nässekarte -----------------------------------------------------------------
 
-  private wetGrid() {
+  private rasterData(): Raster | null {
     const plan = this.plan!;
     const b = this.bounds();
-    if (!b) return null;
+    if (!b || !this.raster) return null;
     const key = JSON.stringify([
+      this.raster,
       plan.zones,
       plan.valves.map((v) => [v.id, v.learned_flow_l_min]),
-      plan.garden.features.filter((f) => f.kind === "tree"),
-      Object.entries(this.status?.zones ?? {}).map(([id, z]) => [id, z.planned_s]),
+      plan.garden.features.filter((f) => f.kind === "tree" || f.kind === "boundary"),
+      Object.entries(this.status?.zones ?? {}).map(([id, z]) => [id, z.planned_s, z.need_mm, z.capacity_mm]),
     ]);
-    if (this.wetCache?.key !== key) {
-      const pad = 1;
-      const grid = computeWetGrid(plan.zones, plan.valves, this.status, plan.garden.features, [
-        b[0] - pad,
-        b[1] - pad,
-        b[2] + pad,
-        b[3] + pad,
+    if (this.rasterCache?.key !== key) {
+      const raster = computeRaster(this.raster, plan.zones, plan.valves, this.status, plan.garden.features, [
+        b[0] - 1,
+        b[1] - 1,
+        b[2] + 1,
+        b[3] + 1,
       ]);
-      this.wetCache = { key, grid, url: gridImage(grid) };
+      this.rasterCache = { key, raster };
     }
-    return this.wetCache;
+    return this.rasterCache.raster;
   }
 
-  private renderWetMap() {
-    const wet = this.wetGrid();
-    if (!wet?.url) return nothing;
-    const g = wet.grid;
-    return svg`<image class="wet-layer" href=${wet.url} x=${g.x0} y=${g.y0}
-      width=${g.cols * g.step} height=${g.rows * g.step} preserveAspectRatio="none"></image>`;
+  /** Kachelraster (jede Kachel ein Rechteck mit kleiner Fuge, damit es wie Kacheln aussieht). */
+  private renderRaster() {
+    const raster = this.rasterData();
+    if (!raster) return nothing;
+    const layer = this.raster;
+    return guard([this.rasterCache?.key], () => {
+      const s = raster.step;
+      const gap = s * 0.08;
+      return svg`<g class="raster">${raster.cells.map((c) => {
+        let fill: string;
+        if (c.kind === "none") fill = "rgba(150,150,150,0.18)";
+        else if (c.kind === "unknown") fill = "url(#wet-hatch)";
+        else {
+          const [r, g, b] = layer === "planned" ? wetColor(c.v) : moistColor(c.v);
+          fill = `rgba(${r},${g},${b},0.78)`;
+        }
+        return svg`<rect x=${c.x + gap / 2} y=${c.y + gap / 2} width=${s - gap} height=${s - gap} fill=${fill}></rect>`;
+      })}</g>`;
+    });
   }
 
   /** Messwerte der Sensoren neben dem Symbol (Bodenfeuchte farbig). */
@@ -1621,28 +1653,43 @@ export class IrrigationPlannerPanel extends LitElement {
   }
 
   private renderWetLegend(): TemplateResult {
+    const layer = this.raster;
     const missing = this.plan!.zones
       .filter((z) => z.enabled && drawnArea(z) !== null)
       .map((z) => ({ z, why: wetReason(z, this.plan!.valves, this.status) }))
       .filter((m): m is { z: PlanZone; why: string } => m.why !== null);
+    const gradient = (stops: [number, [number, number, number]][]) =>
+      stops.map(([, [r, g, b]], i) => `rgb(${r},${g},${b}) ${(i / (stops.length - 1)) * 100}%`).join(", ");
+    const planned = layer === "planned";
     const top = WET_STOPS[WET_STOPS.length - 1][0];
-    // Stufen gleichmäßig verteilt, passend zu den Zahlen darunter.
-    const gradient = WET_STOPS.map(([, [r, g, b]], i) => `rgb(${r},${g},${b}) ${(i / (WET_STOPS.length - 1)) * 100}%`).join(", ");
     return html`<div class="wet-legend">
-      <strong>Wasser pro Durchgang</strong>
-      <div class="bar" style="background: linear-gradient(to right, ${gradient})"></div>
-      <div class="ticks">${WET_STOPS.map(([mm]) => html`<span>${mm}${mm === top ? "+" : ""}</span>`)}<em>mm</em></div>
+      <strong>${planned ? "Geplante Gießmenge (nächster Durchgang)" : layer === "after" ? "Bodenfeuchte nach dem nächsten Gießen" : "Bodenfeuchte jetzt"}</strong>
+      <div class="bar" style="background: linear-gradient(to right, ${gradient(planned ? WET_STOPS : MOIST_STOPS)})"></div>
+      ${planned
+        ? html`<div class="ticks">${WET_STOPS.map(([mm]) => html`<span>${mm}${mm === top ? "+" : ""}</span>`)}<em>mm</em></div>`
+        : html`<div class="ticks"><span>trocken</span><span>halb</span><span>voll</span><span>zu nass</span></div>`}
+      <small class="keys"><span class="swatch none"></span>nicht bewässert <span class="hatch"></span>ohne Wert</small>
       ${missing.length
         ? html`<div class="wet-missing">
-            <small><span class="hatch"></span><strong>Ohne Wert (schraffiert):</strong>
-              ${missing.map((m) => `${m.z.name} (${m.why})`).join(", ")}</small>
+            <small><strong>Ohne Wert:</strong> ${missing.map((m) => `${m.z.name} (${m.why})`).join(", ")}</small>
             ${missing.some((m) => m.why === "Durchfluss unbekannt")
               ? html`<small>Den Durchfluss lernt die Integration bei einem Lauf von mindestens 1 Minute mit Durchflusssensor.
                   Ohne Sensor: bei der Zone unter „Ventil“ den Durchfluss von Hand eintragen (z. B. Eimer auslitern).</small>`
               : nothing}
           </div>`
         : nothing}
-      <small>Schätzung aus Dauer × gelerntem Durchfluss; Überlappungen zählen doppelt.</small>
+      <details class="howto">
+        <summary>Wie wird das berechnet?</summary>
+        ${planned
+          ? html`<small>Liter = geplante Dauer × Durchfluss des Ventils, verteilt auf die Fläche der Zone (1 L auf 1 m² = 1 mm).
+              Die geplante Dauer kommt aus der Zone: von Hand, aus einer Entität oder berechnet aus dem Bedarf (bei keinem Bedarf 0).
+              Wo sich Zonen überschneiden, zählen beide; hinter dicken Baumstämmen bleibt es beim Sprinkler trocken.</small>`
+          : html`<small>Wasserhaushalt nach FAO-56 („Wasserkonto“ je Zone): Jeden Tag wird aus Temperatur, Luftfeuchte und Wind die
+              Verdunstung (ET0) berechnet, mal Pflanzenfaktor. Das zieht Wasser vom Konto ab; wirksamer Regen und Gießen füllen es auf.
+              „Voll“ ist die nutzbare Feldkapazität im Wurzelraum (je nach Boden und Wurzeltiefe), „trocken“ heißt aufgebraucht.
+              Ein Bodenfeuchtesensor ersetzt die Schätzung. Ohne Wetterquelle bleibt der Boden rechnerisch voll.
+              ${layer === "after" ? "„Nach dem Gießen“ rechnet die geplante Gießmenge dazu." : ""}</small>`}
+      </details>
     </div>`;
   }
 
@@ -2004,7 +2051,10 @@ export class IrrigationPlannerPanel extends LitElement {
         <g transform=${transform}>
           ${this.renderBackground(px)}
           <g class="features">${this.renderFeatures(px)}</g>
-          ${this.wetOn ? this.renderWetMap() : nothing}
+          <g class="junctions">${junctions(this.pipeLines()).map(
+            (j) => svg`<circle cx=${j[0]} cy=${j[1]} r=${4.5 * px}><title>Abzweig (T-Stück)</title></circle>`,
+          )}</g>
+          ${this.wetOn ? this.renderRaster() : nothing}
           ${this.plan!.zones.map((z, i) => this.renderZone(z, i, px))}
           ${this.renderSelectedHandles(px)} ${this.renderFeatureHandles(px)}
           ${this.renderDraft(px)} ${this.renderScaleDraft(px)} ${this.renderMeasure(px)}
@@ -2519,9 +2569,9 @@ export class IrrigationPlannerPanel extends LitElement {
       <div class="tools">
         <button class="icon" title="Vergrößern" @click=${() => this.zoomBy(1.4)}><ha-icon icon="mdi:plus"></ha-icon></button>
         <button class="icon" title="Verkleinern" @click=${() => this.zoomBy(1 / 1.4)}><ha-icon icon="mdi:minus"></ha-icon></button>
-        <button class="icon" title="Alles zeigen" @click=${this.fitView}><ha-icon icon="mdi:fit-to-screen-outline"></ha-icon></button>
-        <button class="icon ${this.wetOn ? "on" : ""}" title="Nässekarte: wie viel Wasser wo ankommt"
-          @click=${() => (this.wetOn = !this.wetOn)}>
+        <button class="icon" title="Grundstück zeigen (ohne Grenze: alles)" @click=${this.fitView}><ha-icon icon="mdi:fit-to-screen-outline"></ha-icon></button>
+        <button class="icon ${this.wetOn ? "on" : ""}" title="Wasser-Ansichten: Gießmenge und Bodenfeuchte als Raster"
+          @click=${() => (this.rasterMenu = !this.rasterMenu)}>
           <ha-icon icon="mdi:water-percent"></ha-icon>
         </button>
         <button class="icon ${this.soilOn ? "on" : ""}" title="Bodenansicht: Zonen nach Bodenart"
@@ -2551,7 +2601,7 @@ export class IrrigationPlannerPanel extends LitElement {
             </button>`
           : nothing}
       </div>
-      ${banner} ${this.renderSearch()} ${this.renderLayers()}
+      ${banner} ${this.renderSearch()} ${this.renderLayers()} ${this.renderRasterMenu()}
       <div class="compass" style="transform: rotate(${g.background === "image" ? -g.north_deg : 0}deg)" title="Norden">
         <svg viewBox="-12 -12 24 24"><path d="M0 -10 L4 2 L0 0 L-4 2 Z" class="n"></path><path d="M0 10 L4 2 L0 0 L-4 2 Z" class="s"></path></svg>
         <span>N</span>
@@ -2965,6 +3015,8 @@ export class IrrigationPlannerPanel extends LitElement {
       <div class="palette">${["building", "paving", "water", "area", "soil"].map(tool)}</div>
       <h3>Linien</h3>
       <div class="palette">${["fence", "hedge", "boundary", "pipe"].map(tool)}</div>
+      <p class="hint small">Zuleitung vom Wasserhahn zu den Ventilen: am Hahn beginnen, Punkte setzen, am Ventil enden.
+        Eine neue Zuleitung, die auf einer bestehenden beginnt, wird ein Abzweig (Punkt im Plan).</p>
       <h3>Punkte</h3>
       <div class="palette">${["tree", "tap", "label"].map(tool)}</div>
       <label class="check">

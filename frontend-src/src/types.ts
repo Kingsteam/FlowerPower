@@ -90,6 +90,7 @@ export interface ZoneStatus {
   state: "idle" | "running" | "queued" | "locked";
   ends_at: string | null;
   need_mm: number;
+  capacity_mm?: number;
   planned_s: number;
   reason: string;
   locked_reason: string | null;
