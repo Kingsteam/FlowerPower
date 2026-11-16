@@ -143,6 +143,8 @@ class Feature:
     trunk_m: float | None = None
     # Nur Bodenfläche: Bodenart (Schlüssel aus water_balance.SOILS).
     soil_type: str | None = None
+    # Gesperrt: im Plan nicht verschiebbar (nur Darstellung im Editor).
+    locked: bool = False
 
 
 @dataclass(slots=True, kw_only=True)

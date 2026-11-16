@@ -203,6 +203,22 @@ export const styles = css`
     width: 30px;
     height: 30px;
   }
+  button.icon.lock {
+    color: var(--muted);
+    opacity: 0.6;
+  }
+  button.icon.lock.on {
+    color: var(--accent);
+    opacity: 1;
+  }
+  .list-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .list-head .spacer {
+    flex: 1;
+  }
   button.icon:hover:not(:disabled),
   button.text:hover:not(:disabled) {
     background: color-mix(in srgb, currentColor 10%, transparent);
@@ -1168,11 +1184,17 @@ export const styles = css`
     vector-effect: non-scaling-stroke;
     pointer-events: none;
   }
+  .link-hit {
+    fill: none;
+    stroke: transparent;
+    cursor: copy;
+    pointer-events: stroke;
+  }
   .valve-link.selected {
     stroke-width: 3;
     opacity: 1;
   }
-  .feature-draft polyline {
+  .draft.feature-draft polyline {
     fill: rgba(120, 120, 120, 0.06);
     stroke: var(--accent);
     stroke-width: 2;
@@ -1180,7 +1202,19 @@ export const styles = css`
     vector-effect: non-scaling-stroke;
     pointer-events: none;
   }
-  .feature-draft circle {
+  /* Linien (Zaun, Hecke, Grenze, Leitung) beim Zeichnen nie füllen */
+  .draft.feature-draft.fence polyline,
+  .draft.feature-draft.hedge polyline,
+  .draft.feature-draft.boundary polyline,
+  .draft.feature-draft.pipe polyline {
+    fill: none;
+  }
+  /* Gesperrte Grundriss-Formen: Klicks gehen durch (zum Plan darunter) */
+  .feature.locked,
+  .feature.locked * {
+    pointer-events: none !important;
+  }
+  .draft.feature-draft circle {
     fill: #fff;
     stroke: var(--accent);
     stroke-width: 2;

@@ -35,6 +35,7 @@ export interface Feature {
   label: string | null;
   trunk_m?: number | null;
   soil_type?: string | null;
+  locked?: boolean;
 }
 
 export function family(kind: string): FeatureFamily {

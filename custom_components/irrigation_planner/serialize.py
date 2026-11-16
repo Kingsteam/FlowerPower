@@ -95,6 +95,7 @@ def garden_to_dict(garden: Garden) -> Data:
                 "label": f.label,
                 "trunk_m": f.trunk_m,
                 "soil_type": f.soil_type,
+                "locked": f.locked,
             }
             for f in garden.features
         ],
@@ -127,6 +128,7 @@ def garden_from_dict(raw: Data) -> Garden:
                 label=f.get("label"),
                 trunk_m=None if f.get("trunk_m") is None else float(f["trunk_m"]),
                 soil_type=f.get("soil_type"),
+                locked=bool(f.get("locked", False)),
             )
             for f in _opt(raw, "features", [])
         ],

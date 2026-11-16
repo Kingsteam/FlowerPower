@@ -121,6 +121,34 @@ async def test_change_zone_type_to_hose(
     assert mock_config_entry.runtime_data.store.model.zones[1].type.value == "drip"
 
 
+async def test_lock_feature(
+    hass: HomeAssistant,
+    setup: Any,
+    sim: SimValves,
+    hass_ws_client: Any,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Grundriss-Formen lassen sich sperren; das bleibt gespeichert."""
+    await setup(make_model(1))
+    client = await _ws(hass_ws_client, hass)
+    feature = {"id": "f1", "kind": "building", "points": [[0, 0], [5, 0], [5, 5]]}
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/plan/save",
+            "garden": {
+                "features": [{**feature, "locked": True}, {**feature, "id": "f2"}]
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"], msg
+    assert [f["locked"] for f in msg["result"]["garden"]["features"]] == [True, False]
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    features = mock_config_entry.runtime_data.store.model.garden.features
+    assert [f.locked for f in features] == [True, False]
+
+
 async def test_save_flow_by_hand(
     hass: HomeAssistant,
     setup: Any,

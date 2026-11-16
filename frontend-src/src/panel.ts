@@ -39,7 +39,17 @@ import "./operation";
 import "./schedule";
 import { styles } from "./styles";
 import { type MyPosition, fmtAccuracy, locateErrorText, locateUnavailable } from "./locate";
-import { WET_STOPS, computeWetGrid, drawnArea, gridImage, inPolygon, mmPerRun, runSeconds, wetReason } from "./wetmap";
+import {
+  WET_STOPS,
+  computeWetGrid,
+  distanceToSegment,
+  drawnArea,
+  gridImage,
+  inPolygon,
+  mmPerRun,
+  runSeconds,
+  wetReason,
+} from "./wetmap";
 import type {
   Feature,
   Garden,
@@ -190,7 +200,8 @@ export class IrrigationPlannerPanel extends LitElement {
     this.resizer.observe(this);
   }
 
-  protected updated(): void {
+  protected updated(changed: PropertyValues): void {
+    if (changed.has("view") && this.plan && !this.autoFit) this.storeView();
     const stage = this.renderRoot.querySelector(".stage");
     if (stage && !(stage as HTMLElement).dataset.observed) {
       (stage as HTMLElement).dataset.observed = "1";
@@ -206,8 +217,48 @@ export class IrrigationPlannerPanel extends LitElement {
     if (width && height && (width !== this.size.w || height !== this.size.h)) {
       this.size = { w: width, h: height };
       // Solange niemand verschoben oder gezoomt hat: neu einpassen.
-      if (this.autoFit && this.plan) this.fitView();
+      if (this.autoFit && this.plan) this.initialView();
     }
+  }
+
+  // Ansicht merken: Beim nächsten Öffnen steht der Plan wieder da, wo er war
+  // (nur in diesem Browser; ändert sich die Kartenmitte, gilt das nicht mehr).
+  private static readonly VIEW_KEY = "irrigation_planner.view";
+
+  private viewKey(): string {
+    const g = this.plan?.garden;
+    return `${g?.background}|${g?.latitude}|${g?.longitude}`;
+  }
+
+  private storeView(): void {
+    try {
+      localStorage.setItem(IrrigationPlannerPanel.VIEW_KEY, JSON.stringify({ ...this.view, key: this.viewKey() }));
+    } catch {
+      // ohne Speicher im Browser: dann eben nicht merken
+    }
+  }
+
+  /** Erste Ansicht: gemerkte Ansicht, sonst die Kartenmitte, sonst alles zeigen. */
+  private initialView(): void {
+    try {
+      const raw = localStorage.getItem(IrrigationPlannerPanel.VIEW_KEY);
+      const v = raw ? (JSON.parse(raw) as { cx: number; cy: number; scale: number; key: string }) : null;
+      if (v && v.key === this.viewKey() && [v.cx, v.cy, v.scale].every(Number.isFinite) && v.scale > 0) {
+        this.view = { cx: v.cx, cy: v.cy, scale: v.scale };
+        return;
+      }
+    } catch {
+      // nichts gemerkt
+    }
+    const g = this.plan?.garden;
+    if (g?.background === "map" && g.latitude != null) {
+      // Die Kartenmitte ist die Stelle, die beim Einrichten gesetzt wurde.
+      const b = this.bounds();
+      this.fitView();
+      if (b) this.view = { ...this.view, cx: 0, cy: 0 };
+      return;
+    }
+    this.fitView();
   }
 
   // Daten ----------------------------------------------------------------------
@@ -238,7 +289,7 @@ export class IrrigationPlannerPanel extends LitElement {
     this.dirty = false;
     if (!keepHistory) this.history = [];
     void this.loadImage();
-    if (fit) this.fitView();
+    if (fit) this.initialView();
   }
 
   private editable(): Editable {
@@ -648,6 +699,21 @@ export class IrrigationPlannerPanel extends LitElement {
     }
   }
 
+  private setLocked(features: Feature[], locked: boolean): void {
+    this.remember();
+    for (const f of features) f.locked = locked;
+    this.changed();
+    this.showToast(
+      features.length > 1
+        ? locked
+          ? "Alle Grundriss-Formen gesperrt"
+          : "Alle Grundriss-Formen entsperrt"
+        : locked
+          ? `${featureName(features[0])} gesperrt`
+          : `${featureName(features[0])} entsperrt`,
+    );
+  }
+
   /** Durchfluss des Ventils (gelernt oder von Hand), für Liter und Nässekarte. */
   private renderValveFlow(zone: PlanZone) {
     const valve = this.plan!.valves.find((v) => v.id === zone.valve_id);
@@ -1039,7 +1105,7 @@ export class IrrigationPlannerPanel extends LitElement {
       this.searchPin = { ...this.searchPin, point: shift(this.searchPin.point) };
     }
     this.changed();
-    this.showToast("Kartenmitte gesetzt");
+    this.showToast("Kartenmitte gesetzt. Zum Behalten „Speichern“ drücken.");
   }
 
   // Orten ---------------------------------------------------------------------------
@@ -2170,7 +2236,7 @@ export class IrrigationPlannerPanel extends LitElement {
         this.tab = "plan";
         this.startDrag(e, { type: "f-move", id: f.id, start: this.toPlan(e), orig: structuredClone(f) });
       };
-      const cls = `feature ${f.kind} ${sel ? "selected" : ""}`;
+      const cls = `feature ${f.kind} ${sel ? "selected" : ""} ${f.locked ? "locked" : ""}`;
       if (fam === "area") {
         const c = centroid(f.points);
         const soil = f.kind === "soil" ? SOIL_COLORS[f.soil_type ?? ""] ?? "#a9825a" : "";
@@ -2214,7 +2280,7 @@ export class IrrigationPlannerPanel extends LitElement {
   private renderFeatureHandles(px: number) {
     if (this.tool !== "select" || this.selected?.kind !== "feature") return nothing;
     const f = this.feature(this.selected.id);
-    if (!f) return nothing;
+    if (!f || f.locked) return nothing;
     const r = 7 * px;
     const fam = family(f.kind);
     if (fam === "point") {
@@ -2310,13 +2376,18 @@ export class IrrigationPlannerPanel extends LitElement {
       if (!valve?.position || !to) return nothing;
       const zoneSelected = this.selected?.kind === "zone" && this.selected.id === zone.id;
       const selected = zoneSelected || (this.selected?.kind === "valve" && this.selected.id === valve.id);
+      const editable = selected && this.tool === "select";
       const route = zone.valve_route ?? [];
       const pts: Point[] = [valve.position, ...route, to];
       const path = svg`<path class="valve-link ${selected ? "selected" : ""}" style="--zone:${this.zoneColor(index)}"
         d=${roundedPath(pts, Math.max(0.4, 16 * px))} stroke-dasharray=${`${6 * px} ${4 * px}`}></path>`;
-      if (!zoneSelected || this.tool !== "select") return path;
-      const r = 6 * px;
+      if (!editable) return path;
+      const r = 7 * px;
+      const d = roundedPath(pts, Math.max(0.4, 16 * px));
       return svg`${path}
+        <path class="link-hit" d=${d} stroke-width=${14 * px}
+          @pointerdown=${(e: PointerEvent) => this.grabLink(e, zone, pts)}>
+          <title>Linie ziehen: Knick einfügen</title></path>
         ${pts.slice(0, -1).map((p, i) => {
           const q = pts[i + 1];
           const m: Point = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
@@ -2332,6 +2403,23 @@ export class IrrigationPlannerPanel extends LitElement {
             <title>Ziehen: verschieben · Doppelklick: löschen</title></circle>`,
         )}`;
     });
+  }
+
+  /** Leitung irgendwo anfassen: dort entsteht ein Knick, der gleich mitgezogen wird. */
+  private grabLink(event: PointerEvent, zone: PlanZone, pts: Point[]): void {
+    if (this.tool !== "select" || event.button !== 0) return;
+    const p = this.toPlan(event);
+    let best = 0;
+    let bestDist = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const dist = distanceToSegment(p, pts[i], pts[i + 1]);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    }
+    this.selected = { kind: "zone", id: zone.id };
+    this.insertRoutePoint(event, zone, best, p);
   }
 
   private insertRoutePoint(event: PointerEvent, zone: PlanZone, index: number, at: Point): void {
@@ -2699,8 +2787,8 @@ export class IrrigationPlannerPanel extends LitElement {
           ? html`<p class="hint small">Setze das Ventil im Plan (unten „Platzieren“), dann siehst du die Verbindung.</p>`
           : zone.valve_id
             ? html`<p class="hint small">
-                Leitung zum Ventil: am kleinen Punkt in der Mitte der Linie ziehen, um einen Knick einzufügen
-                (Doppelklick auf einen Knick löscht ihn).
+                Leitung zum Ventil: die Linie im Plan anfassen und ziehen, dort entsteht ein Knick
+                (Doppelklick auf einen Knick löscht ihn). Die Ecken werden rund.
                 ${zone.valve_route?.length
                   ? html`<button class="text" @click=${() => {
                       this.remember();
@@ -2884,7 +2972,17 @@ export class IrrigationPlannerPanel extends LitElement {
         An Ecken einrasten <small>(Alt-Taste: kurz aus)</small>
       </label>
       ${this.features.length
-        ? html`<h3>Im Plan (${this.features.length})</h3>
+        ? html`<div class="list-head">
+              <h3>Im Plan (${this.features.length})</h3>
+              <span class="spacer"></span>
+              ${this.features.some((f) => !f.locked)
+                ? html`<button class="text" @click=${() => this.setLocked(this.features, true)}>
+                    <ha-icon icon="mdi:lock"></ha-icon>Alle sperren</button>`
+                : html`<button class="text" @click=${() => this.setLocked(this.features, false)}>
+                    <ha-icon icon="mdi:lock-open-variant-outline"></ha-icon>Alle entsperren</button>`}
+            </div>
+            <p class="hint small">Gesperrte Formen lassen sich im Plan nicht anfassen oder verschieben; Klicks gehen zum Plan darunter.
+              Bearbeiten: hier in der Liste auswählen und entsperren.</p>
             <ul class="list compact">
               ${this.features.map((f) => this.renderFeatureItem(f, sel?.id === f.id))}
             </ul>`
@@ -2912,6 +3010,14 @@ export class IrrigationPlannerPanel extends LitElement {
           <ha-icon icon=${meta?.icon ?? "mdi:shape-outline"}></ha-icon>
           <span class="name">${featureName(f)}</span>
           <span class="meta">${info}</span>
+          <button class="icon small lock ${f.locked ? "on" : ""}"
+            title=${f.locked ? "Gesperrt: im Plan nicht verschiebbar. Klicken zum Entsperren" : "Sperren: im Plan nicht mehr verschiebbar"}
+            @click=${(e: Event) => {
+              e.stopPropagation();
+              this.setLocked([f], !f.locked);
+            }}>
+            <ha-icon icon=${f.locked ? "mdi:lock" : "mdi:lock-open-variant-outline"}></ha-icon>
+          </button>
         </div>
         ${open
           ? html`<div class="inspector">
