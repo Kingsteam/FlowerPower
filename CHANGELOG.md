@@ -5,6 +5,10 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 
 ## [Unveröffentlicht]
 
+### Neu
+- Rechenkern für Phase 2 (`water_balance.py`): Verdunstung ET0 nach FAO-56 Penman-Monteith (Strahlung aus dem Temperaturunterschied geschätzt), sonst Hargreaves; Pflanzenfaktoren, Bodenarten, nutzbare Feldkapazität, wirksamer Regen, Bedarf → Liter → Dauer. Geprüft mit den Rechenbeispielen aus FAO-56.
+- Zonen: Fläche, Effizienz und Dauer-Art (von Hand, berechnet, aus einer Entität); Bodenfeuchtesensoren: Feldkapazität und Welkepunkt.
+
 ## [0.2.0] – 2026-11-16
 
 Phase 1 (MVP Backend) fertig.

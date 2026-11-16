@@ -19,6 +19,7 @@ from custom_components.irrigation_planner.drivers.base import (
     SafetyLevel,
 )
 from custom_components.irrigation_planner.model import (
+    DurationMode,
     EntityRef,
     Garden,
     GardenModel,
@@ -74,6 +75,10 @@ def full_model() -> GardenModel:
                 priority=2,
                 max_duration_s=1800,
                 duration_s=600,
+                duration_mode=DurationMode.ENTITY,
+                duration_entity=_ref("smart_irrigation_beet"),
+                area_m2=12.6,
+                efficiency=0.85,
                 cycle_soak=True,
                 enabled=False,
             ),
@@ -150,6 +155,8 @@ def full_model() -> GardenModel:
                 device_id="soildev",
                 position=(3.0, 4.0),
                 zone_ids=["z1"],
+                field_capacity_pct=40.0,
+                wilting_point_pct=15.0,
             )
         ],
     )
@@ -207,6 +214,17 @@ def test_supply_rejects_zero_open_valves() -> None:
         (lambda m: m.programs[0].zone_ids.append("fehlt"), "unbekannte"),
         (lambda m: m.sensors[0].zone_ids.append("fehlt"), "unbekannte"),
         (lambda m: setattr(m.zones[0], "max_duration_s", 0), "Höchstdauer"),
+        (lambda m: setattr(m.zones[0], "area_m2", 0), "Fläche"),
+        (lambda m: setattr(m.zones[0], "efficiency", 1.5), "Effizienz"),
+        (lambda m: setattr(m.zones[0], "duration_entity", None), "Entität"),
+        (
+            lambda m: (
+                setattr(m.zones[1], "duration_mode", DurationMode.CALCULATED),
+                setattr(m.zones[1], "area_m2", None),
+            ),
+            "Fläche",
+        ),
+        (lambda m: setattr(m.sensors[0], "wilting_point_pct", 50), "Welkepunkt"),
         (
             lambda m: m.water_supplies.append(
                 WaterSupply(id="w2", name="W2", valve_ids=["v1"])

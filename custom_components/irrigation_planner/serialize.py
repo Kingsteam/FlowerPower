@@ -11,6 +11,7 @@ from typing import Any
 
 from .drivers.base import Capability, SafetyLevel
 from .model import (
+    DurationMode,
     EntityRef,
     Garden,
     GardenModel,
@@ -118,6 +119,10 @@ def zone_to_dict(zone: Zone) -> Data:
         "priority": zone.priority,
         "max_duration_s": zone.max_duration_s,
         "duration_s": zone.duration_s,
+        "duration_mode": zone.duration_mode.value,
+        "duration_entity": _ref_out(zone.duration_entity),
+        "area_m2": zone.area_m2,
+        "efficiency": zone.efficiency,
         "cycle_soak": zone.cycle_soak,
         "enabled": zone.enabled,
     }
@@ -142,6 +147,10 @@ def zone_from_dict(raw: Data) -> Zone:
         priority=int(_opt(raw, "priority", 0)),
         max_duration_s=raw.get("max_duration_s"),
         duration_s=raw.get("duration_s"),
+        duration_mode=DurationMode(_opt(raw, "duration_mode", DurationMode.MANUAL)),
+        duration_entity=_ref_in(raw.get("duration_entity")),
+        area_m2=raw.get("area_m2"),
+        efficiency=raw.get("efficiency"),
         cycle_soak=bool(_opt(raw, "cycle_soak", False)),
         enabled=bool(_opt(raw, "enabled", True)),
     )
@@ -300,6 +309,8 @@ def sensor_to_dict(sensor: Sensor) -> Data:
         "device_id": sensor.device_id,
         "position": _point_out(sensor.position),
         "zone_ids": list(sensor.zone_ids),
+        "field_capacity_pct": sensor.field_capacity_pct,
+        "wilting_point_pct": sensor.wilting_point_pct,
     }
 
 
@@ -313,6 +324,8 @@ def sensor_from_dict(raw: Data) -> Sensor:
         device_id=raw.get("device_id"),
         position=_point_in(raw.get("position")),
         zone_ids=list(_opt(raw, "zone_ids", [])),
+        field_capacity_pct=float(_opt(raw, "field_capacity_pct", 35.0)),
+        wilting_point_pct=float(_opt(raw, "wilting_point_pct", 12.0)),
     )
 
 

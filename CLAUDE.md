@@ -48,7 +48,8 @@ Das Wissen über die konkrete Anlage des Besitzers liegt im separaten privaten R
 | `services.py`, `services.yaml` | Dienste `run_zone` (reiht nur ein), `run_program`, `skip_next`, `stop_all` |
 | `watchdog.py` | Durchflussüberwachung (Konzept Abschnitt 7): Leck, zu hoch, kein Durchfluss/Wassermangel, zu niedrig, Durchfluss bei geschlossenem Ventil, zu viele offen; Alarme als Benachrichtigung + Ereignis `irrigation_planner_alarm`; Sperre bis `release_zone`; lernt den Durchfluss; ruht in der Winterpause. Grenzwerte in `const.py` |
 | `season.py` | Winterpause: alles schließen und bestätigen, Zeitpläne aus, Geräte deaktivieren (nur wenn alles zu ist; gemerkt in `Settings.winter_disabled_devices`), beim Ende genau diese wieder aktivieren; automatisch nach Datum (Start-/Endtag) |
-| `geometry.py`, `water_balance.py`, `websocket_api.py` | nur Platzhalter mit Docstring |
+| `water_balance.py` | Rechenkern Phase 2, ohne Home Assistant: ET0 (FAO-56 Penman-Monteith, sonst Hargreaves), `PLANTS` (Kc, Wurzeltiefe), `SOILS` (nutzbare Feldkapazität), wirksamer Regen, Defizit, Liter, Dauer. Tests mit FAO-56-Beispielen |
+| `geometry.py`, `websocket_api.py` | nur Platzhalter mit Docstring |
 | `strings.json`, `translations/` | Texte (en = `strings.json`, de) |
 | `tests/` | pytest mit `pytest-homeassistant-custom-component`; `helpers.py` (simulierte Ventile `SimValves`, `make_model`), Fixtures `sim`, `setup`, `advance` in `conftest.py`; simulierte Ventile sind echte `switch`-Entitäten der Plattform `test`, mit Durchfluss- und Statussensor (`make_model(sensors=True)`) |
 | `docs/` | `KONZEPT.md`, `HANDBUCH.md`, `bilder/`, `entwuerfe.html` |

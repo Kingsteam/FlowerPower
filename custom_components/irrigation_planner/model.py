@@ -41,6 +41,14 @@ class ZoneType(StrEnum):
     DRIP = "drip"  # Polygon (Tropfschlauch-Beet)
 
 
+class DurationMode(StrEnum):
+    """Woher die Gießdauer einer Zone kommt."""
+
+    MANUAL = "manual"  # von Hand eingestellt (Zone.duration_s)
+    CALCULATED = "calculated"  # aus dem Wasserhaushalt (Phase 2)
+    ENTITY = "entity"  # aus einer Entität in Sekunden, z. B. Smart Irrigation
+
+
 class ValveRole(StrEnum):
     """Rollen der Entitäten eines Ventils (Konzept, Abschnitt 3a)."""
 
@@ -104,8 +112,15 @@ class Zone:
     valve_id: str | None = None
     priority: int = 0
     max_duration_s: int | None = None
-    # Geplante Gießdauer, vorerst von Hand (ab Phase 2 berechnet).
+    # Gießdauer von Hand (Dauer-Art MANUAL; sonst Rückfallwert).
     duration_s: int | None = None
+    duration_mode: DurationMode = DurationMode.MANUAL
+    # Entität mit der Dauer in Sekunden (Dauer-Art ENTITY).
+    duration_entity: EntityRef | None = None
+    # Fläche in m² (bis zum Plan-Editor von Hand, danach aus der Zeichnung).
+    area_m2: float | None = None
+    # Anteil des Wassers, der bei den Pflanzen ankommt (None = nach Zonenart).
+    efficiency: float | None = None
     cycle_soak: bool = False
     enabled: bool = True
 
@@ -193,6 +208,10 @@ class Sensor:
     device_id: str | None = None
     position: Point | None = None
     zone_ids: list[str] = field(default_factory=list)
+    # Bodenfeuchte: Messwert bei voll (Feldkapazität) und bei leer
+    # (Welkepunkt), in %. Daraus wird das Defizit geschätzt.
+    field_capacity_pct: float = 35.0
+    wilting_point_pct: float = 12.0
 
 
 @dataclass(slots=True, kw_only=True)
@@ -243,6 +262,21 @@ class GardenModel:
                 raise ValueError(f"Zone {zone.id}: Höchstdauer muss positiv sein")
             if zone.duration_s is not None and zone.duration_s < 1:
                 raise ValueError(f"Zone {zone.id}: Dauer muss positiv sein")
+            if zone.area_m2 is not None and zone.area_m2 <= 0:
+                raise ValueError(f"Zone {zone.id}: Fläche muss positiv sein")
+            if zone.efficiency is not None and not 0 < zone.efficiency <= 1:
+                raise ValueError(f"Zone {zone.id}: Effizienz liegt zwischen 0 und 1")
+            if zone.duration_mode is DurationMode.CALCULATED and not zone.area_m2:
+                raise ValueError(
+                    f"Zone {zone.id}: Für die berechnete Dauer fehlt die Fläche"
+                )
+            if (
+                zone.duration_mode is DurationMode.ENTITY
+                and zone.duration_entity is None
+            ):
+                raise ValueError(
+                    f"Zone {zone.id}: Für die Dauer aus einer Entität fehlt die Entität"
+                )
         for valve in self.valves:
             for zone_id in valve.zone_ids:
                 _check_ref(f"Ventil {valve.id}", "Zone", zone_id, zone_ids)
@@ -291,6 +325,10 @@ class GardenModel:
         for sensor in self.sensors:
             for zone_id in sensor.zone_ids:
                 _check_ref(f"Sensor {sensor.id}", "Zone", zone_id, zone_ids)
+            if sensor.field_capacity_pct <= sensor.wilting_point_pct:
+                raise ValueError(
+                    f"Sensor {sensor.id}: Feldkapazität muss über dem Welkepunkt liegen"
+                )
 
 
 def _unique_ids(kind: str, items: list[Any]) -> set[str]:
