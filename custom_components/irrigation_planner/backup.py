@@ -26,6 +26,7 @@ from homeassistant.util import dt as dt_util
 import voluptuous as vol
 
 from .const import DOMAIN, LOGGER
+from .panel import async_reload_keep_panel
 from .serialize import garden_from_dict, model_from_dict, model_to_dict
 
 if TYPE_CHECKING:
@@ -192,5 +193,5 @@ async def ws_import(
     LOGGER.info("Sicherung wird eingespielt, die Integration wird neu geladen")
     data.store.model = model
     await data.store.async_save()
-    hass.config_entries.async_schedule_reload(entry.entry_id)
+    async_reload_keep_panel(hass, entry.entry_id)
     connection.send_result(msg["id"], {"reloaded": True, "notes": notes})

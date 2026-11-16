@@ -69,6 +69,7 @@ from .model import (
     Zone,
     ZoneType,
 )
+from .panel import async_reload_keep_panel
 from .scheduler import HardwareTestResult, QueueError
 from .serialize import model_from_dict, model_to_dict
 from .watchdog import Watchdog
@@ -181,7 +182,7 @@ class IrrigationPlannerOptionsFlow(OptionsFlow):
         store = self.config_entry.runtime_data.store
         store.model = self.model
         await store.async_save()
-        self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+        async_reload_keep_panel(self.hass, self.config_entry.entry_id)
         return self.async_create_entry(data=dict(self.config_entry.options))
 
     def _valid(self) -> str | None:

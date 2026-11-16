@@ -35,6 +35,7 @@ from .const import (
     EVENT_RUN_STARTED,
 )
 from .model import MAX_SUN_OFFSET_MIN, Program, ProgramMode
+from .panel import async_reload_keep_panel
 from .programs import next_start, plan_total_s
 
 if TYPE_CHECKING:
@@ -286,7 +287,7 @@ async def ws_programs_create(
         Program(id=program_id, name=msg["name"], enabled=False, finish_by="sunrise")
     )
     await data.store.async_save()
-    hass.config_entries.async_schedule_reload(entry.entry_id)
+    async_reload_keep_panel(hass, entry.entry_id)
     connection.send_result(msg["id"], {"id": program_id, "reloaded": True})
 
 
@@ -322,7 +323,7 @@ async def ws_programs_delete(
         )
         return
     await data.store.async_save()
-    hass.config_entries.async_schedule_reload(entry.entry_id)
+    async_reload_keep_panel(hass, entry.entry_id)
     connection.send_result(msg["id"], {"reloaded": True})
 
 

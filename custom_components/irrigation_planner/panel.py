@@ -18,7 +18,7 @@ import secrets
 from aiohttp import web
 from homeassistant.components import frontend, panel_custom
 from homeassistant.components.http import HomeAssistantView, StaticPathConfig
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN, LOGGER
 
@@ -34,6 +34,7 @@ MAX_IMAGE_BYTES = 15 * 1024 * 1024
 IMAGE_TYPES = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp"}
 IMAGE_NAME = re.compile(r"^plan-[0-9a-f]{16}\.(png|jpg|webp)$")
 _REGISTERED = f"{DOMAIN}_static_registered"
+_KEEP_PANEL = f"{DOMAIN}_keep_panel"
 
 
 def image_dir(hass: HomeAssistant) -> Path:
@@ -43,6 +44,7 @@ def image_dir(hass: HomeAssistant) -> Path:
 
 async def async_register_panel(hass: HomeAssistant) -> None:
     """Statische Dateien, Bild-Ansichten und Panel anmelden."""
+    hass.data.pop(_KEEP_PANEL, None)
     if not hass.data.get(_REGISTERED):
         hass.data[_REGISTERED] = True
         await hass.http.async_register_static_paths(
@@ -76,8 +78,20 @@ def _file_version(name: str) -> str:
         return "0"
 
 
+@callback
+def async_reload_keep_panel(hass: HomeAssistant, entry_id: str) -> None:
+    """Neu laden, ohne das Panel kurz zu entfernen.
+
+    Sonst springt der Browser, der gerade im Panel speichert, zur Übersicht.
+    """
+    hass.data[_KEEP_PANEL] = True
+    hass.config_entries.async_schedule_reload(entry_id)
+
+
 def async_remove_panel(hass: HomeAssistant) -> None:
-    """Panel entfernen (beim Entladen)."""
+    """Panel entfernen (beim Entladen, nicht bei unserem eigenen Neuladen)."""
+    if hass.data.pop(_KEEP_PANEL, False):
+        return
     if PANEL_URL in hass.data.get(frontend.DATA_PANELS, {}):
         frontend.async_remove_panel(hass, PANEL_URL)
 

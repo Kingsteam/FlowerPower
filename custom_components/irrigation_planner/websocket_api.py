@@ -32,6 +32,7 @@ from .backup import ws_export, ws_import
 from .balance import zone_efficiency, zone_taw
 from .catalog import catalog
 from .const import DOMAIN, MAP_PROVIDER_CUSTOM, MAP_PROVIDERS
+from .devices_api import ALL_COMMANDS as DEVICE_COMMANDS
 from .drivers.ha import resolve_entity_id
 from .geocode import GeocodeError, async_search
 from .geometry import geometry_area, overlaps, zone_area
@@ -101,7 +102,7 @@ def async_register(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_geocode)
     websocket_api.async_register_command(hass, ws_export)
     websocket_api.async_register_command(hass, ws_import)
-    for command in (*SCHEDULE_COMMANDS, *OPERATION_COMMANDS):
+    for command in (*SCHEDULE_COMMANDS, *OPERATION_COMMANDS, *DEVICE_COMMANDS):
         websocket_api.async_register_command(hass, command)
 
 

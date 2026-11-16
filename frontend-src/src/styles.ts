@@ -2116,4 +2116,119 @@ export const styles = css`
   :host([narrow]) .queue .left {
     grid-column: 2;
   }
+  /* Seite „Geräte“ */
+  .devices .section-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0 8px;
+  }
+  .devices .section-head h2 {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+  }
+  .devices .section-head .spacer,
+  .device-head .spacer {
+    flex: 1;
+  }
+  .devices h3 {
+    margin: 8px 0 0;
+  }
+  .devices td {
+    vertical-align: top;
+  }
+  .devices tr.selected td {
+    background: color-mix(in srgb, var(--accent) 7%, transparent);
+  }
+  .devices tr.editor-row > td {
+    background: color-mix(in srgb, var(--accent) 4%, transparent);
+    padding-top: 0;
+  }
+  .devices .device-cell {
+    min-width: 180px;
+  }
+  .devices .row-actions {
+    white-space: nowrap;
+    text-align: right;
+    width: 1%;
+  }
+  .devices .row-actions button {
+    display: block;
+    margin: 0 0 2px auto;
+  }
+  .devices table.roles select {
+    min-width: 220px;
+  }
+  .pill {
+    display: inline-block;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--primary-text-color) 8%, transparent);
+    white-space: nowrap;
+  }
+  .pill.ok {
+    background: color-mix(in srgb, var(--success-color, #43a047) 16%, transparent);
+  }
+  .pill.warn {
+    background: color-mix(in srgb, var(--warn) 18%, transparent);
+  }
+  .bad-text {
+    color: var(--bad);
+  }
+  .device-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 360px;
+    overflow-y: auto;
+  }
+  .device-pick {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--primary-text-color);
+    flex-wrap: wrap;
+  }
+  .device-pick:hover {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+  .device-pick.used {
+    opacity: 0.65;
+  }
+  .device-pick .grow {
+    flex: 1;
+    min-width: 160px;
+    display: flex;
+    flex-direction: column;
+  }
+  .device-pick small {
+    color: var(--muted);
+  }
+  .device-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .spinner.inline {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-width: 2px;
+    vertical-align: -2px;
+    margin-right: 6px;
+  }
+  .test-box .fields {
+    max-width: 420px;
+  }
+  :host([narrow]) .devices .fields {
+    flex-direction: column;
+  }
 `;

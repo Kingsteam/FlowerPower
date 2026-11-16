@@ -4,7 +4,7 @@
 
 Eine Erweiterung (Integration) für Home Assistant, die den Garten automatisch und sicher bewässern soll: mit Gartenplan, berechneter Gießdauer pro Zone, Überwachung des Durchflusses und Winterpause. Sie soll mit beliebiger Bewässerungs-Hardware funktionieren.
 
-Domain: `irrigation_planner` · Version: 0.4.0
+Domain: `irrigation_planner` · Version: 0.5.0
 
 > ⚠️ **Noch nicht mit echter Hardware getestet.** Alles ist mit simulierten Ventilen und Sensoren erprobt (automatische Tests und eine simulierte Test-Instanz), aber noch nicht mit echten Ventilen. Wer es ausprobiert: zuerst **ein** Ventil einrichten, einen kurzen Testlauf machen und dabei bleiben, bis klar ist, dass das Ventil selbst schließt.
 
@@ -22,6 +22,7 @@ Domain: `irrigation_planner` · Version: 0.4.0
   - **Betrieb:** was läuft, abbrechen, Verlauf mit Litern, Wetter der letzten 14 Tage
   - **Flächen**
   - **Zeitplan**
+  - **Geräte:** Ventile und Sensoren in einer Tabelle anlegen und ändern; Gerät wählen, der Rest wird vorgeschlagen; Testlauf
 - **Dashboard-Karte „Bewässerung“** (wird automatisch geladen)
 - Dienste und Ereignisse für eigene Automationen
 

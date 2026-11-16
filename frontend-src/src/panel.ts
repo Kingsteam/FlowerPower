@@ -40,6 +40,7 @@ import { FEATURE_META, MAX_LABEL_LENGTH, SOIL_COLORS, family, featureName, newFe
 import { type Place, SEARCH_ATTRIBUTION, searchAddress } from "./geocode";
 import "./operation";
 import "./schedule";
+import "./devices";
 import { styles } from "./styles";
 import { type MyPosition, fmtAccuracy, locateErrorText, locateUnavailable } from "./locate";
 import {
@@ -169,7 +170,7 @@ export class IrrigationPlannerPanel extends LitElement {
   @state() private toastUndo = false;
   @state() private layersOpen = false;
   // Seite: Plan oder Übersicht; Nässekarte über dem Plan
-  @state() private page: "plan" | "operation" | "overview" | "schedule" = "plan";
+  @state() private page: "plan" | "operation" | "overview" | "schedule" | "devices" = "plan";
   // Raster-Ansicht über dem Plan ("" = aus)
   @state() private raster: RasterLayer | "" = "";
   @state() private rasterMenu = false;
@@ -239,6 +240,13 @@ export class IrrigationPlannerPanel extends LitElement {
   }
 
   // Daten ----------------------------------------------------------------------
+
+  /** Die Integration lädt neu (Geräte geändert): danach den Plan frisch holen. */
+  private afterReload = (): void => {
+    this.unsub?.();
+    this.unsub = undefined;
+    setTimeout(() => void this.load(), 4000);
+  };
 
   private async load(): Promise<void> {
     try {
@@ -1466,7 +1474,14 @@ export class IrrigationPlannerPanel extends LitElement {
               @ip-toast=${(e: CustomEvent<{ text: string; isError: boolean }>) =>
                 this.showToast(e.detail.text, e.detail.isError)}
             ></ip-schedule>`
-          : this.renderPlanPage()}
+          : this.page === "devices"
+            ? html`<ip-devices
+                .hass=${this._hass}
+                @ip-toast=${(e: CustomEvent<{ text: string; isError: boolean }>) =>
+                  this.showToast(e.detail.text, e.detail.isError)}
+                @ip-reloaded=${this.afterReload}
+              ></ip-devices>`
+            : this.renderPlanPage()}
       ${this.renderToast()}
     `;
   }
@@ -1879,6 +1894,9 @@ export class IrrigationPlannerPanel extends LitElement {
               <button class=${this.page === "schedule" ? "active" : ""} title="Zeitplan" @click=${() => (this.page = "schedule")}>
                 <ha-icon icon="mdi:calendar-clock"></ha-icon><span class="label">Zeitplan</span>
               </button>
+              <button class=${this.page === "devices" ? "active" : ""} title="Geräte" @click=${() => (this.page = "devices")}>
+                <ha-icon icon="mdi:valve"></ha-icon><span class="label">Geräte</span>
+              </button>
             </nav>`
           : nothing}
         ${s
@@ -1906,13 +1924,15 @@ export class IrrigationPlannerPanel extends LitElement {
         <div class="spacer"></div>
         ${this.plan
           ? html`
-              <button class="icon" title="Rückgängig (Strg+Z)" ?disabled=${!this.history.length} @click=${this.undo}>
-                <ha-icon icon="mdi:undo"></ha-icon>
-              </button>
-              <button class="text" ?disabled=${!this.dirty || this.saving} @click=${this.discard}>Verwerfen</button>
-              <button class="primary" ?disabled=${!this.dirty || this.saving} @click=${this.save}>
-                <ha-icon icon="mdi:content-save"></ha-icon>${this.saving ? "Speichert …" : "Speichern"}
-              </button>
+              ${this.page === "plan" || this.page === "overview" || this.dirty
+                ? html`<button class="icon" title="Rückgängig (Strg+Z)" ?disabled=${!this.history.length} @click=${this.undo}>
+                      <ha-icon icon="mdi:undo"></ha-icon>
+                    </button>
+                    <button class="text" ?disabled=${!this.dirty || this.saving} @click=${this.discard}>Verwerfen</button>
+                    <button class="primary" ?disabled=${!this.dirty || this.saving} @click=${this.save}>
+                      <ha-icon icon="mdi:content-save"></ha-icon>${this.saving ? "Speichert …" : "Speichern"}
+                    </button>`
+                : nothing}
               <div class="menu-wrap">
                 <button class="icon" title="Sichern und Wiederherstellen" @click=${() => (this.menuOpen = !this.menuOpen)}>
                   <ha-icon icon="mdi:dots-vertical"></ha-icon>

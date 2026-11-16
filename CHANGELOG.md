@@ -5,6 +5,20 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 
 ## [Unveröffentlicht]
 
+## [0.5.0] – 2026-11-16
+
+> **Noch nicht mit echter Hardware getestet.** Alles ist mit simulierten Ventilen und Sensoren erprobt. Vor dem ersten echten Einsatz ein Ventil einrichten und einen kurzen Testlauf machen.
+
+### Neu
+- Panel-Seite **„Geräte“**: alle Ventile und Sensoren in einer Tabelle (Gerät, Treiber, Sicherheitsstufe, Zonen, Wasserversorgung, gelernter Durchfluss, Zustand, Batterie). Neues Ventil: Gerät wählen (mit Suche), Treiber, Profil, Entitäten je Aufgabe und der Name in Zigbee2MQTT werden vorgeschlagen und mit dem aktuellen Wert angezeigt; Zonen und Wasserversorgung zuordnen, neue Zone oder Versorgung gleich mit anlegen. Ändern und Löschen in der Zeile.
+- Testlauf aus der Tabelle (10 bis 60 s, nur auf Knopfdruck, über die Warteschlange); das Ergebnis (schließt das Gerät selbst? Durchfluss) wird beim Ventil gespeichert.
+- Sensoren (Bodenfeuchte, Regenmenge) im Panel anlegen, ändern und entfernen.
+- WebSocket-Befehle `irrigation_planner/devices/get`, `suggest`, `save_valve`, `delete_valve`, `save_sensor`, `delete_sensor`, `test_valve` (alle nur Admin).
+
+### Geändert
+- Speichern, das ein Neuladen braucht (Geräte, neue Programme, Sicherung einspielen), lässt das Panel stehen; vorher sprang der Browser kurz zur Übersicht.
+- Rückgängig, Verwerfen und Speichern stehen in der Kopfzeile nur noch auf den Seiten Plan und Flächen (oder wenn etwas ungespeichert ist).
+
 ## [0.4.0] – 2026-11-16
 
 > **Noch nicht mit echter Hardware getestet.** Alles ist mit simulierten Ventilen und Sensoren erprobt. Vor dem ersten echten Einsatz ein Ventil einrichten und einen kurzen Testlauf machen.

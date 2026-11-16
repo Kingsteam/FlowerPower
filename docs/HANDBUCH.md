@@ -2,7 +2,7 @@
 
 # Bewässerungsplaner – Benutzerhandbuch
 
-> ⚠️ **Stand 0.4.0: noch nicht mit echter Hardware getestet.** Alle Funktionen sind mit simulierten Ventilen und Sensoren erprobt (automatische Tests und eine simulierte Test-Instanz). Mit echten Ventilen, z. B. SONOFF über Zigbee2MQTT, ist die Erweiterung noch nicht gelaufen. Richte am Anfang **nur ein Ventil** ein, mach einen kurzen Testlauf und bleib dabei, bis du siehst, dass das Ventil wirklich selbst schließt.
+> ⚠️ **Stand 0.5.0: noch nicht mit echter Hardware getestet.** Alle Funktionen sind mit simulierten Ventilen und Sensoren erprobt (automatische Tests und eine simulierte Test-Instanz). Mit echten Ventilen, z. B. SONOFF über Zigbee2MQTT, ist die Erweiterung noch nicht gelaufen. Richte am Anfang **nur ein Ventil** ein, mach einen kurzen Testlauf und bleib dabei, bis du siehst, dass das Ventil wirklich selbst schließt.
 
 Die Bilder stammen aus der simulierten Test-Instanz (Beispielgarten, kein echter Ort).
 
@@ -11,7 +11,7 @@ Die Bilder stammen aus der simulierten Test-Instanz (Beispielgarten, kein echter
 ## Inhalt
 
 1. [Installieren und einrichten](#1-installieren-und-einrichten)
-2. [Ventile hinzufügen](#2-ventile-hinzufügen)
+2. [Ventile und Sensoren hinzufügen](#2-ventile-und-sensoren-hinzufügen)
 3. [Zonen und Programme anlegen](#3-zonen-und-programme-anlegen)
 4. [Der Plan](#4-der-plan)
 5. [Wasser-Ansichten](#5-wasser-ansichten)
@@ -42,20 +42,38 @@ Danach gibt es in der Seitenleiste den Eintrag **Bewässerung** und in Home Assi
 
 ---
 
-## 2. Ventile hinzufügen
+## 2. Ventile und Sensoren hinzufügen
 
-**Einstellungen → Geräte & Dienste → Bewässerungsplaner → Konfigurieren → Ventile → Ventil hinzufügen.** Ein Assistent führt durch:
+Am einfachsten geht es im Panel: **Bewässerung → Geräte**. Dort stehen alle Ventile und Sensoren in einer Tabelle, mit Gerät, Treiber, Sicherheitsstufe, Zonen, Wasserversorgung, gelerntem Durchfluss und dem Zustand jetzt.
 
-1. **Gerät wählen.** Der Assistent erkennt Ventil, Durchfluss, Status und Batterie selbst und schlägt ein **Geräteprofil** vor. Für das **SONOFF SWV über Zigbee2MQTT** ist alles vorausgefüllt; prüfe nur den Gerätenamen (den „Friendly Name“ aus Zigbee2MQTT).
-2. **Treiber:**
-   - **Zigbee2MQTT:** schickt `{"state":"ON","on_time":<Sekunden>}`. Die Dauer geht also mit, und das Ventil schließt selbst.
-   - **Schalter** oder **Ventil** aus Home Assistant
-   - **Dienstaufruf** für alles andere (z. B. ESPHome), mit `{duration}` im Befehl
-3. **Testlauf** (10 bis 60 Sekunden, nur wenn du ihn startest): Das Ventil öffnet **wirklich**. Geprüft wird, ob es öffnet, wie viel fließt und ob es **von selbst schließt**.
-4. **Ergebnis, die Sicherheitsstufe:**
-   - 🟢 **Gerät schließt selbst:** Auch wenn Home Assistant oder das Funknetz ausfällt, geht das Ventil nach der Zeit zu.
-   - 🟡 **Nur Home Assistant überwacht die Zeit:** Das funktioniert, aber bei einem Ausfall kann das Ventil offen bleiben.
-5. **Zuordnen** zu Zone und Wasserversorgung.
+![Seite Geräte](bilder/21-geraete.png)
+
+**Neues Ventil:**
+
+1. **„Ventil hinzufügen“** und das **Gerät wählen** (Suchfeld für Name, Hersteller oder Raum). Angeboten werden alle Geräte mit einem Schalter oder Ventil. Geräte mit bekanntem Profil sind markiert.
+2. Der Bewässerungsplaner **füllt alles selbst aus**: Name, Treiber, Geräteprofil und die Entitäten je Aufgabe (Schalten, Durchfluss, Menge, Gerätestatus, Batterie), bei Zigbee2MQTT auch den Namen in Zigbee2MQTT. Rechts siehst du den Wert jetzt, so erkennst du gleich, ob die Zuordnung stimmt. Für das **SONOFF SWV über Zigbee2MQTT** ist alles vorausgefüllt.
+3. **Zuordnen:** Wasserversorgung (oder eine neue anlegen), vorhandene Zonen anklicken und auf Wunsch gleich eine **neue Zone** mit Gießdauer anlegen.
+4. **„Ventil anlegen“.** Der Bewässerungsplaner prüft alles und lädt neu (dauert ein paar Sekunden; während gegossen wird, geht das nicht).
+5. Danach wird der **Testlauf** angeboten (10 bis 60 Sekunden). Er startet **nur, wenn du auf „Jetzt testen“ drückst**: Das Ventil öffnet **wirklich**. Geprüft wird, ob es öffnet, wie viel fließt und ob es **von selbst schließt**. Das Ergebnis wird beim Ventil gespeichert.
+
+![Neues Ventil mit Vorschlag](bilder/22-ventil-neu.png)
+
+**Treiber:**
+
+- **Zigbee2MQTT:** schickt `{"state":"ON","on_time":<Sekunden>}`. Die Dauer geht also mit, und das Ventil schließt selbst.
+- **Schalter** oder **Ventil** aus Home Assistant
+- **Dienstaufruf** für alles andere (z. B. ESPHome), mit `{duration}` im Befehl
+
+**Sicherheitsstufe** (Spalte „Sicherheit“):
+
+- 🟢 **Gerät schließt selbst:** Auch wenn Home Assistant oder das Funknetz ausfällt, geht das Ventil nach der Zeit zu.
+- 🟡 **Nur Home Assistant überwacht die Zeit:** Das funktioniert, aber bei einem Ausfall kann das Ventil offen bleiben.
+
+**Ändern und Löschen:** In der Zeile auf **„Ändern“**. Beim Löschen eines Ventils bleiben seine Zonen erhalten (ohne Ventil). Wo das Ventil auf dem Plan liegt und wie die Leitung läuft, zeichnest du auf der Seite **Plan**.
+
+**Sensoren:** Unter der Ventil-Tabelle. **Bodenfeuchte** ersetzt für ihre Zonen die Schätzung (dazu die Messwerte bei „voll“ und „leer“ eintragen). Ein **Regensensor** (mm) ohne Zonen gilt für den ganzen Garten.
+
+Dasselbe geht weiterhin auch über **Einstellungen → Geräte & Dienste → Bewässerungsplaner → Konfigurieren** (Assistent Schritt für Schritt).
 
 > ⚠️ Für den Testlauf muss Wasser anliegen, und niemand soll im Sprühbereich stehen.
 
