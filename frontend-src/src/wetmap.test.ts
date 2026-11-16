@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Feature, PlanValve, PlanZone } from "./types";
-import { computeWetGrid, inTrunkShadow, mmPerRun, wetColor, zoneContains } from "./wetmap";
+import { computeWetGrid, inTrunkShadow, mmPerRun, wetColor, wetReason, zoneContains } from "./wetmap";
 
 function zone(extra: Partial<PlanZone>): PlanZone {
   return {
@@ -64,6 +64,14 @@ describe("Nässekarte", () => {
     expect(at(0.5, 1)).toBeCloseTo(25); // nur a: 100 L / 4 m²
     expect(at(1.5, 1)).toBeCloseTo(50); // a + b
     expect(grid.max).toBeCloseTo(50);
+  });
+
+  it("nennt den Grund, wenn ein Wert fehlt", () => {
+    const bed = zone({ polygon: [[0, 0], [5, 0], [5, 4], [0, 4]] });
+    expect(wetReason(bed, valves)).toBeNull();
+    expect(wetReason({ ...bed, valve_id: null }, valves)).toBe("kein Ventil");
+    expect(wetReason(bed, [{ ...valves[0], learned_flow_l_min: null }])).toBe("Durchfluss unbekannt");
+    expect(wetReason({ ...bed, duration_s: null }, valves)).toBe("keine Gießdauer");
   });
 
   it("Farbskala", () => {

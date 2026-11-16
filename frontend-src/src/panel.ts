@@ -10,6 +10,7 @@
 import { LitElement, html, nothing, svg, type PropertyValues, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import {
+  roundedPath,
   distanceToPolyline,
   hoseRadiusHandle,
   type Point,
@@ -32,13 +33,13 @@ import {
   tilesFor,
   zoomForScale,
 } from "./geometry";
-import { FEATURE_META, MAX_LABEL_LENGTH, SOIL_COLORS, family, featureName, newFeatureId } from "./features";
+import { FEATURE_META, MAX_LABEL_LENGTH, SOIL_COLORS, family, featureName, newFeatureId, plotArea } from "./features";
 import { type Place, SEARCH_ATTRIBUTION, searchAddress } from "./geocode";
 import "./operation";
 import "./schedule";
 import { styles } from "./styles";
 import { type MyPosition, fmtAccuracy, locateErrorText, locateUnavailable } from "./locate";
-import { WET_STOPS, computeWetGrid, drawnArea, gridImage, inPolygon, mmPerRun, runSeconds } from "./wetmap";
+import { WET_STOPS, computeWetGrid, drawnArea, gridImage, inPolygon, mmPerRun, runSeconds, wetReason } from "./wetmap";
 import type {
   Feature,
   Garden,
@@ -83,6 +84,7 @@ type Drag =
   | { type: "move-zone"; id: string; start: Point; orig: PlanZone }
   | { type: "center" | "radius" | "start" | "end" | "hose-radius"; id: string }
   | { type: "vertex"; id: string; index: number }
+  | { type: "route"; id: string; index: number }
   | { type: "marker"; kind: "valve" | "sensor"; id: string }
   | { type: "f-vertex"; id: string; index: number }
   | { type: "f-move"; id: string; start: Point; orig: Feature }
@@ -136,6 +138,8 @@ export class IrrigationPlannerPanel extends LitElement {
   @state() private locating = false;
   // Reichweite beim Zeichnen eines Schlauchs (Meter je Seite)
   @state() private hoseRadius = 0.5;
+  // Ventile, deren Durchfluss hier von Hand geändert wurde
+  private flowEdited = new Set<string>();
 
   private _hass?: Hass;
   private savedJson = "";
@@ -229,6 +233,7 @@ export class IrrigationPlannerPanel extends LitElement {
   /** Neuer Stand vom Server. Nach dem Speichern bleibt „Rückgängig“ möglich. */
   private setPlan(plan: PlanData, fit: boolean, keepHistory = false): void {
     this.plan = plan;
+    this.flowEdited.clear();
     this.savedJson = JSON.stringify(this.editable());
     this.dirty = false;
     if (!keepHistory) this.history = [];
@@ -288,13 +293,20 @@ export class IrrigationPlannerPanel extends LitElement {
           start_angle_deg: z.start_angle_deg,
           arc_deg: z.arc_deg,
           polygon: z.polygon,
+          valve_route: z.valve_route ?? [],
           valve_id: z.valve_id,
           plant_type: z.plant_type,
           kc: z.kc,
           soil_type: z.soil_type,
           root_depth_m: z.root_depth_m,
         })),
-        valves: plan.valves.map((v) => ({ id: v.id, position: v.position })),
+        // Durchfluss nur mitschicken, wenn er hier geändert wurde (sonst
+        // würde ein inzwischen neu gelernter Wert überschrieben).
+        valves: plan.valves.map((v) =>
+          this.flowEdited.has(v.id)
+            ? { id: v.id, position: v.position, learned_flow_l_min: v.learned_flow_l_min }
+            : { id: v.id, position: v.position },
+        ),
         sensors: plan.sensors.map((s) => ({ id: s.id, position: s.position })),
       });
       this.setPlan(result, false, true);
@@ -627,6 +639,39 @@ export class IrrigationPlannerPanel extends LitElement {
     this.cancelTool();
   }
 
+  private async toggleAutomatic(on: boolean): Promise<void> {
+    try {
+      await this._hass!.callWS({ type: `${DOMAIN}/settings/automatic`, on });
+      this.showToast(on ? "Automatik an: Programme starten nach Zeitplan" : "Automatik aus: keine Starts nach Zeitplan");
+    } catch (err) {
+      this.showToast(this.message(err), true);
+    }
+  }
+
+  /** Durchfluss des Ventils (gelernt oder von Hand), für Liter und Nässekarte. */
+  private renderValveFlow(zone: PlanZone) {
+    const valve = this.plan!.valves.find((v) => v.id === zone.valve_id);
+    if (!valve) return nothing;
+    return html`<label class="field">
+        <span>Durchfluss</span>
+        <input type="number" min="0.1" max="500" step="0.1" placeholder="unbekannt"
+          .value=${valve.learned_flow_l_min == null ? "" : String(valve.learned_flow_l_min)}
+          @change=${(e: Event) => {
+            const raw = (e.target as HTMLInputElement).value.trim();
+            const v = raw === "" ? null : parseFloat(raw.replace(",", "."));
+            if (v !== null && (!Number.isFinite(v) || v <= 0 || v > 500)) return;
+            this.remember();
+            valve.learned_flow_l_min = v;
+            this.flowEdited.add(valve.id);
+            this.changed();
+          }} />
+        <span class="unit">L/min</span>
+      </label>
+      <p class="hint small">${valve.learned_flow_l_min
+        ? `${valve.name}. Mit Durchflusssensor wird der Wert bei jedem Lauf nachgeführt.`
+        : `${valve.name}: noch unbekannt. Ohne Sensor hier eintragen (z. B. Eimer auslitern), sonst fehlen Liter und Nässekarte.`}</p>`;
+  }
+
   /**
    * Art der Zone ändern. Die Zeichnung passt meist nicht mehr: Beet und
    * Schlauch behalten ihre Punkte (wenn es genug sind), sonst wird neu gezeichnet.
@@ -828,6 +873,13 @@ export class IrrigationPlannerPanel extends LitElement {
         zone.arc_deg = arc;
         break;
       }
+      case "route": {
+        const route = zone.valve_route ?? [];
+        const q = this.snap(p, event, route[drag.index]);
+        route[drag.index] = [round(q[0]), round(q[1])];
+        zone.valve_route = route;
+        break;
+      }
       case "vertex": {
         const q = this.snap(p, event, zone.polygon[drag.index]);
         zone.polygon[drag.index] = [round(q[0]), round(q[1])];
@@ -976,6 +1028,7 @@ export class IrrigationPlannerPanel extends LitElement {
     for (const z of this.plan!.zones) {
       if (z.center) z.center = shift(z.center);
       z.polygon = z.polygon.map(shift);
+      z.valve_route = (z.valve_route ?? []).map(shift);
     }
     for (const m of [...this.plan!.valves, ...this.plan!.sensors]) {
       if (m.position) m.position = shift(m.position);
@@ -1502,9 +1555,10 @@ export class IrrigationPlannerPanel extends LitElement {
   }
 
   private renderWetLegend(): TemplateResult {
-    const missing = this.plan!.zones.filter(
-      (z) => z.enabled && drawnArea(z) !== null && mmPerRun(z, this.plan!.valves, this.status) === null,
-    );
+    const missing = this.plan!.zones
+      .filter((z) => z.enabled && drawnArea(z) !== null)
+      .map((z) => ({ z, why: wetReason(z, this.plan!.valves, this.status) }))
+      .filter((m): m is { z: PlanZone; why: string } => m.why !== null);
     const top = WET_STOPS[WET_STOPS.length - 1][0];
     // Stufen gleichmäßig verteilt, passend zu den Zahlen darunter.
     const gradient = WET_STOPS.map(([, [r, g, b]], i) => `rgb(${r},${g},${b}) ${(i / (WET_STOPS.length - 1)) * 100}%`).join(", ");
@@ -1513,7 +1567,14 @@ export class IrrigationPlannerPanel extends LitElement {
       <div class="bar" style="background: linear-gradient(to right, ${gradient})"></div>
       <div class="ticks">${WET_STOPS.map(([mm]) => html`<span>${mm}${mm === top ? "+" : ""}</span>`)}<em>mm</em></div>
       ${missing.length
-        ? html`<small>Ohne Wert (kein Ventil, Durchfluss oder Dauer): ${missing.map((z) => z.name).join(", ")}</small>`
+        ? html`<div class="wet-missing">
+            <small><span class="hatch"></span><strong>Ohne Wert (schraffiert):</strong>
+              ${missing.map((m) => `${m.z.name} (${m.why})`).join(", ")}</small>
+            ${missing.some((m) => m.why === "Durchfluss unbekannt")
+              ? html`<small>Den Durchfluss lernt die Integration bei einem Lauf von mindestens 1 Minute mit Durchflusssensor.
+                  Ohne Sensor: bei der Zone unter „Ventil“ den Durchfluss von Hand eintragen (z. B. Eimer auslitern).</small>`
+              : nothing}
+          </div>`
         : nothing}
       <small>Schätzung aus Dauer × gelerntem Durchfluss; Überlappungen zählen doppelt.</small>
     </div>`;
@@ -1537,6 +1598,7 @@ export class IrrigationPlannerPanel extends LitElement {
     const total = active.reduce((s, r) => s + (r.area ?? 0), 0);
     const liters = active.reduce((s, r) => s + (r.liters ?? 0), 0);
     const overlap = zones.reduce((s, z) => s + z.overlap_m2, 0) / 2;
+    const plot = plotArea(plan.garden.features);
     const byType = (["sprinkler", "drip", "hose"] as const).map((type) => {
       const list = active.filter((r) => r.z.type === type);
       return { type, count: list.length, area: list.reduce((s, r) => s + (r.area ?? 0), 0) };
@@ -1569,6 +1631,10 @@ export class IrrigationPlannerPanel extends LitElement {
         <section class="tiles">
           <div class="tile"><span>Bewässerte Fläche</span><strong>${fmtArea(total)}</strong>
             <small>${active.length} aktive Zonen</small></div>
+          ${plot
+            ? html`<div class="tile"><span>Grundstück</span><strong>${fmtArea(plot)}</strong>
+                <small>davon ${Math.round((total / plot) * 100)} % bewässert</small></div>`
+            : nothing}
           <div class="tile"><span>Gezeichnet</span><strong>${rows.filter((r) => r.drawn !== null).length} von ${zones.length}</strong>
             <small>Zonen im Plan</small></div>
           <div class="tile"><span>Wasser pro Durchgang</span><strong>${num(liters)} L</strong>
@@ -1670,9 +1736,14 @@ export class IrrigationPlannerPanel extends LitElement {
           ? html`<div class="chips">
               ${s.winter_mode
                 ? html`<span class="chip winter"><ha-icon icon="mdi:snowflake"></ha-icon>Winterpause</span>`
-                : html`<span class="chip ${s.automatic ? "on" : ""}"
+                : html`<button class="chip toggle ${s.automatic ? "on" : ""}" role="switch"
+                    aria-checked=${s.automatic ? "true" : "false"}
+                    title=${s.automatic
+                      ? "Programme starten nach Zeitplan. Klicken: Automatik aus (was läuft, läuft zu Ende)"
+                      : "Programme starten nicht von selbst. Klicken: Automatik ein"}
+                    @click=${() => this.toggleAutomatic(!s.automatic)}
                     ><ha-icon icon=${s.automatic ? "mdi:calendar-check" : "mdi:calendar-remove"}></ha-icon
-                    >${s.automatic ? "Automatik an" : "Automatik aus"}</span
+                    >${s.automatic ? "Automatik an" : "Automatik aus"}</button
                   >`}
               ${s.problems.length
                 ? html`<span class="chip alarm" title=${s.problems.join("\n")}
@@ -1858,6 +1929,12 @@ export class IrrigationPlannerPanel extends LitElement {
           }
         }}
       >
+        <defs>
+          <pattern id="wet-hatch" patternUnits="userSpaceOnUse" width=${8 * px} height=${8 * px} patternTransform="rotate(45)">
+            <rect width=${8 * px} height=${8 * px} fill="rgba(120,120,120,0.12)"></rect>
+            <line x1="0" y1="0" x2="0" y2=${8 * px} stroke="rgba(90,90,90,0.55)" stroke-width=${2 * px}></line>
+          </pattern>
+        </defs>
         <g transform=${transform}>
           ${this.renderBackground(px)}
           <g class="features">${this.renderFeatures(px)}</g>
@@ -1961,7 +2038,8 @@ export class IrrigationPlannerPanel extends LitElement {
     const color = this.zoneColor(index);
     const st = this.status?.zones[zone.id]?.state ?? "idle";
     const selected = this.selected?.kind === "zone" && this.selected.id === zone.id;
-    const cls = `zone ${st} ${selected ? "selected" : ""} ${zone.enabled ? "" : "disabled"}`;
+    const noWet = this.wetOn && zone.enabled ? wetReason(zone, this.plan!.valves, this.status) : null;
+    const cls = `zone ${st} ${selected ? "selected" : ""} ${zone.enabled ? "" : "disabled"} ${noWet ? "nowet" : ""}`;
     let shape;
     let label: Point | null = null;
     if (zone.type === "sprinkler" && zone.center && zone.radius_m) {
@@ -1989,7 +2067,9 @@ export class IrrigationPlannerPanel extends LitElement {
         ${label
           ? svg`<text x=${label[0]} y=${label[1]} font-size=${13 * px} stroke-width=${3 * px} class="label">
               <tspan x=${label[0]} dy="0">${zone.name}</tspan>
-              <tspan x=${label[0]} dy=${15 * px} class="sub">${fmtArea(area)}${STATE_LABEL[st] ? ` · ${STATE_LABEL[st]}` : ""}</tspan>
+              <tspan x=${label[0]} dy=${15 * px} class="sub">${noWet
+                ? `kein Wert: ${noWet}`
+                : `${fmtArea(area)}${STATE_LABEL[st] ? ` · ${STATE_LABEL[st]}` : ""}`}</tspan>
             </text>`
           : nothing}
       </g>`;
@@ -2009,7 +2089,7 @@ export class IrrigationPlannerPanel extends LitElement {
         <polyline points=${pts} fill="none" stroke="black" stroke-width=${2 * radius}
           stroke-linecap="round" stroke-linejoin="round"></polyline>
       </mask>
-      <polyline class="hose-band" points=${pts} stroke-width=${2 * radius}></polyline>
+      <polyline class="hose-band" points=${pts} stroke-width=${2 * radius} style="--band:${2 * radius}"></polyline>
       <polyline class="hose-reach" points=${pts} stroke-width=${2 * radius + 2 * border} mask="url(#${mask})"></polyline>
       <polyline class="hose-line" points=${pts}></polyline>
       ${points.map((p, i) => (i === 0 || i === points.length - 1 ? svg`<circle class="hose-end" cx=${p[0]} cy=${p[1]} r=${3.5 * px}></circle>` : nothing))}
@@ -2103,10 +2183,15 @@ export class IrrigationPlannerPanel extends LitElement {
             : nothing}`;
       }
       if (fam === "line") {
+        const plot = f.kind === "boundary" && f.points.length >= 3 ? centroid(f.points) : null;
         return svg`<g class=${cls} @pointerdown=${down}>
           <polyline class="hit" points=${f.points.map((p) => p.join(",")).join(" ")} stroke-width=${12 * px}></polyline>
           <polyline points=${f.points.map((p) => p.join(",")).join(" ")}></polyline>
-          <title>${featureName(f)}</title></g>`;
+          <title>${featureName(f)}${plot ? `: ${fmtArea(polygonArea(f.points))}` : ""}</title></g>
+          ${plot && sel
+            ? svg`<text class="feature-name plot" x=${plot[0]} y=${plot[1]} font-size=${13 * px} stroke-width=${3 * px}>
+                Grundstück ${fmtArea(polygonArea(f.points))}</text>`
+            : nothing}`;
       }
       const [x, y] = f.points[0];
       if (f.kind === "tree") {
@@ -2213,18 +2298,61 @@ export class IrrigationPlannerPanel extends LitElement {
   }
 
   /** Gestrichelte Linie von jeder Zone zu ihrem Ventil (wenn beide im Plan sind). */
+  /**
+   * Leitung vom Ventil zur Zone: durch die Zwischenpunkte, Ecken abgerundet.
+   * Ist die Zone ausgewählt, lassen sich Punkte einfügen (Ziehen an der
+   * Mitte eines Stücks), verschieben und löschen (Doppelklick).
+   */
   private renderValveLinks(px: number) {
     return this.plan!.zones.map((zone, index) => {
       const valve = this.plan!.valves.find((v) => v.id === zone.valve_id);
-      const from = this.zoneAnchor(zone);
-      if (!valve?.position || !from) return nothing;
-      const selected =
-        (this.selected?.kind === "zone" && this.selected.id === zone.id) ||
-        (this.selected?.kind === "valve" && this.selected.id === valve.id);
-      const [x2, y2] = valve.position;
-      return svg`<line class="valve-link ${selected ? "selected" : ""}" style="--zone:${this.zoneColor(index)}"
-        x1=${from[0]} y1=${from[1]} x2=${x2} y2=${y2} stroke-dasharray=${`${6 * px} ${4 * px}`}></line>`;
+      const to = this.zoneAnchor(zone);
+      if (!valve?.position || !to) return nothing;
+      const zoneSelected = this.selected?.kind === "zone" && this.selected.id === zone.id;
+      const selected = zoneSelected || (this.selected?.kind === "valve" && this.selected.id === valve.id);
+      const route = zone.valve_route ?? [];
+      const pts: Point[] = [valve.position, ...route, to];
+      const path = svg`<path class="valve-link ${selected ? "selected" : ""}" style="--zone:${this.zoneColor(index)}"
+        d=${roundedPath(pts, Math.max(0.4, 16 * px))} stroke-dasharray=${`${6 * px} ${4 * px}`}></path>`;
+      if (!zoneSelected || this.tool !== "select") return path;
+      const r = 6 * px;
+      return svg`${path}
+        ${pts.slice(0, -1).map((p, i) => {
+          const q = pts[i + 1];
+          const m: Point = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+          return svg`<circle class="handle mid link" cx=${m[0]} cy=${m[1]} r=${r * 0.7}
+            @pointerdown=${(e: PointerEvent) => this.insertRoutePoint(e, zone, i, m)}>
+            <title>Ziehen: Knick in der Leitung einfügen</title></circle>`;
+        })}
+        ${route.map(
+          (p, i) => svg`<circle class="handle link" cx=${p[0]} cy=${p[1]} r=${r}
+            @pointerdown=${(e: PointerEvent) => this.startDrag(e, { type: "route", id: zone.id, index: i })}
+            @dblclick=${(e: MouseEvent) => this.removeRoutePoint(e, zone, i)}
+            @contextmenu=${(e: MouseEvent) => this.removeRoutePoint(e, zone, i)}>
+            <title>Ziehen: verschieben · Doppelklick: löschen</title></circle>`,
+        )}`;
     });
+  }
+
+  private insertRoutePoint(event: PointerEvent, zone: PlanZone, index: number, at: Point): void {
+    if (this.tool !== "select") return;
+    event.stopPropagation();
+    this.remember();
+    const route = [...(zone.valve_route ?? [])];
+    route.splice(index, 0, [round(at[0]), round(at[1])]);
+    zone.valve_route = route;
+    this.changed();
+    const svgEl = this.renderRoot.querySelector("svg.plan") as SVGSVGElement;
+    svgEl.setPointerCapture(event.pointerId);
+    this.drag = { type: "route", id: zone.id, index };
+  }
+
+  private removeRoutePoint(event: MouseEvent, zone: PlanZone, index: number): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.remember();
+    zone.valve_route = (zone.valve_route ?? []).filter((_, i) => i !== index);
+    this.changed();
   }
 
   private renderSnapHint(px: number) {
@@ -2565,10 +2693,23 @@ export class IrrigationPlannerPanel extends LitElement {
             )}
           </select>
         </label>
+        ${this.renderValveFlow(zone)}
         ${this.renderPlantSoil(zone)}
         ${!this.plan!.valves.find((v) => v.id === zone.valve_id)?.position && zone.valve_id
           ? html`<p class="hint small">Setze das Ventil im Plan (unten „Platzieren“), dann siehst du die Verbindung.</p>`
-          : nothing}
+          : zone.valve_id
+            ? html`<p class="hint small">
+                Leitung zum Ventil: am kleinen Punkt in der Mitte der Linie ziehen, um einen Knick einzufügen
+                (Doppelklick auf einen Knick löscht ihn).
+                ${zone.valve_route?.length
+                  ? html`<button class="text" @click=${() => {
+                      this.remember();
+                      zone.valve_route = [];
+                      this.changed();
+                    }}><ha-icon icon="mdi:vector-line"></ha-icon>Leitung wieder gerade</button>`
+                  : nothing}
+              </p>`
+            : nothing}
         <dl>
           <dt>Fläche gezeichnet</dt>
           <dd>${drawn ? fmtArea(area) : "–"}</dd>
@@ -2758,7 +2899,9 @@ export class IrrigationPlannerPanel extends LitElement {
       fam === "area"
         ? fmtArea(polygonArea(f.points))
         : fam === "line"
-          ? fmtLength(pathLength(f.points))
+          ? f.kind === "boundary" && f.points.length >= 3
+            ? `${fmtArea(polygonArea(f.points))} · ${fmtLength(pathLength(f.points, true))} Umfang`
+            : fmtLength(pathLength(f.points))
           : f.kind === "tree"
             ? `Ø ${fmtLength(2 * (f.radius_m ?? 0))}`
             : "";

@@ -28,6 +28,7 @@ export interface PlanZone {
   start_angle_deg: number;
   arc_deg: number;
   polygon: Point[];
+  valve_route?: Point[];
   area_m2: number | null;
   drawn_area_m2: number | null;
   effective_area_m2: number | null;

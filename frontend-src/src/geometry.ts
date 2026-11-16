@@ -240,3 +240,28 @@ export function hoseRadiusHandle(points: Point[], radius: number): Point {
   // Quer zur Linie (nach links gedreht)
   return [(a[0] + b[0]) / 2 + ((b[1] - a[1]) / len) * radius, (a[1] + b[1]) / 2 - ((b[0] - a[0]) / len) * radius];
 }
+
+/**
+ * SVG-Pfad durch die Punkte, Ecken mit Radius `radius` abgerundet (wie ein
+ * verlegter Schlauch). Der Radius wird an kurzen Stücken kleiner.
+ */
+export function roundedPath(points: Point[], radius: number): string {
+  if (points.length < 2) return "";
+  const f = (n: number) => Math.round(n * 1000) / 1000;
+  let d = `M${f(points[0][0])} ${f(points[0][1])}`;
+  for (let i = 1; i < points.length - 1; i++) {
+    const [p, c, n] = [points[i - 1], points[i], points[i + 1]];
+    const l1 = distance(p, c);
+    const l2 = distance(c, n);
+    const r = Math.min(radius, l1 / 2, l2 / 2);
+    if (r <= 0) {
+      d += ` L${f(c[0])} ${f(c[1])}`;
+      continue;
+    }
+    const a: Point = [c[0] + ((p[0] - c[0]) / l1) * r, c[1] + ((p[1] - c[1]) / l1) * r];
+    const b: Point = [c[0] + ((n[0] - c[0]) / l2) * r, c[1] + ((n[1] - c[1]) / l2) * r];
+    d += ` L${f(a[0])} ${f(a[1])} Q${f(c[0])} ${f(c[1])} ${f(b[0])} ${f(b[1])}`;
+  }
+  const last = points[points.length - 1];
+  return `${d} L${f(last[0])} ${f(last[1])}`;
+}

@@ -1,6 +1,6 @@
 // Grundriss-Formen: Arten, Beschriftung, Symbole (wie model.py FEATURE_*).
 
-import type { Point } from "./geometry";
+import { type Point, polygonArea } from "./geometry";
 
 export type FeatureFamily = "area" | "line" | "point";
 
@@ -64,3 +64,14 @@ export const SOIL_COLORS: Record<string, string> = {
   clay_loam: "#8e6a4f",
   clay: "#6f5443",
 };
+
+/**
+ * Fläche innerhalb der Grundstücksgrenze (die Linie wird gedacht geschlossen).
+ * null, wenn es keine Grenze mit mindestens 3 Punkten gibt.
+ */
+export function plotArea(features: { kind: string; points: Point[] }[]): number | null {
+  const borders = features.filter((f) => f.kind === "boundary" && f.points.length >= 3);
+  if (!borders.length) return null;
+  return borders.reduce((sum, f) => sum + polygonArea(f.points), 0);
+}
+

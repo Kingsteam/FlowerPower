@@ -147,6 +147,7 @@ def zone_to_dict(zone: Zone) -> Data:
         "start_angle_deg": zone.start_angle_deg,
         "arc_deg": zone.arc_deg,
         "polygon": [_point_out(p) for p in zone.polygon],
+        "valve_route": [_point_out(p) for p in zone.valve_route],
         "plant_type": zone.plant_type,
         "kc": zone.kc,
         "soil_type": zone.soil_type,
@@ -175,6 +176,7 @@ def zone_from_dict(raw: Data) -> Zone:
         start_angle_deg=float(_opt(raw, "start_angle_deg", 0.0)),
         arc_deg=float(_opt(raw, "arc_deg", 360.0)),
         polygon=[_point_in(p) for p in _opt(raw, "polygon", [])],  # type: ignore[misc]
+        valve_route=[_point_in(p) for p in _opt(raw, "valve_route", [])],  # type: ignore[misc]
         plant_type=raw.get("plant_type"),
         kc=float(_opt(raw, "kc", 1.0)),
         soil_type=raw.get("soil_type"),

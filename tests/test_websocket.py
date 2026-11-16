@@ -121,6 +121,74 @@ async def test_change_zone_type_to_hose(
     assert mock_config_entry.runtime_data.store.model.zones[1].type.value == "drip"
 
 
+async def test_save_flow_by_hand(
+    hass: HomeAssistant,
+    setup: Any,
+    sim: SimValves,
+    hass_ws_client: Any,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Ohne Durchflusssensor lässt sich der Durchfluss von Hand eintragen."""
+    await setup(make_model(2))
+    client = await _ws(hass_ws_client, hass)
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/plan/save",
+            "valves": [
+                {"id": "v1", "position": None, "learned_flow_l_min": 8.5},
+                {"id": "v2", "position": None},
+            ],
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"], msg
+    valves = mock_config_entry.runtime_data.store.model.valves
+    assert [v.learned_flow_l_min for v in valves] == [8.5, None]
+
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/plan/save",
+            "valves": [{"id": "v1", "position": None, "learned_flow_l_min": 0}],
+        }
+    )
+    assert not (await client.receive_json())["success"]
+    assert valves[0].learned_flow_l_min == 8.5
+
+
+async def test_save_valve_route(
+    hass: HomeAssistant,
+    setup: Any,
+    sim: SimValves,
+    hass_ws_client: Any,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Die Leitung vom Ventil zur Zone hat Zwischenpunkte und bleibt gespeichert."""
+    await setup(make_model(2))
+    client = await _ws(hass_ws_client, hass)
+    route = [[1, 0], [1, 5]]
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/plan/save",
+            "zones": [{"id": "z1", "valve_route": route}],
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"], msg
+    assert msg["result"]["zones"][0]["valve_route"] == route
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    zone = mock_config_entry.runtime_data.store.model.zones[0]
+    assert zone.valve_route == [(1, 0), (1, 5)]
+
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/plan/save",
+            "zones": [{"id": "z1", "valve_route": [[0, 0]] * 51}],
+        }
+    )
+    assert not (await client.receive_json())["success"]
+
+
 async def test_assign_valve(
     hass: HomeAssistant,
     setup: Any,

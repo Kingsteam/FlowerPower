@@ -64,6 +64,7 @@ ZONE_GEOMETRY = vol.Schema(
         vol.Optional("start_angle_deg"): _number,
         vol.Optional("arc_deg"): _number,
         vol.Optional("polygon"): [POINT],
+        vol.Optional("valve_route"): [POINT],
         # Zuordnung zum Ventil (None = keins)
         vol.Optional("valve_id"): vol.Any(None, str),
         # Pflanzen und Boden (Prüfung der Werte in GardenModel.validate)
@@ -74,7 +75,20 @@ ZONE_GEOMETRY = vol.Schema(
     }
 )
 PLANT_KEYS = ("plant_type", "kc", "soil_type", "root_depth_m")
-POSITION = vol.Schema({vol.Required("id"): str, vol.Required("position"): OPT_POINT})
+POSITION = vol.Schema(
+    {
+        vol.Required("id"): str,
+        vol.Required("position"): OPT_POINT,
+    }
+)
+VALVE = POSITION.extend(
+    {
+        # Durchfluss von Hand (ohne Sensor); mit Sensor wird er weiter gelernt.
+        vol.Optional("learned_flow_l_min"): vol.Any(
+            None, vol.All(vol.Coerce(float), vol.Range(min=0.1, max=500))
+        ),
+    }
+)
 
 
 @callback
@@ -142,6 +156,7 @@ def plan_payload(hass: HomeAssistant, data: IrrigationPlannerData) -> dict[str, 
                 "start_angle_deg": z.start_angle_deg,
                 "arc_deg": z.arc_deg,
                 "polygon": [_point(p) for p in z.polygon],
+                "valve_route": [_point(p) for p in z.valve_route],
                 "area_m2": z.area_m2,
                 "drawn_area_m2": geometry_area(z),
                 "effective_area_m2": zone_area(z),
@@ -269,7 +284,7 @@ def _apply_garden(model: GardenModel, raw: dict[str, Any]) -> None:
         vol.Required("type"): f"{DOMAIN}/plan/save",
         vol.Optional("garden"): dict,
         vol.Optional("zones", default=[]): [ZONE_GEOMETRY],
-        vol.Optional("valves", default=[]): [POSITION],
+        vol.Optional("valves", default=[]): [VALVE],
         vol.Optional("sensors", default=[]): [POSITION],
     }
 )
@@ -301,6 +316,8 @@ async def ws_plan_save(
                     setattr(zone, key, raw[key])
             if "polygon" in raw:
                 zone.polygon = list(raw["polygon"])
+            if "valve_route" in raw:
+                zone.valve_route = list(raw["valve_route"])
             if "valve_id" in raw:
                 zone.valve_id = raw["valve_id"]
             for key in PLANT_KEYS:
@@ -316,6 +333,8 @@ async def ws_plan_save(
                 if item is None:
                     raise ValueError(f"{what} {raw['id']} gibt es nicht")
                 item.position = raw["position"]
+                if "learned_flow_l_min" in raw:
+                    item.learned_flow_l_min = raw["learned_flow_l_min"]
         model.validate()
     except (ValueError, TypeError, KeyError) as err:
         connection.send_error(msg["id"], "invalid", str(err))
@@ -327,11 +346,13 @@ async def ws_plan_save(
         zone.center, zone.radius_m = new.center, new.radius_m
         zone.start_angle_deg, zone.arc_deg = new.start_angle_deg, new.arc_deg
         zone.polygon = new.polygon
+        zone.valve_route = new.valve_route
         zone.valve_id = new.valve_id
         for key in PLANT_KEYS:
             setattr(zone, key, getattr(new, key))
     for valve in data.store.model.valves:
         valve.position = valves[valve.id].position
+        valve.learned_flow_l_min = valves[valve.id].learned_flow_l_min
         valve.zone_ids = list(valves[valve.id].zone_ids)
     for sensor in data.store.model.sensors:
         sensor.position = sensors[sensor.id].position

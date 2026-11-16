@@ -39,6 +39,7 @@ class EntityRef:
 # Sonnenereignisse für den Zeitplan (statt einer Uhrzeit).
 SUN_EVENTS: Final = ("sunrise", "sunset")
 MAX_SUN_OFFSET_MIN: Final = 360
+MAX_ROUTE_POINTS: Final = 50  # Zwischenpunkte der Leitung Ventil → Zone
 
 
 class BackgroundType(StrEnum):
@@ -158,6 +159,8 @@ class Zone:
     arc_deg: float = 360.0
     # Tropfbereich (Polygon)
     polygon: list[Point] = field(default_factory=list)
+    # Verlauf der Leitung vom Ventil zur Zone (Zwischenpunkte, nur Darstellung)
+    valve_route: list[Point] = field(default_factory=list)
     # Pflanzen und Boden
     plant_type: str | None = None
     kc: float = 1.0
@@ -357,6 +360,10 @@ class GardenModel:
                 raise ValueError(
                     f"Zone {zone.id}: Wurzeltiefe liegt zwischen 5 cm und 3 m"
                 )
+            if len(zone.valve_route) > MAX_ROUTE_POINTS:
+                raise ValueError(f"Zone {zone.id}: zu viele Punkte in der Leitung")
+            if any(not math.isfinite(c) for p in zone.valve_route for c in p):
+                raise ValueError(f"Zone {zone.id}: ungültiger Punkt in der Leitung")
             if zone.area_m2 is not None and zone.area_m2 <= 0:
                 raise ValueError(f"Zone {zone.id}: Fläche muss positiv sein")
             if zone.efficiency is not None and not 0 < zone.efficiency <= 1:

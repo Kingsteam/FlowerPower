@@ -154,6 +154,16 @@ export const styles = css`
   .chip ha-icon {
     --mdc-icon-size: 16px;
   }
+  button.chip.toggle {
+    color: inherit;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  button.chip.toggle:hover {
+    border-color: currentColor;
+  }
   .chip.alarm {
     background: var(--bad);
     color: #fff;
@@ -740,6 +750,31 @@ export const styles = css`
   svg.plan.wet .zone polyline.hose-band {
     stroke: none;
   }
+  svg.plan.wet .zone.nowet path,
+  svg.plan.wet .zone.nowet polygon {
+    fill: url(#wet-hatch);
+  }
+  svg.plan.wet .zone.nowet polyline.hose-band {
+    stroke: url(#wet-hatch);
+    stroke-width: calc(var(--band) * 1px);
+  }
+  svg.plan.wet .zone.nowet .label .sub {
+    fill: var(--bad);
+  }
+  .wet-missing {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .wet-missing .hatch {
+    display: inline-block;
+    width: 12px;
+    height: 10px;
+    margin-right: 6px;
+    vertical-align: -1px;
+    border: 1px solid var(--muted);
+    background: repeating-linear-gradient(45deg, rgba(90, 90, 90, 0.55) 0 2px, transparent 2px 6px);
+  }
   svg.plan.wet .zone polyline.hose-reach {
     opacity: 0.5;
   }
@@ -1126,6 +1161,7 @@ export const styles = css`
     overflow-x: auto;
   }
   .valve-link {
+    fill: none;
     stroke: var(--zone);
     stroke-width: 1.5;
     opacity: 0.55;

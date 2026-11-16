@@ -97,6 +97,15 @@ export function mmPerRun(zone: PlanZone, valves: PlanValve[], status?: Status): 
   return ((seconds / 60) * flow) / area;
 }
 
+/** Warum eine Zone in der Nässekarte keinen Wert hat (null = sie hat einen). */
+export function wetReason(zone: PlanZone, valves: PlanValve[], status?: Status): string | null {
+  if (!zone.valve_id) return "kein Ventil";
+  if (!valves.find((v) => v.id === zone.valve_id)?.learned_flow_l_min) return "Durchfluss unbekannt";
+  if (!(drawnArea(zone) ?? zone.area_m2)) return "keine Fläche";
+  if (!runSeconds(zone, status)) return "keine Gießdauer";
+  return null;
+}
+
 export function computeWetGrid(
   zones: PlanZone[],
   valves: PlanValve[],

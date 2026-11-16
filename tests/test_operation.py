@@ -6,6 +6,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -205,3 +206,33 @@ async def test_operation_page(
     assert [e["zone_id"] for e in msg["result"]["entries"]] == ["z1"]
     today = msg["result"]["entries"][0]["at"][:10]
     assert today
+
+
+async def test_toggle_automatic(
+    hass: HomeAssistant,
+    setup: Any,
+    sim: SimValves,
+    hass_ws_client: Any,
+    mock_config_entry: MockConfigEntry,
+    hass_read_only_access_token: str,
+) -> None:
+    await setup(_model())
+    settings = mock_config_entry.runtime_data.store.model.settings
+    client = await hass_ws_client(hass)
+    msg = await _call(client, type=f"{DOMAIN}/settings/automatic", on=False)
+    assert msg["success"], msg
+    assert settings.automatic is False
+    await hass.async_block_till_done()
+    registry = er.async_get(hass)
+    switch = registry.async_get_entity_id(
+        "switch", DOMAIN, f"{mock_config_entry.entry_id}_automatic"
+    )
+    assert switch is not None
+    assert hass.states.get(switch).state == "off"
+    msg = await _call(client, type=f"{DOMAIN}/settings/automatic", on=True)
+    assert settings.automatic is True
+
+    other = await hass_ws_client(hass, access_token=hass_read_only_access_token)
+    msg = await _call(other, type=f"{DOMAIN}/settings/automatic", on=False)
+    assert msg["error"]["code"] == "unauthorized"
+    assert settings.automatic is True

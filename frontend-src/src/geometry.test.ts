@@ -113,3 +113,24 @@ describe("Schlauch-Reichweite", () => {
     expect(h[1]).toBeCloseTo(5); // Mitte des längsten Stücks
   });
 });
+
+describe("Leitung mit runden Ecken", () => {
+  it("rundet Ecken ab und bleibt bei geraden Linien gerade", async () => {
+    const { roundedPath } = await import("./geometry");
+    expect(roundedPath([[0, 0], [10, 0]], 1)).toBe("M0 0 L10 0");
+    expect(roundedPath([[0, 0], [10, 0], [10, 10]], 1)).toBe("M0 0 L9 0 Q10 0 10 1 L10 10");
+    // kurzes Stück: Radius höchstens die halbe Länge
+    expect(roundedPath([[0, 0], [1, 0], [1, 10]], 2)).toBe("M0 0 L0.5 0 Q1 0 1 0.5 L1 10");
+  });
+});
+
+describe("Grundstück", () => {
+  it("rechnet die Fläche innerhalb der Grenze", async () => {
+    const { plotArea } = await import("./features");
+    expect(plotArea([])).toBeNull();
+    expect(plotArea([{ kind: "boundary", points: [[0, 0], [20, 0]] }])).toBeNull();
+    // offen gezeichnet, wird gedacht geschlossen: 20 × 30 m
+    expect(plotArea([{ kind: "boundary", points: [[0, 0], [20, 0], [20, 30], [0, 30]] }])).toBeCloseTo(600);
+    expect(plotArea([{ kind: "fence", points: [[0, 0], [20, 0], [20, 30]] }])).toBeNull();
+  });
+});

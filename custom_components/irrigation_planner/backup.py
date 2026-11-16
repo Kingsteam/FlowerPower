@@ -33,7 +33,15 @@ if TYPE_CHECKING:
 
 EXPORT_FORMAT: Final = "irrigation_planner"
 EXPORT_VERSION: Final = 1
-GEOMETRY_KEYS: Final = ("center", "radius_m", "start_angle_deg", "arc_deg", "polygon")
+GEOMETRY_KEYS: Final = (
+    "type",
+    "center",
+    "radius_m",
+    "start_angle_deg",
+    "arc_deg",
+    "polygon",
+    "valve_route",
+)
 
 
 def export_payload(model: GardenModel, version: str) -> dict[str, Any]:

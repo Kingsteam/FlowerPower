@@ -262,4 +262,33 @@ async def ws_queue_cancel(
     connection.send_result(msg["id"], {"cancelled": True})
 
 
-ALL_COMMANDS: Final = (ws_operation_subscribe, ws_history_get, ws_queue_cancel)
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/settings/automatic",
+        vol.Required("on"): bool,
+    }
+)
+@websocket_api.require_admin
+@callback
+def ws_set_automatic(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Automatik ein- oder ausschalten (wie der Schalter „Automatik“).
+
+    Aus: Programme starten nicht mehr nach Zeitplan; was läuft, läuft zu Ende.
+    """
+    data = _data(hass)
+    if data is None:
+        connection.send_error(msg["id"], "not_loaded", "Nicht eingerichtet")
+        return
+    data.store.model.settings.automatic = msg["on"]
+    data.async_model_changed()
+    connection.send_result(msg["id"], {"automatic": msg["on"]})
+
+
+ALL_COMMANDS: Final = (
+    ws_operation_subscribe,
+    ws_history_get,
+    ws_queue_cancel,
+    ws_set_automatic,
+)
