@@ -18,6 +18,7 @@ from typing import Any, Final
 
 from .const import DEFAULT_MAX_OPEN_VALVES
 from .drivers.base import Capability, SafetyLevel
+from .water_balance import PLANTS, SOILS
 
 type Point = tuple[float, float]
 """Punkt auf dem Gartenplan in Metern (x nach Osten, y nach Süden)."""
@@ -116,7 +117,7 @@ class Garden:
 
 
 # Arten von Grundriss-Formen und wie viele Punkte sie brauchen.
-FEATURE_AREAS: Final = ("building", "paving", "water", "area")
+FEATURE_AREAS: Final = ("building", "paving", "water", "area", "soil")
 FEATURE_LINES: Final = ("fence", "hedge", "boundary", "pipe")
 FEATURE_POINTS: Final = ("tree", "label", "tap")
 FEATURE_KINDS: Final = (*FEATURE_AREAS, *FEATURE_LINES, *FEATURE_POINTS)
@@ -139,6 +140,8 @@ class Feature:
     label: str | None = None
     # Nur Baum: Stammdurchmesser in Metern (wirft beim Sprinkler Wasserschatten).
     trunk_m: float | None = None
+    # Nur Bodenfläche: Bodenart (Schlüssel aus water_balance.SOILS).
+    soil_type: str | None = None
 
 
 @dataclass(slots=True, kw_only=True)
@@ -342,6 +345,18 @@ class GardenModel:
                 raise ValueError(
                     f"Zone {zone.id}: Ein Beet braucht mindestens 3 Punkte"
                 )
+            if zone.plant_type is not None and zone.plant_type not in PLANTS:
+                raise ValueError(f"Zone {zone.id}: unbekannte Pflanzenart")
+            if zone.soil_type is not None and zone.soil_type not in SOILS:
+                raise ValueError(f"Zone {zone.id}: unbekannte Bodenart")
+            if not 0.1 <= zone.kc <= 2:
+                raise ValueError(
+                    f"Zone {zone.id}: Pflanzenfaktor liegt zwischen 0,1 und 2"
+                )
+            if zone.root_depth_m is not None and not 0.05 <= zone.root_depth_m <= 3:
+                raise ValueError(
+                    f"Zone {zone.id}: Wurzeltiefe liegt zwischen 5 cm und 3 m"
+                )
             if zone.area_m2 is not None and zone.area_m2 <= 0:
                 raise ValueError(f"Zone {zone.id}: Fläche muss positiv sein")
             if zone.efficiency is not None and not 0 < zone.efficiency <= 1:
@@ -477,6 +492,8 @@ def _check_features(features: list[Feature]) -> None:
             0 < feature.trunk_m <= 2 * (feature.radius_m or 0)
         ):
             raise ValueError(f"{name}: Stamm muss dünner als die Krone sein")
+        if feature.kind == "soil" and feature.soil_type not in SOILS:
+            raise ValueError(f"{name}: Bodenart fehlt oder ist unbekannt")
         if feature.kind == "label" and not (feature.label or "").strip():
             raise ValueError(f"{name}: Beschriftung fehlt")
         if feature.label is not None and len(feature.label) > MAX_LABEL_LENGTH:

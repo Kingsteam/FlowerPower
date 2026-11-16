@@ -616,7 +616,17 @@
         "roses": "Roses",
         "shrubs": "Shrubs",
         "trees": "Trees",
-        "pots": "Pots"
+        "pots": "Pots",
+        "perennials": "Perennials",
+        "ground_cover": "Ground cover",
+        "hedge": "Hedge",
+        "fruit_trees": "Fruit trees",
+        "berries": "Berry bushes",
+        "strawberries": "Strawberries",
+        "tomatoes": "Tomatoes",
+        "herbs": "Mediterranean herbs",
+        "rock_garden": "Rock / dry garden",
+        "hydrangeas": "Hydrangeas"
       }
     },
     "soil_type": {

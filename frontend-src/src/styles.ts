@@ -872,6 +872,47 @@ export const styles = css`
   tr.off td {
     color: var(--muted);
   }
+  details.plant {
+    margin: 8px 0;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  details.plant summary {
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .levels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .levels button {
+    padding: 5px 10px;
+    font-size: 12.5px;
+    border: 1px solid var(--line);
+    color: var(--primary-text-color);
+  }
+  .levels button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--text-primary-color, #fff);
+  }
+  .soil-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .soil-row small {
+    margin-left: auto;
+  }
+  .swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+  }
   .valve-link {
     stroke: var(--zone);
     stroke-width: 1.5;

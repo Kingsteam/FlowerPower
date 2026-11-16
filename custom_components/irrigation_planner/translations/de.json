@@ -616,7 +616,17 @@
         "roses": "Rosen",
         "shrubs": "Sträucher",
         "trees": "Bäume",
-        "pots": "Töpfe"
+        "pots": "Töpfe",
+        "perennials": "Stauden",
+        "ground_cover": "Bodendecker",
+        "hedge": "Hecke",
+        "fruit_trees": "Obstbäume",
+        "berries": "Beerensträucher",
+        "strawberries": "Erdbeeren",
+        "tomatoes": "Tomaten",
+        "herbs": "Mediterrane Kräuter",
+        "rock_garden": "Steingarten / Trockenbeet",
+        "hydrangeas": "Hortensien"
       }
     },
     "soil_type": {

@@ -147,6 +147,12 @@ PLAN = {
 # Abgepauster Grundriss (nur Orientierung): Haus, Terrasse, Hecke, Baum, Hahn.
 GRUNDRISS = [
     {
+        "id": "boden_rasen",
+        "kind": "soil",
+        "points": [[-14, -4], [13, -4], [13, 9], [-14, 9]],
+        "soil_type": "sandy_loam",
+    },
+    {
         "id": "haus",
         "kind": "building",
         "points": [[-8, -19], [8, -19], [8, -11], [-8, -11]],

@@ -29,6 +29,7 @@ from homeassistant.core import HomeAssistant, callback
 import voluptuous as vol
 
 from .backup import ws_export, ws_import
+from .catalog import catalog
 from .const import DOMAIN, MAP_PROVIDER_CUSTOM, MAP_PROVIDERS
 from .drivers.ha import resolve_entity_id
 from .geocode import GeocodeError, async_search
@@ -61,8 +62,14 @@ ZONE_GEOMETRY = vol.Schema(
         vol.Optional("polygon"): [POINT],
         # Zuordnung zum Ventil (None = keins)
         vol.Optional("valve_id"): vol.Any(None, str),
+        # Pflanzen und Boden (Prüfung der Werte in GardenModel.validate)
+        vol.Optional("plant_type"): vol.Any(None, str),
+        vol.Optional("kc"): _number,
+        vol.Optional("soil_type"): vol.Any(None, str),
+        vol.Optional("root_depth_m"): vol.Any(None, _number),
     }
 )
+PLANT_KEYS = ("plant_type", "kc", "soil_type", "root_depth_m")
 POSITION = vol.Schema({vol.Required("id"): str, vol.Required("position"): OPT_POINT})
 
 
@@ -117,6 +124,7 @@ def plan_payload(hass: HomeAssistant, data: IrrigationPlannerData) -> dict[str, 
             "latitude": hass.config.latitude,
             "longitude": hass.config.longitude,
         },
+        "catalog": catalog(),
         "providers": {key: dict(provider) for key, provider in MAP_PROVIDERS.items()},
         "zones": [
             {
@@ -133,6 +141,9 @@ def plan_payload(hass: HomeAssistant, data: IrrigationPlannerData) -> dict[str, 
                 "effective_area_m2": zone_area(z),
                 "overlap_m2": overlap.get(z.id, 0.0),
                 "plant_type": z.plant_type,
+                "kc": z.kc,
+                "soil_type": z.soil_type,
+                "root_depth_m": z.root_depth_m,
                 "valve_id": z.valve_id,
                 "duration_mode": z.duration_mode.value,
                 "duration_s": z.duration_s,
@@ -284,6 +295,9 @@ async def ws_plan_save(
                 zone.polygon = list(raw["polygon"])
             if "valve_id" in raw:
                 zone.valve_id = raw["valve_id"]
+            for key in PLANT_KEYS:
+                if key in raw:
+                    setattr(zone, key, raw[key])
         _sync_valve_zones(model)
         for items, raws, what in (
             (valves, msg["valves"], "Ventil"),
@@ -305,6 +319,8 @@ async def ws_plan_save(
         zone.start_angle_deg, zone.arc_deg = new.start_angle_deg, new.arc_deg
         zone.polygon = new.polygon
         zone.valve_id = new.valve_id
+        for key in PLANT_KEYS:
+            setattr(zone, key, getattr(new, key))
     for valve in data.store.model.valves:
         valve.position = valves[valve.id].position
         valve.zone_ids = list(valves[valve.id].zone_ids)

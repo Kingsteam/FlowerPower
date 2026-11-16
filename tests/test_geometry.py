@@ -291,3 +291,22 @@ def test_tree_trunk() -> None:
     assert garden_from_dict(garden_to_dict(garden)).features[0].trunk_m == 0.6
     with pytest.raises(ValueError, match="Stamm"):
         GardenModel(garden=_features({**tree, "trunk_m": 5})).validate()
+
+
+def test_soil_area() -> None:
+    soil = {"id": "s", "kind": "soil", "points": [[0, 0], [5, 0], [5, 5]]}
+    with pytest.raises(ValueError, match="Bodenart"):
+        GardenModel(garden=_features(soil)).validate()
+    garden = _features({**soil, "soil_type": "clay"})
+    GardenModel(garden=garden).validate()
+    assert garden_from_dict(garden_to_dict(garden)).features[0].soil_type == "clay"
+
+
+def test_need_levels() -> None:
+    from custom_components.irrigation_planner.catalog import catalog, need_level
+    from custom_components.irrigation_planner.water_balance import PLANTS
+
+    assert need_level(0.35) == "very_low"
+    assert need_level(0.8) == "medium"
+    assert need_level(1.15) == "very_high"
+    assert set(catalog()["plants"]) == set(PLANTS)

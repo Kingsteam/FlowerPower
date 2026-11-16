@@ -34,6 +34,16 @@ PLANTS: Final[dict[str, tuple[float, float]]] = {
     "shrubs": (0.6, 0.5),
     "trees": (0.7, 0.8),
     "pots": (1.1, 0.2),
+    "perennials": (0.8, 0.4),
+    "ground_cover": (0.7, 0.2),
+    "hedge": (0.7, 0.6),
+    "fruit_trees": (0.85, 1.0),
+    "berries": (0.85, 0.5),
+    "strawberries": (0.85, 0.25),
+    "tomatoes": (1.1, 0.5),
+    "herbs": (0.5, 0.3),
+    "rock_garden": (0.35, 0.2),
+    "hydrangeas": (1.1, 0.4),
 }
 
 # Böden: nutzbare Feldkapazität in mm Wasser je m Wurzeltiefe

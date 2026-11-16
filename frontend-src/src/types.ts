@@ -33,6 +33,9 @@ export interface PlanZone {
   effective_area_m2: number | null;
   overlap_m2: number;
   plant_type: string | null;
+  kc: number;
+  soil_type: string | null;
+  root_depth_m: number | null;
   valve_id: string | null;
   duration_mode: string;
   duration_s: number | null;
@@ -66,7 +69,14 @@ export interface Provider {
   max_zoom: number;
 }
 
+export interface Catalog {
+  plants: Record<string, { name: string; kc: number; root_depth_m: number; need: string }>;
+  soils: Record<string, { name: string; awc_mm_per_m: number }>;
+  needs: { key: string; name: string; kc: number }[];
+}
+
 export interface PlanData {
+  catalog: Catalog;
   garden: Garden;
   home: { latitude: number; longitude: number };
   providers: Record<string, Provider>;

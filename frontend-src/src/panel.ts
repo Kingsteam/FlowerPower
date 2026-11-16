@@ -30,10 +30,10 @@ import {
   tilesFor,
   zoomForScale,
 } from "./geometry";
-import { FEATURE_META, MAX_LABEL_LENGTH, family, featureName, newFeatureId } from "./features";
+import { FEATURE_META, MAX_LABEL_LENGTH, SOIL_COLORS, family, featureName, newFeatureId } from "./features";
 import { type Place, SEARCH_ATTRIBUTION, searchAddress } from "./geocode";
 import { styles } from "./styles";
-import { WET_STOPS, computeWetGrid, drawnArea, gridImage, mmPerRun, runSeconds, wetColor } from "./wetmap";
+import { WET_STOPS, computeWetGrid, drawnArea, gridImage, inPolygon, mmPerRun, runSeconds } from "./wetmap";
 import type {
   Feature,
   Garden,
@@ -140,6 +140,7 @@ export class IrrigationPlannerPanel extends LitElement {
   // Seite: Plan oder Übersicht; Nässekarte über dem Plan
   @state() private page: "plan" | "overview" = "plan";
   @state() private wetOn = false;
+  @state() private soilOn = false;
   private wetCache: { key: string; url: string; grid: ReturnType<typeof computeWetGrid> } | null = null;
   // Sichern und Wiederherstellen
   @state() private menuOpen = false;
@@ -278,6 +279,10 @@ export class IrrigationPlannerPanel extends LitElement {
           arc_deg: z.arc_deg,
           polygon: z.polygon,
           valve_id: z.valve_id,
+          plant_type: z.plant_type,
+          kc: z.kc,
+          soil_type: z.soil_type,
+          root_depth_m: z.root_depth_m,
         })),
         valves: plan.valves.map((v) => ({ id: v.id, position: v.position })),
         sensors: plan.sensors.map((s) => ({ id: s.id, position: s.position })),
@@ -525,7 +530,11 @@ export class IrrigationPlannerPanel extends LitElement {
       this.showToast(`${FEATURE_META[kind].label}: mindestens ${need} Punkte`, true);
       return;
     }
-    this.addFeature({ kind, points: this.draft.map((p) => [round(p[0]), round(p[1])]) });
+    this.addFeature({
+      kind,
+      points: this.draft.map((p) => [round(p[0]), round(p[1])]),
+      soil_type: kind === "soil" ? "loam" : null,
+    });
     this.cancelTool();
   }
 
@@ -1249,6 +1258,103 @@ export class IrrigationPlannerPanel extends LitElement {
     });
   }
 
+  private soilName(key: string | null | undefined): string {
+    return (key && this.plan!.catalog.soils[key]?.name) || "unbekannt";
+  }
+
+  /** Bodenart einer Fläche im Grundriss, in der die Zone liegt. */
+  private soilFromPlan(zone: PlanZone): string | null {
+    const anchor = this.zoneAnchor(zone);
+    if (!anchor) return null;
+    const area = this.features.find((f) => f.kind === "soil" && f.points.length >= 3 && inPolygon(anchor, f.points));
+    return area?.soil_type ?? null;
+  }
+
+  private renderSoilLegend(): TemplateResult {
+    const used = new Set([
+      ...this.plan!.zones.map((z) => z.soil_type ?? "loam"),
+      ...this.features.filter((f) => f.kind === "soil").map((f) => f.soil_type ?? "loam"),
+    ]);
+    return html`<div class="wet-legend">
+      <strong>Bodenart</strong>
+      ${Object.entries(this.plan!.catalog.soils)
+        .filter(([k]) => used.has(k))
+        .map(
+          ([k, s]) => html`<div class="soil-row"><span class="swatch" style="background:${SOIL_COLORS[k]}"></span>${s.name}
+            <small>${s.awc_mm_per_m} mm/m</small></div>`,
+        )}
+      <small>Zahl: Wasser, das der Boden je Meter Tiefe speichern kann. Sandiger Boden braucht öfter, aber weniger Wasser.</small>
+    </div>`;
+  }
+
+  /** Pflanzen, Wasserbedarf und Boden einer Zone. */
+  private renderPlantSoil(zone: PlanZone): TemplateResult {
+    const cat = this.plan!.catalog;
+    const plant = zone.plant_type ? cat.plants[zone.plant_type] : undefined;
+    const levelOf = (kc: number) => cat.needs.find((n) => kc <= levelLimit(n.key)) ?? cat.needs[cat.needs.length - 1];
+    const level = levelOf(zone.kc);
+    const fromPlan = this.soilFromPlan(zone);
+    const set = (fn: () => void) => {
+      this.remember();
+      fn();
+      this.changed();
+    };
+    return html`
+      <details class="plant" open>
+        <summary>Pflanzen und Boden</summary>
+        <label class="field wide">
+          <span>Was wächst hier?</span>
+          <select @change=${(e: Event) => {
+            const key = (e.target as HTMLSelectElement).value;
+            set(() => {
+              zone.plant_type = key || null;
+              if (key) zone.kc = cat.plants[key].kc;
+              zone.root_depth_m = null; // Wurzeltiefe der Pflanzenart
+            });
+          }}>
+            <option value="" ?selected=${!zone.plant_type}>(keine Angabe)</option>
+            ${Object.entries(cat.plants)
+              .sort((a, b) => a[1].name.localeCompare(b[1].name, "de"))
+              .map(([k, p]) => html`<option value=${k} ?selected=${k === zone.plant_type}>${p.name}</option>`)}
+          </select>
+        </label>
+        <div class="field wide">
+          <span>Wasserbedarf</span>
+          <div class="levels" role="radiogroup">
+            ${cat.needs.map(
+              (n) => html`<button role="radio" aria-checked=${n.key === level.key ? "true" : "false"}
+                class=${n.key === level.key ? "active" : ""} title=${`Pflanzenfaktor ${n.kc}`}
+                @click=${() => set(() => (zone.kc = n.kc))}>${n.name}</button>`,
+            )}
+          </div>
+          <small class="hint">
+            Pflanzenfaktor ${zone.kc.toLocaleString("de-DE")}${plant && plant.kc !== zone.kc
+              ? html` (für ${plant.name} üblich: ${plant.kc.toLocaleString("de-DE")})`
+              : nothing}
+          </small>
+        </div>
+        <label class="field wide">
+          <span>Boden</span>
+          <select @change=${(e: Event) => {
+            const key = (e.target as HTMLSelectElement).value;
+            set(() => (zone.soil_type = key || null));
+          }}>
+            <option value="" ?selected=${!zone.soil_type}>unbekannt (gilt als Lehm)</option>
+            ${Object.entries(cat.soils).map(
+              ([k, s]) => html`<option value=${k} ?selected=${k === zone.soil_type}>${s.name}</option>`,
+            )}
+          </select>
+        </label>
+        ${fromPlan && fromPlan !== zone.soil_type
+          ? html`<button class="text small" @click=${() => set(() => (zone.soil_type = fromPlan))}>
+              <ha-icon icon="mdi:layers-triple-outline"></ha-icon>Boden aus dem Plan übernehmen: ${this.soilName(fromPlan)}
+            </button>`
+          : nothing}
+        <p class="hint small">Gilt für die berechnete Gießdauer. Mehr Einstellungen (Wurzeltiefe, Effizienz) unter Einstellungen → Integration → Konfigurieren.</p>
+      </details>
+    `;
+  }
+
   private renderWetLegend(): TemplateResult {
     const missing = this.plan!.zones.filter(
       (z) => z.enabled && drawnArea(z) !== null && mmPerRun(z, this.plan!.valves, this.status) === null,
@@ -1720,8 +1826,9 @@ export class IrrigationPlannerPanel extends LitElement {
     }
     if (!shape) return nothing;
     const area = liveArea(zone);
+    const soilColor = this.soilOn ? SOIL_COLORS[zone.soil_type ?? "loam"] : "";
     return svg`
-      <g class=${cls} style="--zone:${color}"
+      <g class=${cls} style="--zone:${soilColor || color}"
         @pointerdown=${(e: PointerEvent) => {
           if (this.tool !== "select") return;
           this.selected = { kind: "zone", id: zone.id };
@@ -1803,8 +1910,10 @@ export class IrrigationPlannerPanel extends LitElement {
       const cls = `feature ${f.kind} ${sel ? "selected" : ""}`;
       if (fam === "area") {
         const c = centroid(f.points);
+        const soil = f.kind === "soil" ? SOIL_COLORS[f.soil_type ?? ""] ?? "#a9825a" : "";
         return svg`<polygon class=${cls} points=${f.points.map((p) => p.join(",")).join(" ")}
-          @pointerdown=${down}><title>${featureName(f)}</title></polygon>
+          style=${soil ? `fill:${soil}44;stroke:${soil}` : ""}
+          @pointerdown=${down}><title>${featureName(f)}${f.kind === "soil" ? `: ${this.soilName(f.soil_type)}` : ""}</title></polygon>
           ${f.label
             ? svg`<text class="feature-name" x=${c[0]} y=${c[1]} dy=${4 * px} font-size=${12 * px}
                 stroke-width=${3 * px}>${f.label}</text>`
@@ -2015,6 +2124,10 @@ export class IrrigationPlannerPanel extends LitElement {
           @click=${() => (this.wetOn = !this.wetOn)}>
           <ha-icon icon="mdi:water-percent"></ha-icon>
         </button>
+        <button class="icon ${this.soilOn ? "on" : ""}" title="Bodenansicht: Zonen nach Bodenart"
+          @click=${() => (this.soilOn = !this.soilOn)}>
+          <ha-icon icon="mdi:layers-triple-outline"></ha-icon>
+        </button>
         <button class="icon ${this.tool === "measure" ? "on" : ""}" title="Abstand messen"
           @click=${() => (this.tool === "measure" ? this.cancelTool() : this.startTool("measure"))}>
           <ha-icon icon="mdi:tape-measure"></ha-icon>
@@ -2039,6 +2152,7 @@ export class IrrigationPlannerPanel extends LitElement {
       </div>
       <div class="scalebar"><div style="width:${bar.px}px"></div><span>${bar.label}</span></div>
       ${this.wetOn ? this.renderWetLegend() : nothing}
+      ${this.soilOn && !this.wetOn ? this.renderSoilLegend() : nothing}
       ${g.background === "map"
         ? html`<div class="attribution">${provider?.attribution ?? "Eigener Kartendienst"}</div>`
         : nothing}
@@ -2229,6 +2343,7 @@ export class IrrigationPlannerPanel extends LitElement {
             )}
           </select>
         </label>
+        ${this.renderPlantSoil(zone)}
         ${!this.plan!.valves.find((v) => v.id === zone.valve_id)?.position && zone.valve_id
           ? html`<p class="hint small">Setze das Ventil im Plan (unten „Platzieren“), dann siehst du die Verbindung.</p>`
           : nothing}
@@ -2394,7 +2509,7 @@ export class IrrigationPlannerPanel extends LitElement {
       </p>
       ${this.renderOpacity()}
       <h3>Flächen</h3>
-      <div class="palette">${["building", "paving", "water", "area"].map(tool)}</div>
+      <div class="palette">${["building", "paving", "water", "area", "soil"].map(tool)}</div>
       <h3>Linien</h3>
       <div class="palette">${["fence", "hedge", "boundary", "pipe"].map(tool)}</div>
       <h3>Punkte</h3>
@@ -2441,6 +2556,7 @@ export class IrrigationPlannerPanel extends LitElement {
                       @change=${(e: Event) => {
                         this.remember();
                         f.kind = (e.target as HTMLSelectElement).value;
+                        if (f.kind === "soil" && !f.soil_type) f.soil_type = "loam";
                         this.changed();
                       }}
                     >
@@ -2464,6 +2580,23 @@ export class IrrigationPlannerPanel extends LitElement {
                   }}
                 />
               </label>
+              ${f.kind === "soil"
+                ? html`<label class="field wide">
+                    <span>Bodenart</span>
+                    <select
+                      @change=${(e: Event) => {
+                        this.remember();
+                        f.soil_type = (e.target as HTMLSelectElement).value;
+                        this.changed();
+                      }}
+                    >
+                      ${Object.entries(this.plan!.catalog.soils).map(
+                        ([k, s]) => html`<option value=${k} ?selected=${k === f.soil_type}>${s.name}</option>`,
+                      )}
+                    </select>
+                  </label>
+                  <p class="hint small">Zonen in dieser Fläche können den Boden mit einem Klick übernehmen.</p>`
+                : nothing}
               ${f.kind === "tree"
                 ? html`<label class="field wide">
                     <span>Kronendurchmesser</span>
@@ -2671,4 +2804,9 @@ declare global {
   interface HTMLElementTagNameMap {
     "irrigation-planner-panel": IrrigationPlannerPanel;
   }
+}
+
+/** Obergrenze des Pflanzenfaktors je Bedarfsstufe (wie catalog.NEED_LEVELS). */
+function levelLimit(key: string): number {
+  return { very_low: 0.45, low: 0.7, medium: 0.95, high: 1.08 }[key] ?? 9;
 }

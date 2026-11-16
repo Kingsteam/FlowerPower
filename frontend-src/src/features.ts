@@ -15,6 +15,7 @@ export const FEATURE_META: Record<string, FeatureMeta> = {
   paving: { label: "Terrasse / Weg", icon: "mdi:texture-box", family: "area" },
   water: { label: "Teich / Pool", icon: "mdi:waves", family: "area" },
   area: { label: "Sonstige Fläche", icon: "mdi:vector-square", family: "area" },
+  soil: { label: "Bodenfläche", icon: "mdi:layers-triple-outline", family: "area" },
   fence: { label: "Zaun", icon: "mdi:fence", family: "line" },
   hedge: { label: "Hecke", icon: "mdi:leaf", family: "line" },
   boundary: { label: "Grundstücksgrenze", icon: "mdi:vector-polyline", family: "line" },
@@ -33,6 +34,7 @@ export interface Feature {
   radius_m: number | null;
   label: string | null;
   trunk_m?: number | null;
+  soil_type?: string | null;
 }
 
 export function family(kind: string): FeatureFamily {
@@ -51,3 +53,14 @@ export function newFeatureId(existing: Feature[]): string {
   while (used.has(`f${n}`)) n++;
   return `f${n}`;
 }
+
+// Farben der Bodenarten (von hell = sandig bis dunkel = tonig).
+export const SOIL_COLORS: Record<string, string> = {
+  sand: "#e9d8a6",
+  loamy_sand: "#dcc28c",
+  sandy_loam: "#c9a46c",
+  loam: "#a9825a",
+  silt_loam: "#c4a27a",
+  clay_loam: "#8e6a4f",
+  clay: "#6f5443",
+};

@@ -293,3 +293,56 @@ async def test_status_contains_sensor_values(
     event = (await client.receive_json())["event"]
     assert event["sensors"]["s1"]["value"] == 31.5
     assert event["sensors"]["s1"]["unit"] == "%"
+
+
+async def test_plants_and_soil(
+    hass: HomeAssistant,
+    setup: Any,
+    sim: SimValves,
+    hass_ws_client: Any,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    await setup(make_model(1))
+    client = await _ws(hass_ws_client, hass)
+    await client.send_json_auto_id({"type": f"{DOMAIN}/plan/get"})
+    catalog = (await client.receive_json())["result"]["catalog"]
+    assert catalog["plants"]["lawn"]["name"] == "Rasen"
+    assert catalog["plants"]["herbs"]["need"] == "low"
+    assert catalog["soils"]["loam"]["awc_mm_per_m"] == 160.0
+
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/plan/save",
+            "zones": [
+                {
+                    "id": "z1",
+                    "plant_type": "tomatoes",
+                    "kc": 1.1,
+                    "soil_type": "sandy_loam",
+                    "root_depth_m": 0.5,
+                }
+            ],
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"], msg
+    zone = mock_config_entry.runtime_data.store.model.zones[0]
+    assert (zone.plant_type, zone.kc, zone.soil_type, zone.root_depth_m) == (
+        "tomatoes",
+        1.1,
+        "sandy_loam",
+        0.5,
+    )
+
+    for bad, message in (
+        ({"plant_type": "kaktus"}, "Pflanzenart"),
+        ({"soil_type": "beton"}, "Bodenart"),
+        ({"kc": 5}, "Pflanzenfaktor"),
+    ):
+        await client.send_json_auto_id(
+            {"type": f"{DOMAIN}/plan/save", "zones": [{"id": "z1", **bad}]}
+        )
+        msg = await client.receive_json()
+        assert not msg["success"]
+        assert message in msg["error"]["message"]
+    assert zone.plant_type == "tomatoes"

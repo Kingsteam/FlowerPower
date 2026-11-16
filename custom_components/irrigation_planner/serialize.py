@@ -94,6 +94,7 @@ def garden_to_dict(garden: Garden) -> Data:
                 "radius_m": f.radius_m,
                 "label": f.label,
                 "trunk_m": f.trunk_m,
+                "soil_type": f.soil_type,
             }
             for f in garden.features
         ],
@@ -125,6 +126,7 @@ def garden_from_dict(raw: Data) -> Garden:
                 radius_m=None if f.get("radius_m") is None else float(f["radius_m"]),
                 label=f.get("label"),
                 trunk_m=None if f.get("trunk_m") is None else float(f["trunk_m"]),
+                soil_type=f.get("soil_type"),
             )
             for f in _opt(raw, "features", [])
         ],

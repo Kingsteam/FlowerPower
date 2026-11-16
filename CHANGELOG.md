@@ -25,6 +25,8 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 - Seite „Übersicht“: bewässerte Fläche gesamt und je Art, Wasser pro Durchgang, Überschneidungen, Tabellen je Zone (Fläche, Dauer, Liter, mm, Bedarf) und je Ventil (Durchfluss, Regenrate), offene Punkte.
 - Nässekarte (Tropfen-Knopf auf der Karte): wie viel Wasser pro Durchgang wo ankommt, Überlappungen doppelt, Wasserschatten hinter dicken Baumstämmen; Sensorwerte (Bodenfeuchte farbig) im Plan.
 - Bäume im Grundriss mit Stammdurchmesser.
+- Pflanzen und Boden im Plan-Editor: je Zone „Was wächst hier?“, Wasserbedarf in fünf Stufen (sehr wenig bis sehr viel), Bodenart; Pflanzenkatalog um Stauden, Bodendecker, Hecke, Obstbäume, Beeren, Erdbeeren, Tomaten, Kräuter, Steingarten und Hortensien erweitert.
+- Bodenflächen im Grundriss (mit Bodenart); Zonen übernehmen den Boden mit einem Klick; Bodenansicht färbt Zonen nach Bodenart.
 - Testinstanz auf dem eigenen Mac mit einer Zeile im Terminal (`devtools/testinstanz/mac-start.sh`).
 
 ### Behoben
