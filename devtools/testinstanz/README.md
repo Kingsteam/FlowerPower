@@ -2,7 +2,17 @@
 
 Eine eigene, **komplett simulierte** Home-Assistant-Instanz zum Ausprobieren des Bewässerungsplaners. Sie ist absichtlich **keine Kopie** der echten Installation: keine Zugangsdaten, keine echten Geräte, keine Cloud. Nichts darin kann ein echtes Ventil öffnen.
 
-## Starten
+## Auf dem eigenen Mac (ohne Vorkenntnisse)
+
+Terminal öffnen und diese eine Zeile einfügen:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Kingsteam/FlowerPower/main/devtools/testinstanz/mac-start.sh | bash
+```
+
+Das Skript legt alles im Ordner `~/FlowerPower-Test` ab, installiert bei Bedarf `uv` (lädt Python 3.14), holt den aktuellen Stand von GitHub, installiert Home Assistant und öffnet danach den Browser. Benutzer und Passwort stehen am Ende im Terminal. Der erste Durchlauf dauert 5–10 Minuten, spätere nur noch kurz. Beenden mit Ctrl+C; zum Entfernen den Ordner `~/FlowerPower-Test` löschen.
+
+## Starten (Entwicklung)
 
 ```bash
 source ../venv/bin/activate          # venv aus CLAUDE.md
