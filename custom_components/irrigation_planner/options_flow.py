@@ -54,6 +54,8 @@ from .discovery import Suggestion, suggest
 from .drivers.base import Capability, SafetyLevel
 from .drivers.registry import DRIVERS, create_driver
 from .model import (
+    MAX_SUN_OFFSET_MIN,
+    SUN_EVENTS,
     DurationMode,
     EntityRef,
     GardenModel,
@@ -818,12 +820,17 @@ class IrrigationPlannerOptionsFlow(OptionsFlow):
     # Programme --------------------------------------------------------------
 
     def _program_schema(self, program: Program) -> vol.Schema:
-        if program.start_time:
+        at, sun_event = "07:00:00", "sunrise"
+        if program.start_time in SUN_EVENTS:
+            schedule, sun_event = "start_sun", program.start_time
+        elif program.finish_by in SUN_EVENTS:
+            schedule, sun_event = "finish_sun", program.finish_by
+        elif program.start_time:
             schedule, at = "start_time", program.start_time
         elif program.finish_by:
             schedule, at = "finish_by", program.finish_by
         else:
-            schedule, at = "window", "07:00:00"
+            schedule = "window"
         return vol.Schema(
             {
                 vol.Required("name", default=program.name): TextSelector(),
@@ -841,9 +848,31 @@ class IrrigationPlannerOptionsFlow(OptionsFlow):
                 ),
                 vol.Required("soak", default=(program.soak_s or 0) / 60): _minutes(240),
                 vol.Required("schedule", default=schedule): _translated(
-                    "schedule", ["window", "start_time", "finish_by", "manual"]
+                    "schedule",
+                    [
+                        "window",
+                        "start_time",
+                        "finish_by",
+                        "start_sun",
+                        "finish_sun",
+                        "manual",
+                    ],
                 ),
                 vol.Required("time", default=at): TimeSelector(),
+                vol.Required("sun_event", default=sun_event): _translated(
+                    "sun_event", list(SUN_EVENTS)
+                ),
+                vol.Required(
+                    "sun_offset", default=program.sun_offset_min
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=-MAX_SUN_OFFSET_MIN,
+                        max=MAX_SUN_OFFSET_MIN,
+                        step=5,
+                        mode=NumberSelectorMode.BOX,
+                        unit_of_measurement="min",
+                    )
+                ),
                 vol.Optional(
                     "weekdays", default=[str(d) for d in program.weekdays]
                 ): _translated("weekday", [str(d) for d in range(7)], multiple=True),
@@ -873,8 +902,20 @@ class IrrigationPlannerOptionsFlow(OptionsFlow):
         program.cycle_s = round(float(user_input["cycle"]) * 60) or None
         program.soak_s = round(float(user_input["soak"]) * 60) or None
         schedule = user_input["schedule"]
-        program.start_time = user_input["time"] if schedule == "start_time" else None
-        program.finish_by = user_input["time"] if schedule == "finish_by" else None
+        sun_event = user_input.get("sun_event", "sunrise")
+        program.start_time = {
+            "start_time": user_input["time"],
+            "start_sun": sun_event,
+        }.get(schedule)
+        program.finish_by = {
+            "finish_by": user_input["time"],
+            "finish_sun": sun_event,
+        }.get(schedule)
+        program.sun_offset_min = (
+            int(user_input.get("sun_offset", 0))
+            if schedule in ("start_sun", "finish_sun")
+            else 0
+        )
         if schedule == "manual":
             # Ohne Zeit würde das Ende des Zeitfensters gelten: deaktivieren
             # des Zeitplans heißt hier „Programm nicht automatisch starten“.

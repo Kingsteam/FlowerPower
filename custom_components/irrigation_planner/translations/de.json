@@ -434,6 +434,8 @@
           "soak": "Einziehzeit bei „Abwechselnd“",
           "schedule": "Zeitplan",
           "time": "Uhrzeit",
+          "sun_event": "Sonnenereignis",
+          "sun_offset": "Versatz zum Sonnenereignis",
           "weekdays": "Wochentage (leer = jeden Tag)",
           "interval_days": "Alle N Tage (0 = aus)",
           "skip_on_rain": "Bei Regen überspringen",
@@ -444,7 +446,8 @@
         "data_description": {
           "pause_between": "Damit sich der Leitungsdruck erholt, z. B. 10 bis 30 s.",
           "soak": "Mindestabstand zwischen zwei Gießphasen derselben Zone.",
-          "schedule": "„Fertig bis“ rechnet die Startzeit aus der Gesamtdauer zurück. „Zeitfenster“ = fertig bis Ende des Zeitfensters."
+          "schedule": "„Fertig bis“ rechnet die Startzeit aus der Gesamtdauer zurück. „Zeitfenster“ = fertig bis Ende des Zeitfensters. Bei einem Sonnenereignis gilt der Versatz unten.",
+          "sun_offset": "Minuten, negativ = vorher. Beispiel: −60 bei „Fertig bis Sonnenereignis“ und „Sonnenaufgang“ = eine Stunde vor Sonnenaufgang fertig."
         }
       },
       "edit_program_form": {
@@ -458,6 +461,8 @@
           "soak": "Einziehzeit bei „Abwechselnd“",
           "schedule": "Zeitplan",
           "time": "Uhrzeit",
+          "sun_event": "Sonnenereignis",
+          "sun_offset": "Versatz zum Sonnenereignis",
           "weekdays": "Wochentage (leer = jeden Tag)",
           "interval_days": "Alle N Tage (0 = aus)",
           "skip_on_rain": "Bei Regen überspringen",
@@ -468,7 +473,8 @@
         "data_description": {
           "pause_between": "Damit sich der Leitungsdruck erholt, z. B. 10 bis 30 s.",
           "soak": "Mindestabstand zwischen zwei Gießphasen derselben Zone.",
-          "schedule": "„Fertig bis“ rechnet die Startzeit aus der Gesamtdauer zurück. „Zeitfenster“ = fertig bis Ende des Zeitfensters."
+          "schedule": "„Fertig bis“ rechnet die Startzeit aus der Gesamtdauer zurück. „Zeitfenster“ = fertig bis Ende des Zeitfensters. Bei einem Sonnenereignis gilt der Versatz unten.",
+          "sun_offset": "Minuten, negativ = vorher. Beispiel: −60 bei „Fertig bis Sonnenereignis“ und „Sonnenaufgang“ = eine Stunde vor Sonnenaufgang fertig."
         }
       },
       "add_supply": {
@@ -577,6 +583,8 @@
         "window": "Fertig bis Ende des Zeitfensters",
         "start_time": "Startzeit",
         "finish_by": "Fertig bis",
+        "start_sun": "Start bei Sonnenereignis",
+        "finish_sun": "Fertig bis Sonnenereignis",
         "manual": "Nur von Hand"
       }
     },
@@ -632,6 +640,12 @@
       "options": {
         "soil_moisture": "Bodenfeuchte",
         "rain_mm": "Regen (mm)"
+      }
+    },
+    "sun_event": {
+      "options": {
+        "sunrise": "Sonnenaufgang",
+        "sunset": "Sonnenuntergang"
       }
     }
   }

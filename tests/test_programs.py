@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
@@ -171,6 +171,71 @@ def test_default_finish_is_window_end() -> None:
     program = Program(id="p", name="P")
     assert next_start(program, at(1, 3), 1800) is None
     assert next_start(program, at(1, 3), 1800, "07:00:00") == at(1, 6, 30)
+
+
+def fake_sun(event: str, day: date) -> datetime | None:
+    """Sonnenaufgang 5:10, Untergang 21:00; am 3.6. „Polarnacht“ (kein Ereignis)."""
+    if day == date(2026, 6, 3):
+        return None
+    tz = dt_util.get_default_time_zone()
+    hour, minute = (5, 10) if event == "sunrise" else (21, 0)
+    return datetime(day.year, day.month, day.day, hour, minute, tzinfo=tz)
+
+
+def test_finish_by_sunrise_with_offset() -> None:
+    program = Program(id="p", name="P", finish_by="sunrise", sun_offset_min=-60)
+    # Fertig 4:10, 30 min Gesamtdauer: Start 3:40
+    assert next_start(program, at(1, 1), 1800, sun=fake_sun) == at(1, 3, 40)
+    assert next_start(program, at(1, 4), 1800, sun=fake_sun) == at(2, 3, 40)
+    # Am 3.6. gibt es keinen Sonnenaufgang: nächster Start am 4.6.
+    assert next_start(program, at(2, 4), 1800, sun=fake_sun) == at(4, 3, 40)
+
+
+def test_start_at_sunset() -> None:
+    program = Program(id="p", name="P", start_time="sunset", sun_offset_min=30)
+    assert next_start(program, at(1, 12), 600, sun=fake_sun) == at(1, 21, 30)
+    # Ohne Sonnenzeiten gibt es keinen Start (statt eines falschen).
+    assert next_start(program, at(1, 12), 600) is None
+
+
+def test_sun_offset_is_validated() -> None:
+    model = GardenModel(
+        programs=[Program(id="p", name="P", finish_by="sunrise", sun_offset_min=-400)]
+    )
+    with pytest.raises(ValueError, match="Versatz"):
+        model.validate()
+    model.programs[0].sun_offset_min = -60
+    model.validate()
+    model.programs[0].finish_by = "mittags"
+    with pytest.raises(ValueError, match="Fertig bis"):
+        model.validate()
+
+
+async def test_manager_uses_real_sun_times(
+    hass: HomeAssistant, setup: Any, sim: SimValves, mock_config_entry: Any
+) -> None:
+    from homeassistant.helpers.sun import get_astral_event_date
+
+    model = make_model(1, zone_extra={"duration_s": 600})
+    model["programs"] = [
+        {
+            "id": "p1",
+            "name": "Morgens",
+            "zone_ids": ["z1"],
+            "finish_by": "sunrise",
+            "sun_offset_min": -60,
+            "pause_between_s": 0,
+        }
+    ]
+    await setup(model)
+    manager = mock_config_entry.runtime_data.programs
+    program = mock_config_entry.runtime_data.store.model.programs[0]
+    now = at(1, 0)
+    start = manager.next_start(program, now)
+    sunrise = dt_util.as_local(get_astral_event_date(hass, "sunrise", now.date()))
+    # Fertig 60 min vor Sonnenaufgang, 10 min Gießdauer
+    expected = (sunrise - timedelta(minutes=70)).replace(second=0, microsecond=0)
+    assert start == expected
 
 
 def test_weekdays_and_interval() -> None:

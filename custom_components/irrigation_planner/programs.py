@@ -24,12 +24,13 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
 
@@ -41,7 +42,7 @@ from .const import (
     RAIN_CONDITIONS,
     WIND_THRESHOLD_KMH,
 )
-from .model import GardenModel, Program, ProgramMode, Zone
+from .model import SUN_EVENTS, GardenModel, Program, ProgramMode, Zone
 from .scheduler import IrrigationScheduler, QueueError
 from .store import IrrigationPlannerStore
 
@@ -177,13 +178,38 @@ def day_allowed(program: Program, day: date) -> bool:
     return True
 
 
+type SunLookup = Callable[[str, date], datetime | None]
+"""Liefert Sonnenaufgang/-untergang (``"sunrise"``/``"sunset"``) eines Tages."""
+
+
+def _moment(
+    value: str, day: date, tz: Any, offset_min: int, sun: SunLookup | None
+) -> datetime | None:
+    """Uhrzeit oder Sonnenereignis (mit Versatz) an einem Tag.
+
+    ``None``, wenn es das Sonnenereignis an diesem Tag nicht gibt (Polartag
+    oder -nacht) oder niemand die Sonnenzeiten liefern kann.
+    """
+    if value in SUN_EVENTS:
+        event = sun(value, day) if sun is not None else None
+        if event is None:
+            return None
+        return dt_util.as_local(event).astimezone(tz) + timedelta(minutes=offset_min)
+    return datetime.combine(day, _parse(value), tzinfo=tz)
+
+
 def next_start(
     program: Program,
     now: datetime,
     total_s: int,
     default_finish: str | None = None,
+    sun: SunLookup | None = None,
 ) -> datetime | None:
-    """Nächster planmäßiger Start ab ``now`` (auf die Minute)."""
+    """Nächster planmäßiger Start ab ``now`` (auf die Minute).
+
+    Startzeit und „fertig bis“ dürfen ein Sonnenereignis sein; dann gilt
+    ``program.sun_offset_min`` als Versatz.
+    """
     start_time = program.start_time
     finish_by = program.finish_by or (None if start_time else default_finish)
     if start_time is None and finish_by is None:
@@ -193,10 +219,12 @@ def next_start(
     for offset in range(-1, 15):
         day = now.date() + timedelta(days=offset)
         if start_time is not None:
-            start = datetime.combine(day, _parse(start_time), tzinfo=tz)
+            start = _moment(start_time, day, tz, program.sun_offset_min, sun)
         else:
-            finish = datetime.combine(day, _parse(finish_by), tzinfo=tz)  # type: ignore[arg-type]
-            start = finish - timedelta(seconds=total_s)
+            finish = _moment(finish_by, day, tz, program.sun_offset_min, sun)  # type: ignore[arg-type]
+            start = None if finish is None else finish - timedelta(seconds=total_s)
+        if start is None:
+            continue
         start = start.replace(second=0, microsecond=0)
         if start >= now and day_allowed(program, day):
             return start
@@ -334,7 +362,13 @@ class ProgramManager:
         if not program.enabled or not self.automatic_active:
             return None
         total = plan_total_s(self.plan(program))
-        return next_start(program, now or dt_util.now(), total, self.window_end)
+        return next_start(
+            program, now or dt_util.now(), total, self.window_end, self._sun
+        )
+
+    def _sun(self, event: str, day: date) -> datetime | None:
+        """Sonnenaufgang/-untergang am Standort von Home Assistant."""
+        return get_astral_event_date(self.hass, event, day)
 
     @property
     def automatic_active(self) -> bool:

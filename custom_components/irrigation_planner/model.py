@@ -13,7 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date
 from enum import StrEnum
-from typing import Any
+from typing import Any, Final
 
 from .const import DEFAULT_MAX_OPEN_VALVES
 from .drivers.base import Capability, SafetyLevel
@@ -32,6 +32,11 @@ class EntityRef:
     domain: str
     platform: str
     unique_id: str
+
+
+# Sonnenereignisse für den Zeitplan (statt einer Uhrzeit).
+SUN_EVENTS: Final = ("sunrise", "sunset")
+MAX_SUN_OFFSET_MIN: Final = 360
 
 
 class BackgroundType(StrEnum):
@@ -200,9 +205,12 @@ class Program:
     pause_between_s: int = 20
     cycle_s: int | None = None
     soak_s: int | None = None
-    # Zeitplan: entweder Startzeit oder "fertig bis" (HH:MM:SS).
+    # Zeitplan: entweder Startzeit oder "fertig bis". Jeweils eine Uhrzeit
+    # (HH:MM:SS) oder ein Sonnenereignis ("sunrise"/"sunset") mit Versatz
+    # in Minuten (negativ = vorher), z. B. fertig 60 min vor Sonnenaufgang.
     start_time: str | None = None
     finish_by: str | None = None
+    sun_offset_min: int = 0
     weekdays: list[int] = field(default_factory=list)  # 0 = Montag
     interval_days: int | None = None
     skip_on_rain: bool = True
@@ -352,8 +360,13 @@ class GardenModel:
                 ("Startzeit", program.start_time),
                 ("Fertig bis", program.finish_by),
             ):
-                if value is not None:
+                if value is not None and value not in SUN_EVENTS:
                     _check_time(f"Programm {program.id}: {label}", value)
+            if abs(program.sun_offset_min) > MAX_SUN_OFFSET_MIN:
+                raise ValueError(
+                    f"Programm {program.id}: Versatz zur Sonne höchstens "
+                    f"{MAX_SUN_OFFSET_MIN // 60} Stunden"
+                )
         for sensor in self.sensors:
             for zone_id in sensor.zone_ids:
                 _check_ref(f"Sensor {sensor.id}", "Zone", zone_id, zone_ids)

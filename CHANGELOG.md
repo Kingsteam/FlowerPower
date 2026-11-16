@@ -15,6 +15,7 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 - Adresssuche für das Luftbild (Lupe auf der Karte, öffnet sich beim ersten Einrichten von selbst): Home Assistant fragt OpenStreetMap (Nominatim), der Treffer wird zur Kartenmitte oder angezeigt; die Adresse wird nicht gespeichert.
 - Kartenansicht umschalten (Ebenen-Knopf auf der Karte): Luftbild, Luftbild mit Straßen, Karte, Karte grau (basemap.at), OpenStreetMap, Esri Satellit.
 - Entfernen einer Zeichnung oder eines Ventils/Sensors zeigt einen Hinweis mit „Rückgängig“; „Rückgängig“ geht auch nach dem Speichern und nach „Verwerfen“.
+- Zeitplan mit Sonnenaufgang oder Sonnenuntergang: „Start bei Sonnenereignis“ oder „Fertig bis Sonnenereignis“, mit Versatz in Minuten (z. B. fertig 60 min vor Sonnenaufgang). Die Sonnenzeiten kommen vom Standort in Home Assistant.
 - Testinstanz auf dem eigenen Mac mit einer Zeile im Terminal (`devtools/testinstanz/mac-start.sh`).
 
 ### Behoben

@@ -466,6 +466,54 @@ async def test_add_program(
     assert program.weekdays == [0, 3]
 
 
+async def test_program_finish_before_sunrise(
+    hass: HomeAssistant, setup: Any, sim: SimValves, mock_config_entry: MockConfigEntry
+) -> None:
+    await setup(make_model(1, zone_extra={"duration_s": 60}))
+    result = await _menu(hass, mock_config_entry, "programs", "add_program")
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "name": "Vor Sonnenaufgang",
+            "zones": ["z1"],
+            "mode": "sequence",
+            "pause_between": 0,
+            "cycle": 5,
+            "soak": 0,
+            "schedule": "finish_sun",
+            "time": "07:00:00",
+            "sun_event": "sunrise",
+            "sun_offset": -60,
+            "weekdays": [],
+            "interval_days": 0,
+            "skip_on_rain": True,
+            "skip_on_frost": True,
+            "skip_on_wind": False,
+            "enabled": True,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    program = _model(hass, mock_config_entry).programs[0]
+    assert (program.start_time, program.finish_by, program.sun_offset_min) == (
+        None,
+        "sunrise",
+        -60,
+    )
+
+    # Beim Ändern stehen die Werte wieder im Formular.
+    result = await _menu(hass, mock_config_entry, "programs", "edit_program")
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"item": program.id}
+    )
+    defaults = {
+        str(key): key.default() for key in result["data_schema"].schema if key.default
+    }
+    assert defaults["schedule"] == "finish_sun"
+    assert defaults["sun_event"] == "sunrise"
+    assert defaults["sun_offset"] == -60
+
+
 async def test_supply_and_settings(
     hass: HomeAssistant, setup: Any, sim: SimValves, mock_config_entry: MockConfigEntry
 ) -> None:

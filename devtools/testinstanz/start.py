@@ -226,7 +226,9 @@ def _beispielgarten() -> dict:
                 "zone_ids": [f"zone_{n}" for n in range(1, 9)],
                 "mode": "sequence",
                 "pause_between_s": 20,
-                "finish_by": "07:00:00",
+                # Fertig eine Stunde vor Sonnenaufgang (gut für die Pflanzen).
+                "finish_by": "sunrise",
+                "sun_offset_min": -60,
             },
             {
                 "id": "rasen",

@@ -434,6 +434,8 @@
           "soak": "Soak time (cycle and soak)",
           "schedule": "Schedule",
           "time": "Time",
+          "sun_event": "Sun event",
+          "sun_offset": "Offset to the sun event",
           "weekdays": "Weekdays (empty = every day)",
           "interval_days": "Every N days (0 = off)",
           "skip_on_rain": "Skip on rain",
@@ -444,7 +446,8 @@
         "data_description": {
           "pause_between": "Lets the pressure recover, e.g. 10 to 30 s.",
           "soak": "Minimum time between two cycles of the same zone.",
-          "schedule": "'Finish by' calculates the start from the total duration."
+          "schedule": "“Finish by” works the start time back from the total duration. “Window” = finish by the end of the watering window. With a sun event the offset below applies.",
+          "sun_offset": "Minutes, negative = before. Example: -60 with “Finish by sun event” and “Sunrise” = done one hour before sunrise."
         }
       },
       "edit_program_form": {
@@ -458,6 +461,8 @@
           "soak": "Soak time (cycle and soak)",
           "schedule": "Schedule",
           "time": "Time",
+          "sun_event": "Sun event",
+          "sun_offset": "Offset to the sun event",
           "weekdays": "Weekdays (empty = every day)",
           "interval_days": "Every N days (0 = off)",
           "skip_on_rain": "Skip on rain",
@@ -468,7 +473,8 @@
         "data_description": {
           "pause_between": "Lets the pressure recover, e.g. 10 to 30 s.",
           "soak": "Minimum time between two cycles of the same zone.",
-          "schedule": "'Finish by' calculates the start from the total duration."
+          "schedule": "“Finish by” works the start time back from the total duration. “Window” = finish by the end of the watering window. With a sun event the offset below applies.",
+          "sun_offset": "Minutes, negative = before. Example: -60 with “Finish by sun event” and “Sunrise” = done one hour before sunrise."
         }
       },
       "add_supply": {
@@ -577,6 +583,8 @@
         "window": "Finish by end of window",
         "start_time": "Start time",
         "finish_by": "Finish by",
+        "start_sun": "Start at sun event",
+        "finish_sun": "Finish by sun event",
         "manual": "Manual only"
       }
     },
@@ -632,6 +640,12 @@
       "options": {
         "soil_moisture": "Soil moisture",
         "rain_mm": "Rain (mm)"
+      }
+    },
+    "sun_event": {
+      "options": {
+        "sunrise": "Sunrise",
+        "sunset": "Sunset"
       }
     }
   }
