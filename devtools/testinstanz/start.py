@@ -140,6 +140,28 @@ PLAN = {
     4: {"center": [-6.5, 0.5], "radius_m": 5.5, "start_angle_deg": 90, "arc_deg": 180},
     5: {"center": [4, 1], "radius_m": 5.5, "start_angle_deg": 270, "arc_deg": 180},
 }
+# Abgepauster Grundriss (nur Orientierung): Haus, Terrasse, Hecke, Baum, Hahn.
+GRUNDRISS = [
+    {
+        "id": "haus",
+        "kind": "building",
+        "points": [[-8, -19], [8, -19], [8, -11], [-8, -11]],
+        "label": "Wohnhaus",
+    },
+    {
+        "id": "terrasse",
+        "kind": "paving",
+        "points": [[2, -11], [11, -11], [11, -6], [2, -6]],
+    },
+    {"id": "hecke", "kind": "hedge", "points": [[-14, 9.5], [13, 9.5]]},
+    {
+        "id": "grenze",
+        "kind": "boundary",
+        "points": [[-15, -21], [14, -21], [14, 10.5], [-15, 10.5], [-15, -21]],
+    },
+    {"id": "apfel", "kind": "tree", "points": [[9, 5.5]], "radius_m": 2.5},
+    {"id": "hahn", "kind": "tap", "points": [[-1, -10.8]]},
+]
 NAMEN = {
     1: "Blumenbeet Süd",
     2: "Rosen",
@@ -208,7 +230,7 @@ def _beispielgarten() -> dict:
             }
         )
     return {
-        "garden": {},
+        "garden": {"features": GRUNDRISS},
         "zones": zonen,
         "valves": ventile,
         "water_supplies": [

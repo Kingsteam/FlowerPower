@@ -3,18 +3,18 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const F = globalThis, Q = F.ShadowRoot && (F.ShadyCSS === void 0 || F.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, ee = Symbol(), ce = /* @__PURE__ */ new WeakMap();
-let ze = class {
+const q = globalThis, ie = q.ShadowRoot && (q.ShadyCSS === void 0 || q.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, ne = Symbol(), ue = /* @__PURE__ */ new WeakMap();
+let Re = class {
   constructor(e, s, i) {
-    if (this._$cssResult$ = !0, i !== ee) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
+    if (this._$cssResult$ = !0, i !== ne) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
     this.cssText = e, this.t = s;
   }
   get styleSheet() {
     let e = this.o;
     const s = this.t;
-    if (Q && e === void 0) {
+    if (ie && e === void 0) {
       const i = s !== void 0 && s.length === 1;
-      i && (e = ce.get(s)), e === void 0 && ((this.o = e = new CSSStyleSheet()).replaceSync(this.cssText), i && ce.set(s, e));
+      i && (e = ue.get(s)), e === void 0 && ((this.o = e = new CSSStyleSheet()).replaceSync(this.cssText), i && ue.set(s, e));
     }
     return e;
   }
@@ -22,33 +22,33 @@ let ze = class {
     return this.cssText;
   }
 };
-const De = (t) => new ze(typeof t == "string" ? t : t + "", void 0, ee), He = (t, ...e) => {
+const Ve = (t) => new Re(typeof t == "string" ? t : t + "", void 0, ne), Ge = (t, ...e) => {
   const s = t.length === 1 ? t[0] : e.reduce((i, n, r) => i + ((a) => {
     if (a._$cssResult$ === !0) return a.cssText;
     if (typeof a == "number") return a;
     throw Error("Value passed to 'css' function must be a 'css' function result: " + a + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
   })(n) + t[r + 1], t[0]);
-  return new ze(s, t, ee);
-}, Le = (t, e) => {
-  if (Q) t.adoptedStyleSheets = e.map((s) => s instanceof CSSStyleSheet ? s : s.styleSheet);
+  return new Re(s, t, ne);
+}, We = (t, e) => {
+  if (ie) t.adoptedStyleSheets = e.map((s) => s instanceof CSSStyleSheet ? s : s.styleSheet);
   else for (const s of e) {
-    const i = document.createElement("style"), n = F.litNonce;
+    const i = document.createElement("style"), n = q.litNonce;
     n !== void 0 && i.setAttribute("nonce", n), i.textContent = s.cssText, t.appendChild(i);
   }
-}, he = Q ? (t) => t : (t) => t instanceof CSSStyleSheet ? ((e) => {
+}, ge = ie ? (t) => t : (t) => t instanceof CSSStyleSheet ? ((e) => {
   let s = "";
   for (const i of e.cssRules) s += i.cssText;
-  return De(s);
+  return Ve(s);
 })(t) : t;
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const { is: je, defineProperty: Ze, getOwnPropertyDescriptor: Ve, getOwnPropertyNames: Fe, getOwnPropertySymbols: Ke, getPrototypeOf: We } = Object, G = globalThis, de = G.trustedTypes, Ge = de ? de.emptyScript : "", qe = G.reactiveElementPolyfillSupport, U = (t, e) => t, K = { toAttribute(t, e) {
+const { is: qe, defineProperty: Je, getOwnPropertyDescriptor: Xe, getOwnPropertyNames: Ye, getOwnPropertySymbols: Qe, getPrototypeOf: et } = Object, Y = globalThis, me = Y.trustedTypes, tt = me ? me.emptyScript : "", st = Y.reactiveElementPolyfillSupport, j = (t, e) => t, J = { toAttribute(t, e) {
   switch (e) {
     case Boolean:
-      t = t ? Ge : null;
+      t = t ? tt : null;
       break;
     case Object:
     case Array:
@@ -73,23 +73,23 @@ const { is: je, defineProperty: Ze, getOwnPropertyDescriptor: Ve, getOwnProperty
       }
   }
   return s;
-} }, te = (t, e) => !je(t, e), pe = { attribute: !0, type: String, converter: K, reflect: !1, useDefault: !1, hasChanged: te };
-Symbol.metadata ??= Symbol("metadata"), G.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
-let P = class extends HTMLElement {
+} }, re = (t, e) => !qe(t, e), fe = { attribute: !0, type: String, converter: J, reflect: !1, useDefault: !1, hasChanged: re };
+Symbol.metadata ??= Symbol("metadata"), Y.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
+let B = class extends HTMLElement {
   static addInitializer(e) {
     this._$Ei(), (this.l ??= []).push(e);
   }
   static get observedAttributes() {
     return this.finalize(), this._$Eh && [...this._$Eh.keys()];
   }
-  static createProperty(e, s = pe) {
+  static createProperty(e, s = fe) {
     if (s.state && (s.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(e) && ((s = Object.create(s)).wrapped = !0), this.elementProperties.set(e, s), !s.noAccessor) {
       const i = Symbol(), n = this.getPropertyDescriptor(e, i, s);
-      n !== void 0 && Ze(this.prototype, e, n);
+      n !== void 0 && Je(this.prototype, e, n);
     }
   }
   static getPropertyDescriptor(e, s, i) {
-    const { get: n, set: r } = Ve(this.prototype, e) ?? { get() {
+    const { get: n, set: r } = Xe(this.prototype, e) ?? { get() {
       return this[s];
     }, set(a) {
       this[s] = a;
@@ -100,17 +100,17 @@ let P = class extends HTMLElement {
     }, configurable: !0, enumerable: !0 };
   }
   static getPropertyOptions(e) {
-    return this.elementProperties.get(e) ?? pe;
+    return this.elementProperties.get(e) ?? fe;
   }
   static _$Ei() {
-    if (this.hasOwnProperty(U("elementProperties"))) return;
-    const e = We(this);
+    if (this.hasOwnProperty(j("elementProperties"))) return;
+    const e = et(this);
     e.finalize(), e.l !== void 0 && (this.l = [...e.l]), this.elementProperties = new Map(e.elementProperties);
   }
   static finalize() {
-    if (this.hasOwnProperty(U("finalized"))) return;
-    if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(U("properties"))) {
-      const s = this.properties, i = [...Fe(s), ...Ke(s)];
+    if (this.hasOwnProperty(j("finalized"))) return;
+    if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(j("properties"))) {
+      const s = this.properties, i = [...Ye(s), ...Qe(s)];
       for (const n of i) this.createProperty(n, s[n]);
     }
     const e = this[Symbol.metadata];
@@ -129,8 +129,8 @@ let P = class extends HTMLElement {
     const s = [];
     if (Array.isArray(e)) {
       const i = new Set(e.flat(1 / 0).reverse());
-      for (const n of i) s.unshift(he(n));
-    } else e !== void 0 && s.push(he(e));
+      for (const n of i) s.unshift(ge(n));
+    } else e !== void 0 && s.push(ge(e));
     return s;
   }
   static _$Eu(e, s) {
@@ -156,7 +156,7 @@ let P = class extends HTMLElement {
   }
   createRenderRoot() {
     const e = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
-    return Le(e, this.constructor.elementStyles), e;
+    return We(e, this.constructor.elementStyles), e;
   }
   connectedCallback() {
     this.renderRoot ??= this.createRenderRoot(), this.enableUpdating(!0), this._$EO?.forEach((e) => e.hostConnected?.());
@@ -172,14 +172,14 @@ let P = class extends HTMLElement {
   _$ET(e, s) {
     const i = this.constructor.elementProperties.get(e), n = this.constructor._$Eu(e, i);
     if (n !== void 0 && i.reflect === !0) {
-      const r = (i.converter?.toAttribute !== void 0 ? i.converter : K).toAttribute(s, i.type);
+      const r = (i.converter?.toAttribute !== void 0 ? i.converter : J).toAttribute(s, i.type);
       this._$Em = e, r == null ? this.removeAttribute(n) : this.setAttribute(n, r), this._$Em = null;
     }
   }
   _$AK(e, s) {
     const i = this.constructor, n = i._$Eh.get(e);
     if (n !== void 0 && this._$Em !== n) {
-      const r = i.getPropertyOptions(n), a = typeof r.converter == "function" ? { fromAttribute: r.converter } : r.converter?.fromAttribute !== void 0 ? r.converter : K;
+      const r = i.getPropertyOptions(n), a = typeof r.converter == "function" ? { fromAttribute: r.converter } : r.converter?.fromAttribute !== void 0 ? r.converter : J;
       this._$Em = n;
       const o = a.fromAttribute(s, r.type);
       this[n] = o ?? this._$Ej?.get(n) ?? o, this._$Em = null;
@@ -188,7 +188,7 @@ let P = class extends HTMLElement {
   requestUpdate(e, s, i, n = !1, r) {
     if (e !== void 0) {
       const a = this.constructor;
-      if (n === !1 && (r = this[e]), i ??= a.getPropertyOptions(e), !((i.hasChanged ?? te)(r, s) || i.useDefault && i.reflect && r === this._$Ej?.get(e) && !this.hasAttribute(a._$Eu(e, i)))) return;
+      if (n === !1 && (r = this[e]), i ??= a.getPropertyOptions(e), !((i.hasChanged ?? re)(r, s) || i.useDefault && i.reflect && r === this._$Ej?.get(e) && !this.hasAttribute(a._$Eu(e, i)))) return;
       this.C(e, s, i);
     }
     this.isUpdatePending === !1 && (this._$ES = this._$EP());
@@ -256,75 +256,75 @@ let P = class extends HTMLElement {
   firstUpdated(e) {
   }
 };
-P.elementStyles = [], P.shadowRootOptions = { mode: "open" }, P[U("elementProperties")] = /* @__PURE__ */ new Map(), P[U("finalized")] = /* @__PURE__ */ new Map(), qe?.({ ReactiveElement: P }), (G.reactiveElementVersions ??= []).push("2.1.2");
+B.elementStyles = [], B.shadowRootOptions = { mode: "open" }, B[j("elementProperties")] = /* @__PURE__ */ new Map(), B[j("finalized")] = /* @__PURE__ */ new Map(), st?.({ ReactiveElement: B }), (Y.reactiveElementVersions ??= []).push("2.1.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const se = globalThis, ue = (t) => t, W = se.trustedTypes, ge = W ? W.createPolicy("lit-html", { createHTML: (t) => t }) : void 0, Ee = "$lit$", k = `lit$${Math.random().toFixed(9).slice(2)}$`, Pe = "?" + k, Je = `<${Pe}>`, z = document, D = () => z.createComment(""), H = (t) => t === null || typeof t != "object" && typeof t != "function", ie = Array.isArray, Xe = (t) => ie(t) || typeof t?.[Symbol.iterator] == "function", X = `[ 	
-\f\r]`, R = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, me = /-->/g, fe = />/g, S = RegExp(`>|${X}(?:([^\\s"'>=/]+)(${X}*=${X}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), be = /'/g, $e = /"/g, Te = /^(?:script|style|textarea|title)$/i, Oe = (t) => (e, ...s) => ({ _$litType$: t, strings: e, values: s }), h = Oe(1), $ = Oe(2), T = Symbol.for("lit-noChange"), c = Symbol.for("lit-nothing"), ve = /* @__PURE__ */ new WeakMap(), M = z.createTreeWalker(z, 129);
-function Ce(t, e) {
-  if (!ie(t) || !t.hasOwnProperty("raw")) throw Error("invalid template strings array");
-  return ge !== void 0 ? ge.createHTML(e) : e;
+const ae = globalThis, be = (t) => t, X = ae.trustedTypes, $e = X ? X.createPolicy("lit-html", { createHTML: (t) => t }) : void 0, Be = "$lit$", P = `lit$${Math.random().toFixed(9).slice(2)}$`, De = "?" + P, it = `<${De}>`, T = document, L = () => T.createComment(""), Z = (t) => t === null || typeof t != "object" && typeof t != "function", oe = Array.isArray, nt = (t) => oe(t) || typeof t?.[Symbol.iterator] == "function", te = `[ 	
+\f\r]`, I = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, ye = /-->/g, ve = />/g, z = RegExp(`>|${te}(?:([^\\s"'>=/]+)(${te}*=${te}*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`, "g"), xe = /'/g, ke = /"/g, He = /^(?:script|style|textarea|title)$/i, Ne = (t) => (e, ...s) => ({ _$litType$: t, strings: e, values: s }), h = Ne(1), u = Ne(2), D = Symbol.for("lit-noChange"), c = Symbol.for("lit-nothing"), we = /* @__PURE__ */ new WeakMap(), E = T.createTreeWalker(T, 129);
+function Ie(t, e) {
+  if (!oe(t) || !t.hasOwnProperty("raw")) throw Error("invalid template strings array");
+  return $e !== void 0 ? $e.createHTML(e) : e;
 }
-const Ye = (t, e) => {
+const rt = (t, e) => {
   const s = t.length - 1, i = [];
-  let n, r = e === 2 ? "<svg>" : e === 3 ? "<math>" : "", a = R;
+  let n, r = e === 2 ? "<svg>" : e === 3 ? "<math>" : "", a = I;
   for (let o = 0; o < s; o++) {
     const l = t[o];
-    let d, u, p = -1, b = 0;
-    for (; b < l.length && (a.lastIndex = b, u = a.exec(l), u !== null); ) b = a.lastIndex, a === R ? u[1] === "!--" ? a = me : u[1] !== void 0 ? a = fe : u[2] !== void 0 ? (Te.test(u[2]) && (n = RegExp("</" + u[2], "g")), a = S) : u[3] !== void 0 && (a = S) : a === S ? u[0] === ">" ? (a = n ?? R, p = -1) : u[1] === void 0 ? p = -2 : (p = a.lastIndex - u[2].length, d = u[1], a = u[3] === void 0 ? S : u[3] === '"' ? $e : be) : a === $e || a === be ? a = S : a === me || a === fe ? a = R : (a = S, n = void 0);
-    const y = a === S && t[o + 1].startsWith("/>") ? " " : "";
-    r += a === R ? l + Je : p >= 0 ? (i.push(d), l.slice(0, p) + Ee + l.slice(p) + k + y) : l + k + (p === -2 ? o : y);
+    let d, p, g = -1, y = 0;
+    for (; y < l.length && (a.lastIndex = y, p = a.exec(l), p !== null); ) y = a.lastIndex, a === I ? p[1] === "!--" ? a = ye : p[1] !== void 0 ? a = ve : p[2] !== void 0 ? (He.test(p[2]) && (n = RegExp("</" + p[2], "g")), a = z) : p[3] !== void 0 && (a = z) : a === z ? p[0] === ">" ? (a = n ?? I, g = -1) : p[1] === void 0 ? g = -2 : (g = a.lastIndex - p[2].length, d = p[1], a = p[3] === void 0 ? z : p[3] === '"' ? ke : xe) : a === ke || a === xe ? a = z : a === ye || a === ve ? a = I : (a = z, n = void 0);
+    const v = a === z && t[o + 1].startsWith("/>") ? " " : "";
+    r += a === I ? l + it : g >= 0 ? (i.push(d), l.slice(0, g) + Be + l.slice(g) + P + v) : l + P + (g === -2 ? o : v);
   }
-  return [Ce(t, r + (t[s] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), i];
+  return [Ie(t, r + (t[s] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), i];
 };
-class L {
+class K {
   constructor({ strings: e, _$litType$: s }, i) {
     let n;
     this.parts = [];
     let r = 0, a = 0;
-    const o = e.length - 1, l = this.parts, [d, u] = Ye(e, s);
-    if (this.el = L.createElement(d, i), M.currentNode = this.el.content, s === 2 || s === 3) {
-      const p = this.el.content.firstChild;
-      p.replaceWith(...p.childNodes);
+    const o = e.length - 1, l = this.parts, [d, p] = rt(e, s);
+    if (this.el = K.createElement(d, i), E.currentNode = this.el.content, s === 2 || s === 3) {
+      const g = this.el.content.firstChild;
+      g.replaceWith(...g.childNodes);
     }
-    for (; (n = M.nextNode()) !== null && l.length < o; ) {
+    for (; (n = E.nextNode()) !== null && l.length < o; ) {
       if (n.nodeType === 1) {
-        if (n.hasAttributes()) for (const p of n.getAttributeNames()) if (p.endsWith(Ee)) {
-          const b = u[a++], y = n.getAttribute(p).split(k), A = /([.?@])?(.*)/.exec(b);
-          l.push({ type: 1, index: r, name: A[2], strings: y, ctor: A[1] === "." ? et : A[1] === "?" ? tt : A[1] === "@" ? st : q }), n.removeAttribute(p);
-        } else p.startsWith(k) && (l.push({ type: 6, index: r }), n.removeAttribute(p));
-        if (Te.test(n.tagName)) {
-          const p = n.textContent.split(k), b = p.length - 1;
-          if (b > 0) {
-            n.textContent = W ? W.emptyScript : "";
-            for (let y = 0; y < b; y++) n.append(p[y], D()), M.nextNode(), l.push({ type: 2, index: ++r });
-            n.append(p[b], D());
+        if (n.hasAttributes()) for (const g of n.getAttributeNames()) if (g.endsWith(Be)) {
+          const y = p[a++], v = n.getAttribute(g).split(P), x = /([.?@])?(.*)/.exec(y);
+          l.push({ type: 1, index: r, name: x[2], strings: v, ctor: x[1] === "." ? ot : x[1] === "?" ? lt : x[1] === "@" ? ct : Q }), n.removeAttribute(g);
+        } else g.startsWith(P) && (l.push({ type: 6, index: r }), n.removeAttribute(g));
+        if (He.test(n.tagName)) {
+          const g = n.textContent.split(P), y = g.length - 1;
+          if (y > 0) {
+            n.textContent = X ? X.emptyScript : "";
+            for (let v = 0; v < y; v++) n.append(g[v], L()), E.nextNode(), l.push({ type: 2, index: ++r });
+            n.append(g[y], L());
           }
         }
-      } else if (n.nodeType === 8) if (n.data === Pe) l.push({ type: 2, index: r });
+      } else if (n.nodeType === 8) if (n.data === De) l.push({ type: 2, index: r });
       else {
-        let p = -1;
-        for (; (p = n.data.indexOf(k, p + 1)) !== -1; ) l.push({ type: 7, index: r }), p += k.length - 1;
+        let g = -1;
+        for (; (g = n.data.indexOf(P, g + 1)) !== -1; ) l.push({ type: 7, index: r }), g += P.length - 1;
       }
       r++;
     }
   }
   static createElement(e, s) {
-    const i = z.createElement("template");
+    const i = T.createElement("template");
     return i.innerHTML = e, i;
   }
 }
-function O(t, e, s = t, i) {
-  if (e === T) return e;
+function H(t, e, s = t, i) {
+  if (e === D) return e;
   let n = i !== void 0 ? s._$Co?.[i] : s._$Cl;
-  const r = H(e) ? void 0 : e._$litDirective$;
-  return n?.constructor !== r && (n?._$AO?.(!1), r === void 0 ? n = void 0 : (n = new r(t), n._$AT(t, s, i)), i !== void 0 ? (s._$Co ??= [])[i] = n : s._$Cl = n), n !== void 0 && (e = O(t, n._$AS(t, e.values), n, i)), e;
+  const r = Z(e) ? void 0 : e._$litDirective$;
+  return n?.constructor !== r && (n?._$AO?.(!1), r === void 0 ? n = void 0 : (n = new r(t), n._$AT(t, s, i)), i !== void 0 ? (s._$Co ??= [])[i] = n : s._$Cl = n), n !== void 0 && (e = H(t, n._$AS(t, e.values), n, i)), e;
 }
-class Qe {
+class at {
   constructor(e, s) {
     this._$AV = [], this._$AN = void 0, this._$AD = e, this._$AM = s;
   }
@@ -335,24 +335,24 @@ class Qe {
     return this._$AM._$AU;
   }
   u(e) {
-    const { el: { content: s }, parts: i } = this._$AD, n = (e?.creationScope ?? z).importNode(s, !0);
-    M.currentNode = n;
-    let r = M.nextNode(), a = 0, o = 0, l = i[0];
+    const { el: { content: s }, parts: i } = this._$AD, n = (e?.creationScope ?? T).importNode(s, !0);
+    E.currentNode = n;
+    let r = E.nextNode(), a = 0, o = 0, l = i[0];
     for (; l !== void 0; ) {
       if (a === l.index) {
         let d;
-        l.type === 2 ? d = new j(r, r.nextSibling, this, e) : l.type === 1 ? d = new l.ctor(r, l.name, l.strings, this, e) : l.type === 6 && (d = new it(r, this, e)), this._$AV.push(d), l = i[++o];
+        l.type === 2 ? d = new V(r, r.nextSibling, this, e) : l.type === 1 ? d = new l.ctor(r, l.name, l.strings, this, e) : l.type === 6 && (d = new ht(r, this, e)), this._$AV.push(d), l = i[++o];
       }
-      a !== l?.index && (r = M.nextNode(), a++);
+      a !== l?.index && (r = E.nextNode(), a++);
     }
-    return M.currentNode = z, n;
+    return E.currentNode = T, n;
   }
   p(e) {
     let s = 0;
     for (const i of this._$AV) i !== void 0 && (i.strings !== void 0 ? (i._$AI(e, i, s), s += i.strings.length - 2) : i._$AI(e[s])), s++;
   }
 }
-class j {
+class V {
   get _$AU() {
     return this._$AM?._$AU ?? this._$Cv;
   }
@@ -371,7 +371,7 @@ class j {
     return this._$AB;
   }
   _$AI(e, s = this) {
-    e = O(this, e, s), H(e) ? e === c || e == null || e === "" ? (this._$AH !== c && this._$AR(), this._$AH = c) : e !== this._$AH && e !== T && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : Xe(e) ? this.k(e) : this._(e);
+    e = H(this, e, s), Z(e) ? e === c || e == null || e === "" ? (this._$AH !== c && this._$AR(), this._$AH = c) : e !== this._$AH && e !== D && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : nt(e) ? this.k(e) : this._(e);
   }
   O(e) {
     return this._$AA.parentNode.insertBefore(e, this._$AB);
@@ -380,38 +380,38 @@ class j {
     this._$AH !== e && (this._$AR(), this._$AH = this.O(e));
   }
   _(e) {
-    this._$AH !== c && H(this._$AH) ? this._$AA.nextSibling.data = e : this.T(z.createTextNode(e)), this._$AH = e;
+    this._$AH !== c && Z(this._$AH) ? this._$AA.nextSibling.data = e : this.T(T.createTextNode(e)), this._$AH = e;
   }
   $(e) {
-    const { values: s, _$litType$: i } = e, n = typeof i == "number" ? this._$AC(e) : (i.el === void 0 && (i.el = L.createElement(Ce(i.h, i.h[0]), this.options)), i);
+    const { values: s, _$litType$: i } = e, n = typeof i == "number" ? this._$AC(e) : (i.el === void 0 && (i.el = K.createElement(Ie(i.h, i.h[0]), this.options)), i);
     if (this._$AH?._$AD === n) this._$AH.p(s);
     else {
-      const r = new Qe(n, this), a = r.u(this.options);
+      const r = new at(n, this), a = r.u(this.options);
       r.p(s), this.T(a), this._$AH = r;
     }
   }
   _$AC(e) {
-    let s = ve.get(e.strings);
-    return s === void 0 && ve.set(e.strings, s = new L(e)), s;
+    let s = we.get(e.strings);
+    return s === void 0 && we.set(e.strings, s = new K(e)), s;
   }
   k(e) {
-    ie(this._$AH) || (this._$AH = [], this._$AR());
+    oe(this._$AH) || (this._$AH = [], this._$AR());
     const s = this._$AH;
     let i, n = 0;
-    for (const r of e) n === s.length ? s.push(i = new j(this.O(D()), this.O(D()), this, this.options)) : i = s[n], i._$AI(r), n++;
+    for (const r of e) n === s.length ? s.push(i = new V(this.O(L()), this.O(L()), this, this.options)) : i = s[n], i._$AI(r), n++;
     n < s.length && (this._$AR(i && i._$AB.nextSibling, n), s.length = n);
   }
   _$AR(e = this._$AA.nextSibling, s) {
     for (this._$AP?.(!1, !0, s); e !== this._$AB; ) {
-      const i = ue(e).nextSibling;
-      ue(e).remove(), e = i;
+      const i = be(e).nextSibling;
+      be(e).remove(), e = i;
     }
   }
   setConnected(e) {
     this._$AM === void 0 && (this._$Cv = e, this._$AP?.(e));
   }
 }
-class q {
+class Q {
   get tagName() {
     return this.element.tagName;
   }
@@ -424,11 +424,11 @@ class q {
   _$AI(e, s = this, i, n) {
     const r = this.strings;
     let a = !1;
-    if (r === void 0) e = O(this, e, s, 0), a = !H(e) || e !== this._$AH && e !== T, a && (this._$AH = e);
+    if (r === void 0) e = H(this, e, s, 0), a = !Z(e) || e !== this._$AH && e !== D, a && (this._$AH = e);
     else {
       const o = e;
       let l, d;
-      for (e = r[0], l = 0; l < r.length - 1; l++) d = O(this, o[i + l], s, l), d === T && (d = this._$AH[l]), a ||= !H(d) || d !== this._$AH[l], d === c ? e = c : e !== c && (e += (d ?? "") + r[l + 1]), this._$AH[l] = d;
+      for (e = r[0], l = 0; l < r.length - 1; l++) d = H(this, o[i + l], s, l), d === D && (d = this._$AH[l]), a ||= !Z(d) || d !== this._$AH[l], d === c ? e = c : e !== c && (e += (d ?? "") + r[l + 1]), this._$AH[l] = d;
     }
     a && !n && this.j(e);
   }
@@ -436,7 +436,7 @@ class q {
     e === c ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
   }
 }
-class et extends q {
+class ot extends Q {
   constructor() {
     super(...arguments), this.type = 3;
   }
@@ -444,7 +444,7 @@ class et extends q {
     this.element[this.name] = e === c ? void 0 : e;
   }
 }
-class tt extends q {
+class lt extends Q {
   constructor() {
     super(...arguments), this.type = 4;
   }
@@ -452,12 +452,12 @@ class tt extends q {
     this.element.toggleAttribute(this.name, !!e && e !== c);
   }
 }
-class st extends q {
+class ct extends Q {
   constructor(e, s, i, n, r) {
     super(e, s, i, n, r), this.type = 5;
   }
   _$AI(e, s = this) {
-    if ((e = O(this, e, s, 0) ?? c) === T) return;
+    if ((e = H(this, e, s, 0) ?? c) === D) return;
     const i = this._$AH, n = e === c && i !== c || e.capture !== i.capture || e.once !== i.once || e.passive !== i.passive, r = e !== c && (i === c || n);
     n && this.element.removeEventListener(this.name, this, i), r && this.element.addEventListener(this.name, this, e), this._$AH = e;
   }
@@ -465,7 +465,7 @@ class st extends q {
     typeof this._$AH == "function" ? this._$AH.call(this.options?.host ?? this.element, e) : this._$AH.handleEvent(e);
   }
 }
-class it {
+class ht {
   constructor(e, s, i) {
     this.element = e, this.type = 6, this._$AN = void 0, this._$AM = s, this.options = i;
   }
@@ -473,17 +473,17 @@ class it {
     return this._$AM._$AU;
   }
   _$AI(e) {
-    O(this, e);
+    H(this, e);
   }
 }
-const nt = se.litHtmlPolyfillSupport;
-nt?.(L, j), (se.litHtmlVersions ??= []).push("3.3.3");
-const rt = (t, e, s) => {
+const dt = ae.litHtmlPolyfillSupport;
+dt?.(K, V), (ae.litHtmlVersions ??= []).push("3.3.3");
+const pt = (t, e, s) => {
   const i = s?.renderBefore ?? e;
   let n = i._$litPart$;
   if (n === void 0) {
     const r = s?.renderBefore ?? null;
-    i._$litPart$ = n = new j(e.insertBefore(D(), r), r, void 0, s ?? {});
+    i._$litPart$ = n = new V(e.insertBefore(L(), r), r, void 0, s ?? {});
   }
   return n._$AI(t), n;
 };
@@ -492,8 +492,8 @@ const rt = (t, e, s) => {
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const ne = globalThis;
-class I extends P {
+const le = globalThis;
+class F extends B {
   constructor() {
     super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
   }
@@ -503,7 +503,7 @@ class I extends P {
   }
   update(e) {
     const s = this.render();
-    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = rt(s, this.renderRoot, this.renderOptions);
+    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = pt(s, this.renderRoot, this.renderOptions);
   }
   connectedCallback() {
     super.connectedCallback(), this._$Do?.setConnected(!0);
@@ -512,19 +512,19 @@ class I extends P {
     super.disconnectedCallback(), this._$Do?.setConnected(!1);
   }
   render() {
-    return T;
+    return D;
   }
 }
-I._$litElement$ = !0, I.finalized = !0, ne.litElementHydrateSupport?.({ LitElement: I });
-const at = ne.litElementPolyfillSupport;
-at?.({ LitElement: I });
-(ne.litElementVersions ??= []).push("4.2.2");
+F._$litElement$ = !0, F.finalized = !0, le.litElementHydrateSupport?.({ LitElement: F });
+const ut = le.litElementPolyfillSupport;
+ut?.({ LitElement: F });
+(le.litElementVersions ??= []).push("4.2.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const ot = (t) => (e, s) => {
+const gt = (t) => (e, s) => {
   s !== void 0 ? s.addInitializer(() => {
     customElements.define(t, e);
   }) : customElements.define(t, e);
@@ -534,7 +534,7 @@ const ot = (t) => (e, s) => {
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const lt = { attribute: !0, type: String, converter: K, reflect: !1, hasChanged: te }, ct = (t = lt, e, s) => {
+const mt = { attribute: !0, type: String, converter: J, reflect: !1, hasChanged: re }, ft = (t = mt, e, s) => {
   const { kind: i, metadata: n } = s;
   let r = globalThis.litPropertyMetadata.get(n);
   if (r === void 0 && globalThis.litPropertyMetadata.set(n, r = /* @__PURE__ */ new Map()), i === "setter" && ((t = Object.create(t)).wrapped = !0), r.set(s.name, t), i === "accessor") {
@@ -555,8 +555,8 @@ const lt = { attribute: !0, type: String, converter: K, reflect: !1, hasChanged:
   }
   throw Error("Unsupported decorator location: " + i);
 };
-function Re(t) {
-  return (e, s) => typeof s == "object" ? ct(t, e, s) : ((i, n, r) => {
+function Ue(t) {
+  return (e, s) => typeof s == "object" ? ft(t, e, s) : ((i, n, r) => {
     const a = n.hasOwnProperty(r);
     return n.constructor.createProperty(r, i), a ? Object.getOwnPropertyDescriptor(n, r) : void 0;
   })(t, e, s);
@@ -566,15 +566,15 @@ function Re(t) {
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-function f(t) {
-  return Re({ ...t, state: !0, attribute: !1 });
+function $(t) {
+  return Ue({ ...t, state: !0, attribute: !1 });
 }
-const w = 6378137, Be = 256, B = Math.PI * w;
-function ht(t, e) {
+const A = 6378137, je = 256, U = Math.PI * A;
+function bt(t, e) {
   const s = Math.max(0, Math.min(360, e));
   return Math.PI * t * t * s / 360;
 }
-function dt(t) {
+function Fe(t) {
   if (t.length < 3) return 0;
   let e = 0;
   for (let s = 0; s < t.length; s++) {
@@ -583,67 +583,116 @@ function dt(t) {
   }
   return Math.abs(e) / 2;
 }
-function _(t, e, s) {
+function w(t, e, s) {
   const i = s * Math.PI / 180;
   return [t[0] + Math.sin(i) * e, t[1] - Math.cos(i) * e];
 }
-function ye(t, e) {
+function _e(t, e) {
   return (Math.atan2(e[0] - t[0], -(e[1] - t[1])) * 180 / Math.PI + 360) % 360;
 }
-function Z(t, e) {
+function k(t, e) {
   return Math.hypot(t[0] - e[0], t[1] - e[1]);
 }
-function pt(t, e, s, i) {
+function $t(t, e, s, i) {
   const [n, r] = t;
   if (i >= 360)
     return `M ${n - e} ${r} a ${e} ${e} 0 1 0 ${2 * e} 0 a ${e} ${e} 0 1 0 ${-2 * e} 0 Z`;
-  const [a, o] = _(t, e, s), [l, d] = _(t, e, s + i), u = i > 180 ? 1 : 0;
-  return `M ${n} ${r} L ${a} ${o} A ${e} ${e} 0 ${u} 1 ${l} ${d} Z`;
+  const [a, o] = w(t, e, s), [l, d] = w(t, e, s + i), p = i > 180 ? 1 : 0;
+  return `M ${n} ${r} L ${a} ${o} A ${e} ${e} 0 ${p} 1 ${l} ${d} Z`;
 }
-function ut(t) {
+function Ae(t) {
   const e = t.length || 1;
   return [t.reduce((s, i) => s + i[0], 0) / e, t.reduce((s, i) => s + i[1], 0) / e];
 }
-function xe(t, e) {
-  return 2 * Math.PI * w * Math.cos(t * Math.PI / 180) / (Be * 2 ** e);
+function Se(t, e) {
+  return 2 * Math.PI * A * Math.cos(t * Math.PI / 180) / (je * 2 ** e);
 }
-function _e(t, e) {
+function Pe(t, e) {
   return Math.log2(
-    2 * Math.PI * w * Math.cos(t * Math.PI / 180) * e / Be
+    2 * Math.PI * A * Math.cos(t * Math.PI / 180) * e / je
   );
 }
-function gt(t, e, s) {
+function yt(t, e, s) {
   const [i, n] = s, r = Math.PI / 180;
   return [
-    (e - n) * r * w * Math.cos(i * r),
-    -(t - i) * r * w
+    (e - n) * r * A * Math.cos(i * r),
+    -(t - i) * r * A
   ];
 }
-function mt(t, e) {
+function vt(t, e) {
   const [s, i] = e, n = 180 / Math.PI;
   return [
-    s - t[1] / w * n,
-    i + t[0] / (w * Math.cos(s / n)) * n
+    s - t[1] / A * n,
+    i + t[0] / (A * Math.cos(s / n)) * n
   ];
 }
-function we(t, e, s, i, n = 200) {
-  const [r, a] = e, o = Math.PI / 180, l = 1 / Math.cos(r * o), d = w * a * o, u = w * Math.log(Math.tan(Math.PI / 4 + r * o / 2)), p = 2 ** i, b = 2 * B / p, y = (x) => (d + x * l + B) / b, A = (x) => (B - (u - x * l)) / b, re = Math.max(0, Math.floor(y(s.x0))), ae = Math.min(p - 1, Math.floor(y(s.x1))), oe = Math.max(0, Math.floor(A(s.y0))), le = Math.min(p - 1, Math.floor(A(s.y1))), J = [];
-  if ((ae - re + 1) * (le - oe + 1) > n) return J;
-  for (let x = oe; x <= le; x++)
-    for (let C = re; C <= ae; C++) {
-      const Ue = C * b - B, Ie = B - x * b;
-      J.push({
-        url: t.replace("{z}", String(i)).replace("{x}", String(C)).replace("{y}", String(x)),
-        key: `${i}/${C}/${x}`,
-        x: (Ue - d) / l,
-        y: (u - Ie) / l,
-        size: b / l
+function ze(t, e, s, i, n = 200) {
+  const [r, a] = e, o = Math.PI / 180, l = 1 / Math.cos(r * o), d = A * a * o, p = A * Math.log(Math.tan(Math.PI / 4 + r * o / 2)), g = 2 ** i, y = 2 * U / g, v = (_) => (d + _ * l + U) / y, x = (_) => (U - (p - _ * l)) / y, ce = Math.max(0, Math.floor(v(s.x0))), he = Math.min(g - 1, Math.floor(v(s.x1))), de = Math.max(0, Math.floor(x(s.y0))), pe = Math.min(g - 1, Math.floor(x(s.y1))), ee = [];
+  if ((he - ce + 1) * (pe - de + 1) > n) return ee;
+  for (let _ = de; _ <= pe; _++)
+    for (let N = ce; N <= he; N++) {
+      const Ze = N * y - U, Ke = U - _ * y;
+      ee.push({
+        url: t.replace("{z}", String(i)).replace("{x}", String(N)).replace("{y}", String(_)),
+        key: `${i}/${N}/${_}`,
+        x: (Ze - d) / l,
+        y: (p - Ke) / l,
+        size: y / l
       });
     }
-  return J;
+  return ee;
 }
-const ft = "Suche: © OpenStreetMap-Mitwirkende";
-async function bt(t, e, s = "de") {
+function xt(t, e, s) {
+  let i = null, n = s;
+  for (const r of e) {
+    const a = k(t, r);
+    a <= n && (i = r, n = a);
+  }
+  return i;
+}
+function Me(t, e = !1) {
+  let s = 0;
+  for (let i = 1; i < t.length; i++) s += k(t[i - 1], t[i]);
+  return e && t.length > 2 && (s += k(t[t.length - 1], t[0])), s;
+}
+function kt(t, e) {
+  const s = e ? t.length : t.length - 1, i = [];
+  for (let n = 0; n < s; n++) i.push(k(t[n], t[(n + 1) % t.length]));
+  return i;
+}
+function wt(t, e, s) {
+  const i = (e + 1) % t.length, n = t[e], r = t[i], a = k(n, r);
+  if (!(s > 0) || a === 0) return t;
+  const o = s / a, l = [n[0] + (r[0] - n[0]) * o, n[1] + (r[1] - n[1]) * o];
+  return t.map((d, p) => p === i ? l : d);
+}
+const S = {
+  building: { label: "Gebäude", icon: "mdi:home-outline", family: "area" },
+  paving: { label: "Terrasse / Weg", icon: "mdi:texture-box", family: "area" },
+  water: { label: "Teich / Pool", icon: "mdi:waves", family: "area" },
+  area: { label: "Sonstige Fläche", icon: "mdi:vector-square", family: "area" },
+  fence: { label: "Zaun", icon: "mdi:fence", family: "line" },
+  hedge: { label: "Hecke", icon: "mdi:leaf", family: "line" },
+  boundary: { label: "Grundstücksgrenze", icon: "mdi:vector-polyline", family: "line" },
+  pipe: { label: "Leitung", icon: "mdi:pipe", family: "line" },
+  tree: { label: "Baum / Strauch", icon: "mdi:tree-outline", family: "point" },
+  label: { label: "Beschriftung", icon: "mdi:format-text", family: "point" },
+  tap: { label: "Wasserhahn", icon: "mdi:water-pump", family: "point" }
+}, _t = 60;
+function M(t) {
+  return S[t]?.family ?? "area";
+}
+function O(t) {
+  return t.kind === "label" && t.label ? t.label : t.label || S[t.kind]?.label || t.kind;
+}
+function At(t) {
+  const e = new Set(t.map((i) => i.id));
+  let s = t.length + 1;
+  for (; e.has(`f${s}`); ) s++;
+  return `f${s}`;
+}
+const St = "Suche: © OpenStreetMap-Mitwirkende";
+async function Pt(t, e, s = "de") {
   if (e.trim().length < 3) throw new Error("Bitte mindestens 3 Zeichen eingeben");
   return (await t({
     type: "irrigation_planner/geocode",
@@ -651,7 +700,7 @@ async function bt(t, e, s = "de") {
     language: s
   })).places ?? [];
 }
-const $t = He`
+const zt = Ge`
   :host {
     display: flex;
     flex-direction: column;
@@ -1129,6 +1178,242 @@ const $t = He`
   .grid-layer.faint {
     opacity: 0.5;
   }
+  /* Grundriss: ruhige Farben, damit die Zonen im Vordergrund bleiben */
+  .feature {
+    vector-effect: non-scaling-stroke;
+    cursor: pointer;
+  }
+  polygon.feature {
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+  }
+  polygon.feature.building {
+    fill: #b0a9a1;
+    stroke: #6d655d;
+  }
+  polygon.feature.paving {
+    fill: #e8dfd2;
+    stroke: #a8998a;
+  }
+  polygon.feature.water {
+    fill: #9ccbea;
+    stroke: #3f8fc4;
+  }
+  polygon.feature.area {
+    fill: rgba(120, 120, 120, 0.12);
+    stroke: #8a8a8a;
+    stroke-dasharray: 6 4;
+  }
+  g.feature polyline {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  g.feature polyline.hit {
+    stroke: transparent;
+    vector-effect: none;
+  }
+  g.feature.fence polyline:not(.hit) {
+    stroke: #6d4c41;
+    stroke-width: 2;
+    stroke-dasharray: 7 3;
+  }
+  g.feature.hedge polyline:not(.hit) {
+    stroke: #4f7f2a;
+    stroke-width: 7;
+    stroke-opacity: 0.8;
+  }
+  g.feature.boundary polyline:not(.hit) {
+    stroke: #c0392b;
+    stroke-width: 2;
+    stroke-dasharray: 12 4 3 4;
+  }
+  g.feature.pipe polyline:not(.hit) {
+    stroke: #1e88e5;
+    stroke-width: 2;
+    stroke-dasharray: 2 4;
+  }
+  g.feature.tree circle {
+    fill: rgba(67, 160, 71, 0.35);
+    stroke: #2e7d32;
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+  g.feature.tree circle.trunk {
+    fill: #5d4037;
+    stroke: none;
+  }
+  g.feature.tap circle {
+    fill: #1e88e5;
+    stroke: #fff;
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+  g.feature.tap text {
+    fill: #fff;
+    font-weight: 700;
+    text-anchor: middle;
+    pointer-events: none;
+  }
+  text.feature-name {
+    fill: #4e4740;
+    stroke: rgba(255, 255, 255, 0.7);
+    paint-order: stroke;
+    stroke-linejoin: round;
+    text-anchor: middle;
+    pointer-events: none;
+  }
+  text.feature.label {
+    fill: var(--primary-text-color);
+    stroke: var(--card);
+    paint-order: stroke;
+    stroke-linejoin: round;
+    text-anchor: middle;
+    font-style: italic;
+  }
+  polygon.feature.selected,
+  g.feature.selected polyline:not(.hit),
+  g.feature.selected circle:not(.trunk) {
+    stroke: var(--accent);
+    stroke-width: 3;
+  }
+  text.feature.selected {
+    fill: var(--accent);
+  }
+  .feature-draft polyline {
+    fill: rgba(120, 120, 120, 0.15);
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-dasharray: 6 4;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
+  .feature-draft circle {
+    fill: #fff;
+    stroke: var(--accent);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
+  .measure polyline {
+    fill: none;
+    stroke: #ff6f00;
+    stroke-width: 2.5;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
+  .measure circle {
+    fill: #ff6f00;
+    pointer-events: none;
+  }
+  .measure-label {
+    fill: #ff6f00;
+    stroke: #fff;
+    paint-order: stroke;
+    stroke-linejoin: round;
+    text-anchor: middle;
+    font-weight: 700;
+    pointer-events: none;
+  }
+  .snap-hint {
+    fill: none;
+    stroke: #ff6f00;
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
+
+  /* Seitenleiste Grundriss */
+  .palette {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .palette .tool {
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--primary-text-color);
+    font-size: 13px;
+    text-align: left;
+    min-width: 0;
+  }
+  .palette .tool span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .palette .tool ha-icon {
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .palette .tool:hover {
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+  }
+  .palette .tool.active {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+  }
+  .palette .tool.active ha-icon {
+    color: var(--accent);
+  }
+  .slider {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 4px;
+    font-size: 13px;
+  }
+  .slider input {
+    padding: 0;
+    border: none;
+    background: none;
+    accent-color: var(--accent);
+  }
+  .slider output {
+    min-width: 3.2em;
+    text-align: right;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 16px 4px 4px;
+    font-size: 13.5px;
+  }
+  .check input {
+    width: auto;
+    accent-color: var(--accent);
+  }
+  .check small {
+    color: var(--muted);
+  }
+  .field.wide {
+    margin: 6px 0;
+  }
+  .edges {
+    margin: 8px 0;
+    font-size: 13px;
+  }
+  .edges summary {
+    cursor: pointer;
+    color: var(--accent);
+    font-weight: 500;
+    padding: 4px 0;
+  }
+  .edge-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 6px;
+  }
   .zone path,
   .zone polygon {
     fill: color-mix(in srgb, var(--zone) 30%, transparent);
@@ -1557,12 +1842,12 @@ const $t = He`
     }
   }
 `;
-var vt = Object.defineProperty, yt = Object.getOwnPropertyDescriptor, m = (t, e, s, i) => {
-  for (var n = i > 1 ? void 0 : i ? yt(e, s) : e, r = t.length - 1, a; r >= 0; r--)
+var Mt = Object.defineProperty, Et = Object.getOwnPropertyDescriptor, b = (t, e, s, i) => {
+  for (var n = i > 1 ? void 0 : i ? Et(e, s) : e, r = t.length - 1, a; r >= 0; r--)
     (a = t[r]) && (n = (i ? a(e, s, n) : a(n)) || n);
-  return i && n && vt(e, s, n), n;
+  return i && n && Mt(e, s, n), n;
 };
-const E = "irrigation_planner", ke = [
+const C = "irrigation_planner", Ee = [
   "#2e7d32",
   "#1565c0",
   "#ef6c00",
@@ -1573,49 +1858,71 @@ const E = "irrigation_planner", ke = [
   "#4527a0",
   "#ad1457",
   "#37474f"
-], Ae = {
+], Te = {
   soil_moisture: "B",
   rain_mm: "R",
   rain_binary: "R",
   water_meter: "W"
-}, xt = {
+}, Tt = {
   soil_moisture: "Bodenfeuchte",
   rain_mm: "Regenmenge",
   rain_binary: "Regensensor",
   water_meter: "Wasserzähler"
-}, Y = {
+}, se = {
   idle: "",
   running: "läuft",
   queued: "wartet",
   locked: "gesperrt"
-}, _t = 0.05;
-let g = class extends I {
+}, Ot = 0.05, Ct = 10;
+let f = class extends F {
   constructor() {
-    super(...arguments), this.narrow = !1, this.error = "", this.toast = "", this.tab = "zones", this.tool = "select", this.toolTarget = "", this.selected = null, this.draft = [], this.scaleDraft = [], this.scaleInput = "", this.view = { cx: 0, cy: 0, scale: 25 }, this.size = { w: 800, h: 600 }, this.imageUrl = "", this.imageSize = null, this.saving = !1, this.dirty = !1, this.searchOpen = !1, this.searchQuery = "", this.searchResults = null, this.searching = !1, this.searchError = "", this.searchPin = null, this.savedJson = "", this.history = [], this.drag = null, this.toastUndo = !1, this.layersOpen = !1, this.autoFit = !0, this.loadedImage = "", this.onWheel = (t) => {
+    super(...arguments), this.narrow = !1, this.error = "", this.toast = "", this.tab = "zones", this.featureKind = "building", this.measurePts = [], this.snapOn = !0, this.snapHint = null, this.tool = "select", this.toolTarget = "", this.selected = null, this.draft = [], this.scaleDraft = [], this.scaleInput = "", this.view = { cx: 0, cy: 0, scale: 25 }, this.size = { w: 800, h: 600 }, this.imageUrl = "", this.imageSize = null, this.saving = !1, this.dirty = !1, this.searchOpen = !1, this.searchQuery = "", this.searchResults = null, this.searching = !1, this.searchError = "", this.searchPin = null, this.savedJson = "", this.history = [], this.drag = null, this.toastUndo = !1, this.layersOpen = !1, this.autoFit = !0, this.loadedImage = "", this.onWheel = (t) => {
       t.preventDefault();
       const s = t.currentTarget.getBoundingClientRect(), i = Math.exp(-t.deltaY * (t.ctrlKey ? 0.01 : 15e-4));
       this.zoomBy(i, this.toPlan(t), [t.clientX - s.left, t.clientY - s.top]);
     }, this.onKey = (t) => {
       const e = t.composedPath()[0];
-      e && ["INPUT", "SELECT", "TEXTAREA"].includes(e.tagName) || (t.key === "Escape" && this.cancelTool(), t.key === "Enter" && this.tool === "bed" && this.finishBed(), (t.ctrlKey || t.metaKey) && t.key === "z" && (t.preventDefault(), this.undo()), t.key === "Delete" && this.selected?.kind === "zone" && this.clearGeometry(this.selected.id));
+      e && ["INPUT", "SELECT", "TEXTAREA"].includes(e.tagName) || (t.key === "Escape" && this.cancelTool(), t.key === "Enter" && this.tool === "bed" && this.finishBed(), t.key === "Enter" && this.tool === "feature" && this.finishFeature(), (t.ctrlKey || t.metaKey) && t.key === "z" && (t.preventDefault(), this.undo()), t.key === "Delete" && this.selected?.kind === "zone" && this.clearGeometry(this.selected.id), t.key === "Delete" && this.selected?.kind === "feature" && this.deleteFeature(this.selected.id));
     }, this.onPointerDown = (t) => {
       if (t.button !== 0) return;
       const e = t.currentTarget, s = this.toPlan(t);
+      if (this.tool === "feature") {
+        const i = this.featureKind, n = this.snap(s, t), r = M(i);
+        if (r === "point") {
+          const o = [m(n[0]), m(n[1])];
+          if (i === "tree") {
+            const l = this.addFeature({ kind: i, points: [o], radius_m: 0 });
+            this.drag = { type: "new-tree", id: l.id }, e.setPointerCapture(t.pointerId);
+          } else
+            this.addFeature({ kind: i, points: [o], label: i === "label" ? "Beschriftung" : null }), this.cancelTool(), i === "label" && this.updateComplete.then(
+              () => this.renderRoot.querySelector("#feature-label")?.select()
+            );
+          return;
+        }
+        const a = (o) => k(n, o) * this.view.scale < 12;
+        r === "area" && this.draft.length >= 3 && a(this.draft[0]) ? this.finishFeature() : r === "line" && this.draft.length >= 2 && a(this.draft[this.draft.length - 1]) ? this.finishFeature() : this.draft = [...this.draft, n];
+        return;
+      }
+      if (this.tool === "measure") {
+        this.measurePts = [...this.measurePts, this.snap(s, t)];
+        return;
+      }
       if (this.tool === "sprinkler") {
         this.remember();
-        const i = this.zone(this.toolTarget);
-        i.center = [v(s[0]), v(s[1])], i.radius_m = 0, this.drag = { type: "new-sprinkler", id: i.id }, e.setPointerCapture(t.pointerId), this.changed();
+        const i = this.zone(this.toolTarget), n = this.snap(s, t);
+        s[0] = n[0], s[1] = n[1], i.center = [m(s[0]), m(s[1])], i.radius_m = 0, this.drag = { type: "new-sprinkler", id: i.id }, e.setPointerCapture(t.pointerId), this.changed();
         return;
       }
       if (this.tool === "bed") {
-        this.draft.length >= 3 && Z(s, this.draft[0]) * this.view.scale < 12 ? this.finishBed() : this.draft = [...this.draft, s];
+        const i = this.snap(s, t);
+        this.draft.length >= 3 && k(i, this.draft[0]) * this.view.scale < 12 ? this.finishBed() : this.draft = [...this.draft, i];
         return;
       }
       if (this.tool === "place") {
         const [i, n] = this.toolTarget.split(":");
         this.remember();
         const r = this.marker(i, n);
-        r.position = [v(s[0]), v(s[1])], this.selected = { kind: i, id: n }, this.changed(), this.cancelTool();
+        r.position = [m(s[0]), m(s[1])], this.selected = { kind: i, id: n }, this.changed(), this.cancelTool();
         return;
       }
       if (this.tool === "scale") {
@@ -1634,10 +1941,14 @@ let g = class extends I {
     }, this.onPointerMove = (t) => {
       const e = this.drag;
       if (!e) {
-        this.tool === "bed" && this.draft.length && (this.hover = this.toPlan(t));
+        ["bed", "feature", "measure", "sprinkler"].includes(this.tool) && (this.hover = this.snap(this.toPlan(t), t));
         return;
       }
       const s = this.toPlan(t);
+      if (e.type.startsWith("f-") || e.type === "new-tree") {
+        this.moveFeature(e, s, t);
+        return;
+      }
       if (e.type === "pan") {
         const n = t.clientX - e.sx, r = t.clientY - e.sy;
         Math.abs(n) + Math.abs(r) > 3 && (e.moved = !0, this.autoFit = !1), this.view = {
@@ -1648,42 +1959,48 @@ let g = class extends I {
         return;
       }
       if (e.type === "marker") {
-        this.marker(e.kind, e.id).position = [v(s[0]), v(s[1])], this.changed();
+        this.marker(e.kind, e.id).position = [m(s[0]), m(s[1])], this.changed();
         return;
       }
       const i = this.zone(e.id);
       switch (e.type) {
         case "new-sprinkler":
         case "radius":
-          i.radius_m = v(Math.max(0.1, Z(i.center, s)));
+          i.radius_m = m(Math.max(0.1, k(i.center, s)));
           break;
         case "center":
-          i.center = [v(s[0]), v(s[1])];
+          i.center = [m(s[0]), m(s[1])];
           break;
         case "start": {
-          const n = i.start_angle_deg + i.arc_deg, r = Se(ye(i.center, s));
+          const n = i.start_angle_deg + i.arc_deg, r = Oe(_e(i.center, s));
           let a = ((n - r) % 360 + 360) % 360;
           a < 5 && (a = 360), i.start_angle_deg = r, i.arc_deg = a;
           break;
         }
         case "end": {
-          let r = ((Se(ye(i.center, s)) - i.start_angle_deg) % 360 + 360) % 360;
+          let r = ((Oe(_e(i.center, s)) - i.start_angle_deg) % 360 + 360) % 360;
           r < 5 && (r = 360), i.arc_deg = r;
           break;
         }
-        case "vertex":
-          i.polygon[e.index] = [v(s[0]), v(s[1])];
+        case "vertex": {
+          const n = this.snap(s, t, i.polygon[e.index]);
+          i.polygon[e.index] = [m(n[0]), m(n[1])];
           break;
+        }
         case "move-zone": {
           const n = s[0] - e.start[0], r = s[1] - e.start[1];
-          i.type === "sprinkler" && e.orig.center ? i.center = [v(e.orig.center[0] + n), v(e.orig.center[1] + r)] : i.polygon = e.orig.polygon.map((a) => [v(a[0] + n), v(a[1] + r)]);
+          i.type === "sprinkler" && e.orig.center ? i.center = [m(e.orig.center[0] + n), m(e.orig.center[1] + r)] : i.polygon = e.orig.polygon.map((a) => [m(a[0] + n), m(a[1] + r)]);
           break;
         }
       }
       this.changed();
     }, this.hover = null, this.onPointerUp = () => {
       const t = this.drag;
-      if (this.drag = null, !!t) {
+      if (this.drag = null, this.snapHint = null, !!t) {
+        if (t.type === "new-tree") {
+          const e = this.feature(t.id);
+          (!e.radius_m || e.radius_m < 0.3) && (e.radius_m = 1.5), this.cancelTool(), this.changed();
+        }
         if (t.type === "pan") {
           t.moved || (this.selected = null);
           return;
@@ -1727,7 +2044,7 @@ let g = class extends I {
   // Daten ----------------------------------------------------------------------
   async load() {
     try {
-      const t = await this._hass.callWS({ type: `${E}/plan/get` });
+      const t = await this._hass.callWS({ type: `${C}/plan/get` });
       this.setPlan(t, !0), await this.subscribe();
     } catch (t) {
       this.error = this.message(t);
@@ -1736,7 +2053,7 @@ let g = class extends I {
   async subscribe() {
     this.unsub || !this._hass || (this.unsub = await this._hass.connection.subscribeMessage(
       (t) => this.status = t,
-      { type: `${E}/plan/subscribe` }
+      { type: `${C}/plan/subscribe` }
     ));
   }
   /** Neuer Stand vom Server. Nach dem Speichern bleibt „Rückgängig“ möglich. */
@@ -1763,10 +2080,10 @@ let g = class extends I {
   }
   async save() {
     const t = this.plan, e = { ...t.garden };
-    e.background === "map" && e.latitude != null && (e.map_zoom = Math.round(_e(e.latitude, this.view.scale) * 100) / 100), this.saving = !0;
+    e.background === "map" && e.latitude != null && (e.map_zoom = Math.round(Pe(e.latitude, this.view.scale) * 100) / 100), this.saving = !0;
     try {
       const s = await this._hass.callWS({
-        type: `${E}/plan/save`,
+        type: `${C}/plan/save`,
         garden: e,
         zones: t.zones.map((i) => ({
           id: i.id,
@@ -1805,7 +2122,7 @@ let g = class extends I {
     const t = this.plan?.garden.background_image;
     if (!(!t || t === this.loadedImage))
       try {
-        const e = await this._hass.fetchWithAuth(`/api/${E}/image/${t}`);
+        const e = await this._hass.fetchWithAuth(`/api/${C}/image/${t}`);
         if (!e.ok) throw new Error(`Bild nicht gefunden (${e.status})`);
         const s = URL.createObjectURL(await e.blob()), i = new Image();
         i.src = s, await i.decode(), this.imageUrl && URL.revokeObjectURL(this.imageUrl), this.imageUrl = s, this.imageSize = [i.naturalWidth, i.naturalHeight], this.loadedImage = t;
@@ -1819,7 +2136,7 @@ let g = class extends I {
     const i = new FormData();
     i.append("file", s);
     try {
-      const n = await this._hass.fetchWithAuth(`/api/${E}/image`, {
+      const n = await this._hass.fetchWithAuth(`/api/${C}/image`, {
         method: "POST",
         body: i
       }), r = await n.json();
@@ -1838,10 +2155,10 @@ let g = class extends I {
   imageMpp() {
     const t = this.plan.garden;
     if (t.scale_points && t.scale_distance_m) {
-      const e = Z(t.scale_points[0], t.scale_points[1]);
+      const e = k(t.scale_points[0], t.scale_points[1]);
       if (e > 0) return t.scale_distance_m / e;
     }
-    return _t;
+    return Ot;
   }
   // Ansicht --------------------------------------------------------------------
   toScreen(t) {
@@ -1861,7 +2178,13 @@ let g = class extends I {
       n.type === "sprinkler" && n.center && n.radius_m && (t.push([n.center[0] - n.radius_m, n.center[1] - n.radius_m]), t.push([n.center[0] + n.radius_m, n.center[1] + n.radius_m])), n.type !== "sprinkler" && t.push(...n.polygon);
     for (const n of [...this.plan?.valves ?? [], ...this.plan?.sensors ?? []])
       n.position && t.push(n.position);
-    if (this.plan?.garden?.background === "image" && this.imageSize) {
+    const e = this.plan?.garden;
+    for (const n of e?.features ?? [])
+      if (t.push(...n.points), n.kind === "tree" && n.radius_m) {
+        const [r, a] = n.points[0];
+        t.push([r - n.radius_m, a - n.radius_m], [r + n.radius_m, a + n.radius_m]);
+      }
+    if (e?.background === "image" && this.imageSize) {
       const n = this.imageMpp();
       t.push([0, 0], [this.imageSize[0] * n, this.imageSize[1] * n]);
     }
@@ -1873,7 +2196,7 @@ let g = class extends I {
     const t = this.plan?.garden, e = this.bounds();
     if (t?.background === "map" && t.latitude != null && !e) {
       const d = t.map_zoom ?? 19;
-      this.view = { cx: 0, cy: 0, scale: 1 / xe(t.latitude, d) };
+      this.view = { cx: 0, cy: 0, scale: 1 / Se(t.latitude, d) };
       return;
     }
     if (!e) {
@@ -1898,7 +2221,52 @@ let g = class extends I {
   }
   // Werkzeuge ------------------------------------------------------------------
   startTool(t, e = "") {
-    this.tool = t, this.toolTarget = e, this.draft = [], this.scaleDraft = [], this.scaleInput = "", e && t !== "place" && (this.selected = { kind: "zone", id: e });
+    this.tool = t, this.toolTarget = e, this.draft = [], this.scaleDraft = [], this.scaleInput = "", this.measurePts = [], this.hover = null, this.snapHint = null, t === "feature" && (this.featureKind = e), e && (t === "sprinkler" || t === "bed") && (this.selected = { kind: "zone", id: e });
+  }
+  // Grundriss -------------------------------------------------------------------
+  get features() {
+    return this.plan.garden.features;
+  }
+  feature(t) {
+    return this.features.find((e) => e.id === t);
+  }
+  /** Alle Ecken und Mittelpunkte, an denen neue Punkte einrasten. */
+  snapCandidates(t) {
+    const e = [];
+    for (const s of this.features) e.push(...s.points);
+    for (const s of this.plan.zones)
+      e.push(...s.polygon), s.center && e.push(s.center);
+    for (const s of [...this.plan.valves, ...this.plan.sensors]) s.position && e.push(s.position);
+    return e.push(...this.draft, ...this.measurePts), t ? e.filter((s) => s !== t) : e;
+  }
+  /** Punkt fangen (Alt-Taste: frei). Merkt den Fangpunkt für die Anzeige. */
+  snap(t, e, s) {
+    if (!this.snapOn || e?.altKey)
+      return this.snapHint = null, t;
+    const i = xt(t, this.snapCandidates(s), Ct / this.view.scale);
+    return this.snapHint = i, i ? [i[0], i[1]] : t;
+  }
+  finishFeature() {
+    const t = this.featureKind, e = M(t) === "area" ? 3 : 2;
+    if (this.draft.length < e) {
+      this.showToast(`${S[t].label}: mindestens ${e} Punkte`, !0);
+      return;
+    }
+    this.addFeature({ kind: t, points: this.draft.map((s) => [m(s[0]), m(s[1])]) }), this.cancelTool();
+  }
+  addFeature(t) {
+    this.remember();
+    const e = {
+      id: At(this.features),
+      radius_m: null,
+      label: null,
+      ...t
+    };
+    return this.features.push(e), this.selected = { kind: "feature", id: e.id }, this.tab = "plan", this.changed(), e;
+  }
+  deleteFeature(t) {
+    const e = this.feature(t);
+    this.remember(), this.plan.garden.features = this.features.filter((s) => s.id !== t), this.selected?.kind === "feature" && this.selected.id === t && (this.selected = null), this.changed(), this.removed(`${O(e)} entfernt`);
   }
   cancelTool() {
     this.startTool("select");
@@ -1911,7 +2279,7 @@ let g = class extends I {
       this.showToast("Ein Beet braucht mindestens 3 Punkte", !0);
       return;
     }
-    this.remember(), this.zone(this.toolTarget).polygon = this.draft.map((t) => [v(t[0]), v(t[1])]), this.selected = { kind: "zone", id: this.toolTarget }, this.changed(), this.cancelTool();
+    this.remember(), this.zone(this.toolTarget).polygon = this.draft.map((t) => [m(t[0]), m(t[1])]), this.selected = { kind: "zone", id: this.toolTarget }, this.changed(), this.cancelTool();
   }
   clearGeometry(t) {
     const e = this.zone(t);
@@ -1921,11 +2289,34 @@ let g = class extends I {
     if (this.tool !== "select" || t.button !== 0) return;
     t.stopPropagation(), this.renderRoot.querySelector("svg.plan").setPointerCapture(t.pointerId), this.remember(), this.drag = e;
   }
+  moveFeature(t, e, s) {
+    if (!("id" in t)) return;
+    const i = this.feature(t.id);
+    if (i) {
+      switch (t.type) {
+        case "new-tree":
+        case "f-radius":
+          i.radius_m = m(Math.max(0.1, k(i.points[0], e)));
+          break;
+        case "f-vertex": {
+          const n = this.snap(e, s, i.points[t.index]);
+          i.points[t.index] = [m(n[0]), m(n[1])];
+          break;
+        }
+        case "f-move": {
+          const n = e[0] - t.start[0], r = e[1] - t.start[1];
+          i.points = t.orig.points.map((a) => [m(a[0] + n), m(a[1] + r)]);
+          break;
+        }
+      }
+      this.changed();
+    }
+  }
   insertVertex(t, e, s) {
     if (this.tool !== "select") return;
     t.stopPropagation(), this.remember();
     const i = e.polygon[s], n = e.polygon[(s + 1) % e.polygon.length];
-    e.polygon.splice(s + 1, 0, [v((i[0] + n[0]) / 2), v((i[1] + n[1]) / 2)]), this.changed(), this.renderRoot.querySelector("svg.plan").setPointerCapture(t.pointerId), this.drag = { type: "vertex", id: e.id, index: s + 1 };
+    e.polygon.splice(s + 1, 0, [m((i[0] + n[0]) / 2), m((i[1] + n[1]) / 2)]), this.changed(), this.renderRoot.querySelector("svg.plan").setPointerCapture(t.pointerId), this.drag = { type: "vertex", id: e.id, index: s + 1 };
   }
   removeVertex(t, e, s) {
     if (t.preventDefault(), t.stopPropagation(), e.polygon.length <= 3) {
@@ -1953,14 +2344,15 @@ let g = class extends I {
     const t = this.plan.garden;
     if (t.latitude == null || t.longitude == null) return;
     const { cx: e, cy: s } = this.view;
-    this.remember(), [t.latitude, t.longitude] = mt([e, s], [t.latitude, t.longitude]).map(
+    this.remember(), [t.latitude, t.longitude] = vt([e, s], [t.latitude, t.longitude]).map(
       (n) => Math.round(n * 1e7) / 1e7
     );
-    const i = (n) => [v(n[0] - e), v(n[1] - s)];
+    const i = (n) => [m(n[0] - e), m(n[1] - s)];
     for (const n of this.plan.zones)
       n.center && (n.center = i(n.center)), n.polygon = n.polygon.map(i);
     for (const n of [...this.plan.valves, ...this.plan.sensors])
       n.position && (n.position = i(n.position));
+    for (const n of this.features) n.points = n.points.map(i);
     this.view = { ...this.view, cx: 0, cy: 0 }, this.searchPin && (this.searchPin = { ...this.searchPin, point: i(this.searchPin.point) }), this.changed(), this.showToast("Kartenmitte gesetzt");
   }
   // Adresssuche ------------------------------------------------------------------
@@ -1977,7 +2369,7 @@ let g = class extends I {
       this.searching = !0, this.searchError = "";
       try {
         const t = this._hass?.language ?? "de";
-        this.searchResults = await bt(
+        this.searchResults = await Pt(
           (e) => this._hass.callWS(e),
           this.searchQuery,
           t
@@ -1995,11 +2387,11 @@ let g = class extends I {
    * die Ansicht springt.
    */
   goToPlace(t) {
-    const e = this.plan.garden, s = 1 / xe(t.latitude, 19);
+    const e = this.plan.garden, s = 1 / Se(t.latitude, 20.5);
     if (this.autoFit = !1, !this.hasAnyDrawing() && ![...this.plan.valves, ...this.plan.sensors].some((n) => n.position) || e.latitude == null || e.longitude == null)
       this.remember(), e.latitude = Math.round(t.latitude * 1e7) / 1e7, e.longitude = Math.round(t.longitude * 1e7) / 1e7, this.view = { cx: 0, cy: 0, scale: s }, this.searchPin = { point: [0, 0], name: t.name }, this.changed(), this.showToast(`${t.name}: Kartenmitte gesetzt. Fein ausrichten mit „Mitte hier festlegen“.`);
     else {
-      const n = gt(t.latitude, t.longitude, [e.latitude, e.longitude]);
+      const n = yt(t.latitude, t.longitude, [e.latitude, e.longitude]);
       this.view = { cx: n[0], cy: n[1], scale: s }, this.searchPin = { point: n, name: t.name }, this.showToast(`${t.name} angezeigt. „Mitte hier festlegen“ übernimmt die Stelle.`);
     }
     this.searchResults = null;
@@ -2040,7 +2432,7 @@ let g = class extends I {
                 </li>`
     )}
             </ul>` : c}
-        <p class="search-note">${ft}. Die Adresse geht nur an die Suche und wird nicht gespeichert.</p>
+        <p class="search-note">${St}. Die Adresse geht nur an die Suche und wird nicht gespeichert.</p>
       </div>
     `;
   }
@@ -2078,7 +2470,7 @@ let g = class extends I {
       this.showToast("Zwei Punkte wählen und den echten Abstand in Metern eingeben", !0);
       return;
     }
-    if (Z(this.scaleDraft[0], this.scaleDraft[1]) < 2) {
+    if (k(this.scaleDraft[0], this.scaleDraft[1]) < 2) {
       this.showToast("Die beiden Punkte liegen zu nah beieinander", !0);
       return;
     }
@@ -2096,7 +2488,7 @@ let g = class extends I {
       return;
     }
     try {
-      await this._hass.callService(E, "run_zone", { zone_id: t.id, duration: e }), this.showToast(`${t.name}: ${Me(e)} eingereiht`);
+      await this._hass.callService(C, "run_zone", { zone_id: t.id, duration: e }), this.showToast(`${t.name}: ${Ce(e)} eingereiht`);
     } catch (s) {
       this.showToast(this.message(s), !0);
     }
@@ -2119,6 +2511,9 @@ let g = class extends I {
             <button class=${this.tab === "zones" ? "active" : ""} @click=${() => this.tab = "zones"}>
               <ha-icon icon="mdi:sprinkler-variant"></ha-icon>Zonen
             </button>
+            <button class=${this.tab === "plan" ? "active" : ""} @click=${() => this.tab = "plan"}>
+              <ha-icon icon="mdi:floor-plan"></ha-icon>Grundriss
+            </button>
             <button
               class=${this.tab === "background" ? "active" : ""}
               @click=${() => this.tab = "background"}
@@ -2127,7 +2522,7 @@ let g = class extends I {
             </button>
           </div>
           <div class="side-body">
-            ${this.tab === "zones" ? this.renderZonesTab() : this.renderBackgroundTab()}
+            ${this.tab === "zones" ? this.renderZonesTab() : this.tab === "plan" ? this.renderPlanTab() : this.renderBackgroundTab()}
           </div>
         </aside>
       </div>
@@ -2193,16 +2588,19 @@ let g = class extends I {
         @pointercancel=${this.onPointerUp}
         @wheel=${this.onWheel}
         @dblclick=${(l) => {
-      this.tool === "bed" && (l.preventDefault(), this.draft = this.draft.slice(0, -1), this.finishBed());
+      this.tool === "bed" && (l.preventDefault(), this.draft = this.draft.slice(0, -1), this.finishBed()), this.tool === "feature" && M(this.featureKind) !== "point" && (l.preventDefault(), this.draft = this.draft.slice(0, -1), this.finishFeature());
     }}
       >
         <g transform=${r}>
           ${this.renderBackground(a)}
+          <g class="features">${this.renderFeatures(a)}</g>
           ${this.plan.zones.map((l, d) => this.renderZone(l, d, a))}
-          ${this.renderSelectedHandles(a)} ${this.renderDraft(a)} ${this.renderScaleDraft(a)}
+          ${this.renderSelectedHandles(a)} ${this.renderFeatureHandles(a)}
+          ${this.renderDraft(a)} ${this.renderScaleDraft(a)} ${this.renderMeasure(a)}
           ${this.plan.valves.map((l) => this.renderMarker("valve", l, a))}
           ${this.plan.sensors.map((l) => this.renderMarker("sensor", l, a))}
-          ${this.searchPin && this.plan.garden.background === "map" ? $`<g class="pin" transform="translate(${this.searchPin.point[0]} ${this.searchPin.point[1]}) scale(${a})">
+          ${this.renderSnapHint(a)}
+          ${this.searchPin && this.plan.garden.background === "map" ? u`<g class="pin" transform="translate(${this.searchPin.point[0]} ${this.searchPin.point[1]}) scale(${a})">
                 <path d="M0 0 C-3 -9 -11 -13 -11 -22 A11 11 0 1 1 11 -22 C11 -13 3 -9 0 0 Z"></path>
                 <circle cx="0" cy="-22" r="4"></circle>
                 <title>${this.searchPin.name}</title>
@@ -2218,77 +2616,78 @@ let g = class extends I {
   renderBackground(t) {
     const e = this.plan.garden, s = this.visibleBox(), i = [];
     if (e.background === "map" && e.latitude != null && e.longitude != null) {
-      const n = this.tileTemplate();
-      if (n) {
-        const r = this.plan.providers[e.map_provider ?? ""], a = r?.max_zoom ?? 20, o = Math.max(
+      const a = this.tileTemplate();
+      if (a) {
+        const o = this.plan.providers[e.map_provider ?? ""], l = o?.max_zoom ?? 20, d = Math.max(
           1,
-          Math.min(a, Math.round(_e(e.latitude, this.view.scale * (window.devicePixelRatio > 1 ? 1.4 : 1))))
-        ), l = we(n, [e.latitude, e.longitude], s, o);
-        i.push($`<rect x=${s.x0} y=${s.y0} width=${s.x1 - s.x0} height=${s.y1 - s.y0} class="map-fill"></rect>`);
-        const d = t * 0.5, u = (p) => p.map(
-          (b) => $`<image href=${b.url} x=${b.x - d} y=${b.y - d} width=${b.size + 2 * d} height=${b.size + 2 * d} preserveAspectRatio="none" crossorigin="anonymous"></image>`
+          Math.min(l, Math.round(Pe(e.latitude, this.view.scale * (window.devicePixelRatio > 1 ? 1.4 : 1))))
+        ), p = ze(a, [e.latitude, e.longitude], s, d);
+        i.push(u`<rect x=${s.x0} y=${s.y0} width=${s.x1 - s.x0} height=${s.y1 - s.y0} class="map-fill"></rect>`);
+        const g = t * 0.5, y = (v) => v.map(
+          (x) => u`<image href=${x.url} x=${x.x - g} y=${x.y - g} width=${x.size + 2 * g} height=${x.size + 2 * g} preserveAspectRatio="none" crossorigin="anonymous"></image>`
         );
-        i.push(...u(l)), r?.overlay && e.map_provider !== "custom" && i.push(...u(we(r.overlay, [e.latitude, e.longitude], s, o)));
+        i.push(...y(p)), o?.overlay && e.map_provider !== "custom" && i.push(...y(ze(o.overlay, [e.latitude, e.longitude], s, d)));
       }
     } else if (e.background === "image" && this.imageUrl && this.imageSize) {
-      const n = this.imageMpp();
+      const a = this.imageMpp();
       i.push(
-        $`<image href=${this.imageUrl} x="0" y="0" width=${this.imageSize[0] * n} height=${this.imageSize[1] * n} preserveAspectRatio="none"></image>`
+        u`<image href=${this.imageUrl} x="0" y="0" width=${this.imageSize[0] * a} height=${this.imageSize[1] * a} preserveAspectRatio="none"></image>`
       );
     }
-    return e.background !== "map" && i.push(this.renderGrid(s, t, e.background === "image")), i;
+    const n = [u`<g class="bg" opacity=${e.background_opacity ?? 1}>${i}</g>`], r = (e.background_opacity ?? 1) < 0.35;
+    return (e.background !== "map" || r) && n.push(this.renderGrid(s, t, e.background === "image" && !r)), n;
   }
   renderGrid(t, e, s) {
-    const i = Ne(40 * e), n = [], r = i * 5;
+    const i = Le(40 * e), n = [], r = i * 5;
     for (let a = Math.floor(t.x0 / i) * i; a <= t.x1; a += i) {
       const o = Math.abs(a / r - Math.round(a / r)) < 1e-6;
-      n.push($`<line x1=${a} y1=${t.y0} x2=${a} y2=${t.y1} class=${o ? "grid major" : "grid"}></line>`);
+      n.push(u`<line x1=${a} y1=${t.y0} x2=${a} y2=${t.y1} class=${o ? "grid major" : "grid"}></line>`);
     }
     for (let a = Math.floor(t.y0 / i) * i; a <= t.y1; a += i) {
       const o = Math.abs(a / r - Math.round(a / r)) < 1e-6;
-      n.push($`<line x1=${t.x0} y1=${a} x2=${t.x1} y2=${a} class=${o ? "grid major" : "grid"}></line>`);
+      n.push(u`<line x1=${t.x0} y1=${a} x2=${t.x1} y2=${a} class=${o ? "grid major" : "grid"}></line>`);
     }
-    return $`<g class=${s ? "grid-layer faint" : "grid-layer"}>${n}</g>`;
+    return u`<g class=${s ? "grid-layer faint" : "grid-layer"}>${n}</g>`;
   }
   tileTemplate() {
     const t = this.plan.garden;
     return t.map_provider === "custom" ? t.map_url ?? "" : this.plan.providers[t.map_provider ?? ""]?.url ?? "";
   }
   zoneColor(t) {
-    return ke[t % ke.length];
+    return Ee[t % Ee.length];
   }
   renderZone(t, e, s) {
     const i = this.zoneColor(e), n = this.status?.zones[t.id]?.state ?? "idle", r = this.selected?.kind === "zone" && this.selected.id === t.id, a = `zone ${n} ${r ? "selected" : ""} ${t.enabled ? "" : "disabled"}`;
     let o, l = null;
-    if (t.type === "sprinkler" && t.center && t.radius_m ? (o = $`<path d=${pt(t.center, t.radius_m, t.start_angle_deg, t.arc_deg)}></path>`, l = t.arc_deg >= 360 ? t.center : _(t.center, t.radius_m * 0.55, t.start_angle_deg + t.arc_deg / 2)) : t.type !== "sprinkler" && t.polygon.length >= 3 && (o = $`<polygon points=${t.polygon.map((u) => u.join(",")).join(" ")}></polygon>`, l = ut(t.polygon)), !o) return c;
-    const d = V(t);
-    return $`
+    if (t.type === "sprinkler" && t.center && t.radius_m ? (o = u`<path d=${$t(t.center, t.radius_m, t.start_angle_deg, t.arc_deg)}></path>`, l = t.arc_deg >= 360 ? t.center : w(t.center, t.radius_m * 0.55, t.start_angle_deg + t.arc_deg / 2)) : t.type !== "sprinkler" && t.polygon.length >= 3 && (o = u`<polygon points=${t.polygon.map((p) => p.join(",")).join(" ")}></polygon>`, l = Ae(t.polygon)), !o) return c;
+    const d = G(t);
+    return u`
       <g class=${a} style="--zone:${i}"
-        @pointerdown=${(u) => {
-      this.tool === "select" && (this.selected = { kind: "zone", id: t.id }, this.tab = "zones", this.startDrag(u, { type: "move-zone", id: t.id, start: this.toPlan(u), orig: structuredClone(t) }));
+        @pointerdown=${(p) => {
+      this.tool === "select" && (this.selected = { kind: "zone", id: t.id }, this.tab = "zones", this.startDrag(p, { type: "move-zone", id: t.id, start: this.toPlan(p), orig: structuredClone(t) }));
     }}>
         ${o}
-        ${l ? $`<text x=${l[0]} y=${l[1]} font-size=${13 * s} stroke-width=${3 * s} class="label">
+        ${l ? u`<text x=${l[0]} y=${l[1]} font-size=${13 * s} stroke-width=${3 * s} class="label">
               <tspan x=${l[0]} dy="0">${t.name}</tspan>
-              <tspan x=${l[0]} dy=${15 * s} class="sub">${N(d)}${Y[n] ? ` · ${Y[n]}` : ""}</tspan>
+              <tspan x=${l[0]} dy=${15 * s} class="sub">${R(d)}${se[n] ? ` · ${se[n]}` : ""}</tspan>
             </text>` : c}
       </g>`;
   }
   renderSelectedHandles(t) {
     if (this.tool !== "select" || this.selected?.kind !== "zone") return c;
-    const e = this.zone(this.selected.id), s = 7 * t, i = (n, r, a = "", o = "") => $`<circle class="handle ${a}" cx=${n[0]} cy=${n[1]} r=${s}
+    const e = this.zone(this.selected.id), s = 7 * t, i = (n, r, a = "", o = "") => u`<circle class="handle ${a}" cx=${n[0]} cy=${n[1]} r=${s}
         @pointerdown=${(l) => this.startDrag(l, r)}><title>${o}</title></circle>`;
     if (e.type === "sprinkler" && e.center && e.radius_m) {
       const n = e.center, r = e.arc_deg >= 360, a = r ? e.start_angle_deg + 135 : e.start_angle_deg + e.arc_deg / 2, o = [
-        $`<line class="guide" x1=${n[0]} y1=${n[1]} x2=${_(n, e.radius_m, e.start_angle_deg)[0]} y2=${_(n, e.radius_m, e.start_angle_deg)[1]}></line>`,
+        u`<line class="guide" x1=${n[0]} y1=${n[1]} x2=${w(n, e.radius_m, e.start_angle_deg)[0]} y2=${w(n, e.radius_m, e.start_angle_deg)[1]}></line>`,
         i(n, { type: "center", id: e.id }, "center", "Mittelpunkt verschieben"),
-        i(_(n, e.radius_m, a), { type: "radius", id: e.id }, "radius", "Reichweite ändern"),
-        i(_(n, e.radius_m, e.start_angle_deg), { type: "start", id: e.id }, "angle", "Anfang des Bogens")
+        i(w(n, e.radius_m, a), { type: "radius", id: e.id }, "radius", "Reichweite ändern"),
+        i(w(n, e.radius_m, e.start_angle_deg), { type: "start", id: e.id }, "angle", "Anfang des Bogens")
       ];
       return r ? o.push(
-        i(_(n, e.radius_m * 0.8, e.start_angle_deg + 20), { type: "end", id: e.id }, "angle small", "Bogen öffnen")
+        i(w(n, e.radius_m * 0.8, e.start_angle_deg + 20), { type: "end", id: e.id }, "angle small", "Bogen öffnen")
       ) : o.push(
-        i(_(n, e.radius_m, e.start_angle_deg + e.arc_deg), { type: "end", id: e.id }, "angle", "Ende des Bogens")
+        i(w(n, e.radius_m, e.start_angle_deg + e.arc_deg), { type: "end", id: e.id }, "angle", "Ende des Bogens")
       ), o;
     }
     if (e.type !== "sprinkler" && e.polygon.length >= 3) {
@@ -2296,11 +2695,11 @@ let g = class extends I {
       return [
         ...n.map((r, a) => {
           const o = n[(a + 1) % n.length], l = [(r[0] + o[0]) / 2, (r[1] + o[1]) / 2];
-          return $`<circle class="handle mid" cx=${l[0]} cy=${l[1]} r=${s * 0.7}
+          return u`<circle class="handle mid" cx=${l[0]} cy=${l[1]} r=${s * 0.7}
             @pointerdown=${(d) => this.insertVertex(d, e, a)}><title>Ziehen: neuen Punkt einfügen</title></circle>`;
         }),
         ...n.map(
-          (r, a) => $`<circle class="handle" cx=${r[0]} cy=${r[1]} r=${s}
+          (r, a) => u`<circle class="handle" cx=${r[0]} cy=${r[1]} r=${s}
             @pointerdown=${(o) => this.startDrag(o, { type: "vertex", id: e.id, index: a })}
             @contextmenu=${(o) => this.removeVertex(o, e, a)}
             @dblclick=${(o) => this.removeVertex(o, e, a)}><title>Ziehen: verschieben · Doppelklick: löschen</title></circle>`
@@ -2309,45 +2708,148 @@ let g = class extends I {
     }
     return c;
   }
+  renderFeatures(t) {
+    return this.features.map((e) => {
+      const s = this.selected?.kind === "feature" && this.selected.id === e.id, i = M(e.kind), n = (l) => {
+        this.tool === "select" && (this.selected = { kind: "feature", id: e.id }, this.tab = "plan", this.startDrag(l, { type: "f-move", id: e.id, start: this.toPlan(l), orig: structuredClone(e) }));
+      }, r = `feature ${e.kind} ${s ? "selected" : ""}`;
+      if (i === "area") {
+        const l = Ae(e.points);
+        return u`<polygon class=${r} points=${e.points.map((d) => d.join(",")).join(" ")}
+          @pointerdown=${n}><title>${O(e)}</title></polygon>
+          ${e.label ? u`<text class="feature-name" x=${l[0]} y=${l[1]} dy=${4 * t} font-size=${12 * t}
+                stroke-width=${3 * t}>${e.label}</text>` : c}`;
+      }
+      if (i === "line")
+        return u`<g class=${r} @pointerdown=${n}>
+          <polyline class="hit" points=${e.points.map((l) => l.join(",")).join(" ")} stroke-width=${12 * t}></polyline>
+          <polyline points=${e.points.map((l) => l.join(",")).join(" ")}></polyline>
+          <title>${O(e)}</title></g>`;
+      const [a, o] = e.points[0];
+      return e.kind === "tree" ? u`<g class=${r} @pointerdown=${n}>
+          <circle cx=${a} cy=${o} r=${e.radius_m ?? 1}></circle>
+          <circle class="trunk" cx=${a} cy=${o} r=${3 * t}></circle>
+          <title>${O(e)}</title></g>` : e.kind === "label" ? u`<text class=${r} x=${a} y=${o} font-size=${14 * t} stroke-width=${3 * t}
+          @pointerdown=${n}>${e.label}</text>` : u`<g class=${r} @pointerdown=${n}>
+        <circle cx=${a} cy=${o} r=${8 * t}></circle>
+        <text x=${a} y=${o} dy=${4 * t} font-size=${11 * t}>H</text>
+        <title>${O(e)}</title></g>`;
+    });
+  }
+  renderFeatureHandles(t) {
+    if (this.tool !== "select" || this.selected?.kind !== "feature") return c;
+    const e = this.feature(this.selected.id);
+    if (!e) return c;
+    const s = 7 * t, i = M(e.kind);
+    if (i === "point") {
+      if (e.kind !== "tree") return c;
+      const [o, l] = e.points[0], d = w(e.points[0], e.radius_m ?? 1, 135);
+      return u`
+        <circle class="handle center" cx=${o} cy=${l} r=${s}
+          @pointerdown=${(p) => this.startDrag(p, { type: "f-move", id: e.id, start: this.toPlan(p), orig: structuredClone(e) })}></circle>
+        <circle class="handle" cx=${d[0]} cy=${d[1]} r=${s}
+          @pointerdown=${(p) => this.startDrag(p, { type: "f-radius", id: e.id })}><title>Kronengröße</title></circle>`;
+    }
+    const n = e.points;
+    return [
+      ...(i === "area" ? n : n.slice(0, -1)).map((o, l) => {
+        const d = n[(l + 1) % n.length], p = [(o[0] + d[0]) / 2, (o[1] + d[1]) / 2];
+        return u`<circle class="handle mid" cx=${p[0]} cy=${p[1]} r=${s * 0.7}
+        @pointerdown=${(g) => this.insertFeatureVertex(g, e, l)}><title>Ziehen: neuen Punkt einfügen</title></circle>`;
+      }),
+      ...n.map(
+        (o, l) => u`<circle class="handle" cx=${o[0]} cy=${o[1]} r=${s}
+          @pointerdown=${(d) => this.startDrag(d, { type: "f-vertex", id: e.id, index: l })}
+          @contextmenu=${(d) => this.removeFeatureVertex(d, e, l)}
+          @dblclick=${(d) => this.removeFeatureVertex(d, e, l)}><title>Ziehen: verschieben · Doppelklick: löschen</title></circle>`
+      )
+    ];
+  }
+  insertFeatureVertex(t, e, s) {
+    if (this.tool !== "select") return;
+    t.stopPropagation(), this.remember();
+    const i = e.points[s], n = e.points[(s + 1) % e.points.length];
+    e.points.splice(s + 1, 0, [m((i[0] + n[0]) / 2), m((i[1] + n[1]) / 2)]), this.changed(), this.renderRoot.querySelector("svg.plan").setPointerCapture(t.pointerId), this.drag = { type: "f-vertex", id: e.id, index: s + 1 };
+  }
+  removeFeatureVertex(t, e, s) {
+    t.preventDefault(), t.stopPropagation();
+    const i = M(e.kind) === "area" ? 3 : 2;
+    if (e.points.length <= i) {
+      this.showToast(`${S[e.kind].label}: mindestens ${i} Punkte`, !0);
+      return;
+    }
+    this.remember(), e.points.splice(s, 1), this.changed();
+  }
+  /** Messwerkzeug: Strecken mit Längen und Summe. */
+  renderMeasure(t) {
+    if (this.tool !== "measure" || !this.measurePts.length) return c;
+    const e = this.hover ? [...this.measurePts, this.hover] : this.measurePts, s = e.slice(1).map((i, n) => {
+      const r = e[n];
+      if (k(r, i) < 0.01) return c;
+      const a = [(r[0] + i[0]) / 2, (r[1] + i[1]) / 2];
+      return u`<text class="measure-label" x=${a[0]} y=${a[1]} dy=${-6 * t} font-size=${13 * t}
+        stroke-width=${3 * t}>${W(k(r, i))}</text>`;
+    });
+    return u`<g class="measure">
+      <polyline points=${e.map((i) => i.join(",")).join(" ")}></polyline>
+      ${this.measurePts.map((i) => u`<circle cx=${i[0]} cy=${i[1]} r=${4 * t}></circle>`)}
+      ${s}
+    </g>`;
+  }
+  renderSnapHint(t) {
+    return this.snapHint ? u`<circle class="snap-hint" cx=${this.snapHint[0]} cy=${this.snapHint[1]} r=${9 * t}></circle>` : c;
+  }
   renderDraft(t) {
+    if (this.tool === "feature" && this.draft.length) {
+      const i = this.hover ? [...this.draft, this.hover] : this.draft, n = M(this.featureKind) === "area";
+      return u`
+        <g class="draft feature-draft ${this.featureKind}">
+          <polyline points=${[...i, ...n && i.length > 2 ? [i[0]] : []].map((r) => r.join(",")).join(" ")}></polyline>
+          ${this.draft.map((r, a) => u`<circle cx=${r[0]} cy=${r[1]} r=${(a === 0 ? 7 : 5) * t}></circle>`)}
+        </g>`;
+    }
     if (this.tool !== "bed" || !this.draft.length) return c;
     const e = this.hover ? [...this.draft, this.hover] : this.draft, s = this.plan.zones.findIndex((i) => i.id === this.toolTarget);
-    return $`
+    return u`
       <g class="draft" style="--zone:${this.zoneColor(s)}">
         <polyline points=${e.map((i) => i.join(",")).join(" ")}></polyline>
         ${this.draft.map(
-      (i, n) => $`<circle cx=${i[0]} cy=${i[1]} r=${(n === 0 ? 8 : 5) * t} class=${n === 0 ? "first" : ""}></circle>`
+      (i, n) => u`<circle cx=${i[0]} cy=${i[1]} r=${(n === 0 ? 8 : 5) * t} class=${n === 0 ? "first" : ""}></circle>`
     )}
       </g>`;
   }
   renderScaleDraft(t) {
     if (this.tool !== "scale") return c;
     const e = this.imageMpp(), s = this.scaleDraft.map((i) => [i[0] * e, i[1] * e]);
-    return $`<g class="scale-draft">
-      ${s.length === 2 ? $`<line x1=${s[0][0]} y1=${s[0][1]} x2=${s[1][0]} y2=${s[1][1]}></line>` : c}
-      ${s.map((i) => $`<circle cx=${i[0]} cy=${i[1]} r=${6 * t}></circle>`)}
+    return u`<g class="scale-draft">
+      ${s.length === 2 ? u`<line x1=${s[0][0]} y1=${s[0][1]} x2=${s[1][0]} y2=${s[1][1]}></line>` : c}
+      ${s.map((i) => u`<circle cx=${i[0]} cy=${i[1]} r=${6 * t}></circle>`)}
     </g>`;
   }
   renderMarker(t, e, s) {
     if (!e.position) return c;
-    const [i, n] = e.position, r = this.selected?.kind === t && this.selected.id === e.id, a = t === "valve" ? "V" : Ae[e.kind] ?? "S", o = 11 * s;
-    return $`
+    const [i, n] = e.position, r = this.selected?.kind === t && this.selected.id === e.id, a = t === "valve" ? "V" : Te[e.kind] ?? "S", o = 11 * s;
+    return u`
       <g class="marker ${t} ${r ? "selected" : ""}"
         @pointerdown=${(l) => {
       this.tool === "select" && (this.selected = { kind: t, id: e.id }, this.tab = "zones", this.startDrag(l, { type: "marker", kind: t, id: e.id }));
     }}>
-        ${t === "valve" ? $`<rect x=${i - o} y=${n - o} width=${2 * o} height=${2 * o} rx=${4 * s}></rect>` : $`<circle cx=${i} cy=${n} r=${o}></circle>`}
+        ${t === "valve" ? u`<rect x=${i - o} y=${n - o} width=${2 * o} height=${2 * o} rx=${4 * s}></rect>` : u`<circle cx=${i} cy=${n} r=${o}></circle>`}
         <text x=${i} y=${n} font-size=${12 * s} dy=${4.2 * s}>${a}</text>
         <title>${e.name}</title>
       </g>`;
   }
   renderOverlay() {
-    const t = this.plan.garden, e = this.toolBanner(), s = wt(this.view.scale), i = t.background === "map" ? this.plan.providers[t.map_provider ?? ""] : void 0;
+    const t = this.plan.garden, e = this.toolBanner(), s = Rt(this.view.scale), i = t.background === "map" ? this.plan.providers[t.map_provider ?? ""] : void 0;
     return h`
       <div class="tools">
         <button class="icon" title="Vergrößern" @click=${() => this.zoomBy(1.4)}><ha-icon icon="mdi:plus"></ha-icon></button>
         <button class="icon" title="Verkleinern" @click=${() => this.zoomBy(1 / 1.4)}><ha-icon icon="mdi:minus"></ha-icon></button>
         <button class="icon" title="Alles zeigen" @click=${this.fitView}><ha-icon icon="mdi:fit-to-screen-outline"></ha-icon></button>
+        <button class="icon ${this.tool === "measure" ? "on" : ""}" title="Abstand messen"
+          @click=${() => this.tool === "measure" ? this.cancelTool() : this.startTool("measure")}>
+          <ha-icon icon="mdi:tape-measure"></ha-icon>
+        </button>
         ${t.background === "map" ? h`<button class="icon ${this.layersOpen ? "on" : ""}" title="Kartenansicht wechseln"
               @click=${() => this.layersOpen = !this.layersOpen}>
               <ha-icon icon="mdi:layers-outline"></ha-icon>
@@ -2374,13 +2876,27 @@ let g = class extends I {
     `;
   }
   hasAnyDrawing() {
-    return this.plan.zones.some((t) => V(t) !== null);
+    return this.features.length > 0 || this.plan.zones.some((t) => G(t) !== null);
   }
   toolBanner() {
     if (this.tool === "select") return c;
     let t = "", e = c;
     const s = this.toolTarget ? this.zoneOrMarkerName(this.toolTarget) : "";
-    return this.tool === "sprinkler" && (t = `${s}: Am Sprinkler drücken und bis zum Rand ziehen.`), this.tool === "bed" && (t = `${s}: Ecken anklicken, zum Schließen den ersten Punkt.`, e = h`<button class="text" ?disabled=${this.draft.length < 3} @click=${this.finishBed}>Fertig</button>`), this.tool === "place" && (t = `${s}: Auf die Stelle im Plan klicken.`), this.tool === "scale" && (t = this.scaleDraft.length < 2 ? "Maßstab: Zwei Punkte im Bild anklicken, deren Abstand du kennst (z. B. die Ecken der Terrasse)." : "Abstand eingeben:", this.scaleDraft.length === 2 && (e = h`<input
+    if (this.tool === "sprinkler" && (t = `${s}: Am Sprinkler drücken und bis zum Rand ziehen.`), this.tool === "bed" && (t = `${s}: Ecken anklicken, zum Schließen den ersten Punkt.`, e = h`<button class="text" ?disabled=${this.draft.length < 3} @click=${this.finishBed}>Fertig</button>`), this.tool === "place" && (t = `${s}: Auf die Stelle im Plan klicken.`), this.tool === "feature") {
+      const i = S[this.featureKind], n = i.family;
+      t = n === "area" ? `${i.label}: Ecken anklicken, zum Schließen den ersten Punkt.` : n === "line" ? `${i.label}: Punkte anklicken, Doppelklick beendet.` : this.featureKind === "tree" ? `${i.label}: In die Mitte drücken und bis zum Kronenrand ziehen.` : `${i.label}: Auf die Stelle klicken.`, n !== "point" && (e = h`<button
+          class="text"
+          ?disabled=${this.draft.length < (n === "area" ? 3 : 2)}
+          @click=${this.finishFeature}
+        >
+          Fertig
+        </button>`);
+    }
+    if (this.tool === "measure") {
+      const i = Me(this.measurePts);
+      t = this.measurePts.length < 2 ? "Messen: Punkte anklicken. Alt-Taste: ohne Einrasten." : `Gemessen: ${W(i)}${this.measurePts.length > 2 ? " (Summe)" : ""}`, this.measurePts.length && (e = h`<button class="text" @click=${() => this.measurePts = []}>Neu</button>`);
+    }
+    return this.tool === "scale" && (t = this.scaleDraft.length < 2 ? "Maßstab: Zwei Punkte im Bild anklicken, deren Abstand du kennst (z. B. die Ecken der Terrasse)." : "Abstand eingeben:", this.scaleDraft.length === 2 && (e = h`<input
             class="small"
             type="text"
             inputmode="decimal"
@@ -2427,7 +2943,7 @@ let g = class extends I {
     `;
   }
   renderZoneItem(t, e, s) {
-    const i = this.status?.zones[t.id], n = V(t), r = n !== null, a = t.type === "sprinkler";
+    const i = this.status?.zones[t.id], n = G(t), r = n !== null, a = t.type === "sprinkler";
     return h`
       <li class="item ${s ? "open" : ""}" style="--zone:${this.zoneColor(e)}">
         <div class="row" @click=${() => {
@@ -2436,20 +2952,20 @@ let g = class extends I {
           <span class="dot"></span>
           <ha-icon icon=${a ? "mdi:sprinkler-variant" : "mdi:water-outline"}></ha-icon>
           <span class="name">${t.name}</span>
-          ${i && i.state !== "idle" ? h`<span class="badge ${i.state}">${Y[i.state]}</span>` : c}
-          <span class="meta">${r ? N(n) : h`<em>nicht gezeichnet</em>`}</span>
+          ${i && i.state !== "idle" ? h`<span class="badge ${i.state}">${se[i.state]}</span>` : c}
+          <span class="meta">${r ? R(n) : h`<em>nicht gezeichnet</em>`}</span>
         </div>
         ${s ? this.renderInspector(t, i) : c}
       </li>
     `;
   }
   renderInspector(t, e) {
-    const s = t.type === "sprinkler", i = V(t), n = i !== null, r = s ? "sprinkler" : "bed", a = (o, l, d, u, p = 0.1) => h`<label class="field">
+    const s = t.type === "sprinkler", i = G(t), n = i !== null, r = s ? "sprinkler" : "bed", a = (o, l, d, p, g = 0.1) => h`<label class="field">
         <span>${o}</span>
-        <input type="number" step=${p} .value=${l == null ? "" : String(l)}
-          @change=${(b) => {
-      const y = parseFloat(b.target.value);
-      Number.isFinite(y) && (this.remember(), u(y), this.changed());
+        <input type="number" step=${g} .value=${l == null ? "" : String(l)}
+          @change=${(y) => {
+      const v = parseFloat(y.target.value);
+      Number.isFinite(v) && (this.remember(), p(v), this.changed());
     }} />
         <span class="unit">${d}</span>
       </label>`;
@@ -2457,12 +2973,12 @@ let g = class extends I {
       <div class="inspector">
         <dl>
           <dt>Fläche gezeichnet</dt>
-          <dd>${n ? N(i) : "–"}</dd>
+          <dd>${n ? R(i) : "–"}</dd>
           <dt>Fläche von Hand</dt>
-          <dd>${t.area_m2 ? N(t.area_m2) : "–"}</dd>
-          ${t.overlap_m2 > 0.05 ? h`<dt>Überschneidung</dt><dd class="warn">${N(t.overlap_m2)} mit anderen Zonen</dd>` : c}
+          <dd>${t.area_m2 ? R(t.area_m2) : "–"}</dd>
+          ${t.overlap_m2 > 0.05 ? h`<dt>Überschneidung</dt><dd class="warn">${R(t.overlap_m2)} mit anderen Zonen</dd>` : c}
           ${e ? h`<dt>Bedarf</dt><dd>${e.need_mm.toFixed(1)} mm</dd>
-                <dt>Geplant</dt><dd>${e.planned_s ? Me(e.planned_s) : "nicht gießen"}
+                <dt>Geplant</dt><dd>${e.planned_s ? Ce(e.planned_s) : "nicht gießen"}
                   <span class="reason">(${e.reason})</span></dd>` : c}
           ${e?.locked_reason ? h`<dt>Gesperrt</dt><dd class="warn">${e.locked_reason}</dd>` : c}
         </dl>
@@ -2472,6 +2988,7 @@ let g = class extends I {
               ${a("Bogen", t.arc_deg, "°", (o) => t.arc_deg = Math.min(360, Math.max(1, o)), 5)}
             </div>
             <p class="hint small">Richtung: Anfang des Bogens, 0° = Norden (oben), 90° = Osten.</p>` : c}
+        ${!s && n ? this.renderEdges(t.polygon, !0, (o) => t.polygon = o) : c}
         <div class="actions">
           <button class="text" @click=${() => this.startTool(r, t.id)}>
             <ha-icon icon=${n ? "mdi:pencil" : "mdi:draw"}></ha-icon>${n ? "Neu zeichnen" : "Zeichnen"}
@@ -2489,11 +3006,11 @@ let g = class extends I {
     `;
   }
   renderMarkerItem(t, e) {
-    const s = this.selected?.kind === t && this.selected.id === e.id, i = t === "valve" ? e.safety_level === "device" ? "schließt selbst" : "nur Home Assistant" : xt[e.kind] ?? "";
+    const s = this.selected?.kind === t && this.selected.id === e.id, i = t === "valve" ? e.safety_level === "device" ? "schließt selbst" : "nur Home Assistant" : Tt[e.kind] ?? "";
     return h`
       <li class="item ${s ? "open" : ""}">
         <div class="row" @click=${() => this.selected = { kind: t, id: e.id }}>
-          <span class="marker-icon ${t}">${t === "valve" ? "V" : Ae[e.kind] ?? "S"}</span>
+          <span class="marker-icon ${t}">${t === "valve" ? "V" : Te[e.kind] ?? "S"}</span>
           <span class="name">${e.name}<small>${i}</small></span>
           <button class="text small" @click=${(n) => {
       n.stopPropagation(), this.startTool("place", `${t}:${e.id}`);
@@ -2502,6 +3019,151 @@ let g = class extends I {
       n.stopPropagation(), this.remember(), e.position = null, this.changed(), this.removed(`${e.name}: vom Plan genommen`);
     }}><ha-icon icon="mdi:close"></ha-icon></button>` : c}
         </div>
+      </li>
+    `;
+  }
+  /** Regler für die Deckkraft des Luftbilds oder Bilds (zum Abpausen). */
+  renderOpacity() {
+    const t = this.plan.garden;
+    if (t.background === "none") return c;
+    const e = Math.round((t.background_opacity ?? 1) * 100);
+    return h`
+      <label class="slider">
+        <span>${t.background === "map" ? "Luftbild" : "Bild"} sichtbar</span>
+        <input
+          id="opacity"
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          .value=${String(e)}
+          @pointerdown=${() => this.remember()}
+          @keydown=${() => this.remember()}
+          @input=${(s) => {
+      this.plan.garden.background_opacity = Number(s.target.value) / 100, this.changed();
+    }}
+        />
+        <output>${e} %</output>
+      </label>
+    `;
+  }
+  /** Kantenlängen ansehen und als Zahl eintippen (genauer als das Luftbild). */
+  renderEdges(t, e, s) {
+    const i = kt(t, e);
+    return h`
+      <details class="edges">
+        <summary>Seitenlängen (${i.length})</summary>
+        <div class="edge-list">
+          ${i.map(
+      (n, r) => h`<label class="field">
+              <span>Seite ${r + 1}</span>
+              <input
+                type="number"
+                step="0.05"
+                min="0.05"
+                .value=${n.toFixed(2)}
+                @change=${(a) => {
+        const o = parseFloat(a.target.value.replace(",", "."));
+        o > 0 && (this.remember(), s(wt(t, r, o).map((l) => [m(l[0]), m(l[1])])), this.changed());
+      }}
+              />
+              <span class="unit">m</span>
+            </label>`
+    )}
+        </div>
+        <p class="hint small">Eine Länge ändern verschiebt den Endpunkt dieser Seite.</p>
+      </details>
+    `;
+  }
+  renderPlanTab() {
+    const t = this.selected?.kind === "feature" ? this.feature(this.selected.id) : null, e = (s) => {
+      const i = S[s], n = this.tool === "feature" && this.featureKind === s;
+      return h`<button
+        class="tool ${n ? "active" : ""}"
+        title=${i.label}
+        @click=${() => n ? this.cancelTool() : this.startTool("feature", s)}
+      >
+        <ha-icon icon=${i.icon}></ha-icon><span>${i.label}</span>
+      </button>`;
+    };
+    return h`
+      <p class="hint small">
+        Pause Haus, Wege, Zäune und Bäume vom Luftbild ab. Dann kannst du das Luftbild abblenden und
+        bleibst in jeder Zoomstufe scharf. Der Grundriss dient nur zur Orientierung.
+      </p>
+      ${this.renderOpacity()}
+      <h3>Flächen</h3>
+      <div class="palette">${["building", "paving", "water", "area"].map(e)}</div>
+      <h3>Linien</h3>
+      <div class="palette">${["fence", "hedge", "boundary", "pipe"].map(e)}</div>
+      <h3>Punkte</h3>
+      <div class="palette">${["tree", "tap", "label"].map(e)}</div>
+      <label class="check">
+        <input type="checkbox" .checked=${this.snapOn} @change=${(s) => this.snapOn = s.target.checked} />
+        An Ecken einrasten <small>(Alt-Taste: kurz aus)</small>
+      </label>
+      ${this.features.length ? h`<h3>Im Plan (${this.features.length})</h3>
+            <ul class="list compact">
+              ${this.features.map((s) => this.renderFeatureItem(s, t?.id === s.id))}
+            </ul>` : c}
+    `;
+  }
+  renderFeatureItem(t, e) {
+    const s = S[t.kind], i = s?.family ?? "area", n = i === "area" ? R(Fe(t.points)) : i === "line" ? W(Me(t.points)) : t.kind === "tree" ? `Ø ${W(2 * (t.radius_m ?? 0))}` : "", r = Object.entries(S).filter(([, a]) => a.family === i);
+    return h`
+      <li class="item ${e ? "open" : ""}">
+        <div class="row" @click=${() => this.selected = e ? null : { kind: "feature", id: t.id }}>
+          <ha-icon icon=${s?.icon ?? "mdi:shape-outline"}></ha-icon>
+          <span class="name">${O(t)}</span>
+          <span class="meta">${n}</span>
+        </div>
+        ${e ? h`<div class="inspector">
+              ${t.kind !== "label" && r.length > 1 ? h`<label class="field wide">
+                    <span>Art</span>
+                    <select
+                      .value=${t.kind}
+                      @change=${(a) => {
+      this.remember(), t.kind = a.target.value, this.changed();
+    }}
+                    >
+                      ${r.map(([a, o]) => h`<option value=${a} ?selected=${a === t.kind}>${o.label}</option>`)}
+                    </select>
+                  </label>` : c}
+              <label class="field wide">
+                <span>${t.kind === "label" ? "Text" : "Name (optional)"}</span>
+                <input
+                  id=${t.kind === "label" ? "feature-label" : "feature-name"}
+                  type="text"
+                  maxlength=${_t}
+                  .value=${t.label ?? ""}
+                  @change=${(a) => {
+      const o = a.target.value.trim();
+      t.kind === "label" && !o || (this.remember(), t.label = o || null, this.changed());
+    }}
+                />
+              </label>
+              ${t.kind === "tree" ? h`<label class="field wide">
+                    <span>Kronendurchmesser</span>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0.2"
+                      .value=${(2 * (t.radius_m ?? 0)).toFixed(1)}
+                      @change=${(a) => {
+      const o = parseFloat(a.target.value);
+      o > 0 && (this.remember(), t.radius_m = m(o / 2), this.changed());
+    }}
+                    />
+                    <span class="unit">m</span>
+                  </label>` : c}
+              ${i !== "point" ? this.renderEdges(t.points, i === "area", (a) => t.points = a) : c}
+              <div class="actions">
+                <span class="spacer"></span>
+                <button class="text danger" @click=${() => this.deleteFeature(t.id)}>
+                  <ha-icon icon="mdi:delete-outline"></ha-icon>Entfernen
+                </button>
+              </div>
+            </div>` : c}
       </li>
     `;
   }
@@ -2517,6 +3179,7 @@ let g = class extends I {
         ${s("image", "mdi:image-outline", "Eigenes Bild", "Foto, Skizze oder Screenshot")}
         ${s("none", "mdi:grid", "Raster", "Leeres Raster in Metern")}
       </div>
+      ${this.renderOpacity()}
       ${t.background === "map" ? this.renderMapSettings(t, e) : c}
       ${t.background === "image" ? this.renderImageSettings(t) : c}
     `;
@@ -2590,117 +3253,132 @@ let g = class extends I {
     `;
   }
 };
-g.styles = $t;
-m([
-  Re({ type: Boolean, reflect: !0 })
-], g.prototype, "narrow", 2);
-m([
-  f()
-], g.prototype, "plan", 2);
-m([
-  f()
-], g.prototype, "status", 2);
-m([
-  f()
-], g.prototype, "error", 2);
-m([
-  f()
-], g.prototype, "toast", 2);
-m([
-  f()
-], g.prototype, "tab", 2);
-m([
-  f()
-], g.prototype, "tool", 2);
-m([
-  f()
-], g.prototype, "toolTarget", 2);
-m([
-  f()
-], g.prototype, "selected", 2);
-m([
-  f()
-], g.prototype, "draft", 2);
-m([
-  f()
-], g.prototype, "scaleDraft", 2);
-m([
-  f()
-], g.prototype, "scaleInput", 2);
-m([
-  f()
-], g.prototype, "view", 2);
-m([
-  f()
-], g.prototype, "size", 2);
-m([
-  f()
-], g.prototype, "imageUrl", 2);
-m([
-  f()
-], g.prototype, "imageSize", 2);
-m([
-  f()
-], g.prototype, "saving", 2);
-m([
-  f()
-], g.prototype, "dirty", 2);
-m([
-  f()
-], g.prototype, "searchOpen", 2);
-m([
-  f()
-], g.prototype, "searchQuery", 2);
-m([
-  f()
-], g.prototype, "searchResults", 2);
-m([
-  f()
-], g.prototype, "searching", 2);
-m([
-  f()
-], g.prototype, "searchError", 2);
-m([
-  f()
-], g.prototype, "searchPin", 2);
-m([
-  f()
-], g.prototype, "toastUndo", 2);
-m([
-  f()
-], g.prototype, "layersOpen", 2);
-m([
-  f()
-], g.prototype, "hover", 2);
-g = m([
-  ot("irrigation-planner-panel")
-], g);
-function v(t) {
+f.styles = zt;
+b([
+  Ue({ type: Boolean, reflect: !0 })
+], f.prototype, "narrow", 2);
+b([
+  $()
+], f.prototype, "plan", 2);
+b([
+  $()
+], f.prototype, "status", 2);
+b([
+  $()
+], f.prototype, "error", 2);
+b([
+  $()
+], f.prototype, "toast", 2);
+b([
+  $()
+], f.prototype, "tab", 2);
+b([
+  $()
+], f.prototype, "featureKind", 2);
+b([
+  $()
+], f.prototype, "measurePts", 2);
+b([
+  $()
+], f.prototype, "snapOn", 2);
+b([
+  $()
+], f.prototype, "snapHint", 2);
+b([
+  $()
+], f.prototype, "tool", 2);
+b([
+  $()
+], f.prototype, "toolTarget", 2);
+b([
+  $()
+], f.prototype, "selected", 2);
+b([
+  $()
+], f.prototype, "draft", 2);
+b([
+  $()
+], f.prototype, "scaleDraft", 2);
+b([
+  $()
+], f.prototype, "scaleInput", 2);
+b([
+  $()
+], f.prototype, "view", 2);
+b([
+  $()
+], f.prototype, "size", 2);
+b([
+  $()
+], f.prototype, "imageUrl", 2);
+b([
+  $()
+], f.prototype, "imageSize", 2);
+b([
+  $()
+], f.prototype, "saving", 2);
+b([
+  $()
+], f.prototype, "dirty", 2);
+b([
+  $()
+], f.prototype, "searchOpen", 2);
+b([
+  $()
+], f.prototype, "searchQuery", 2);
+b([
+  $()
+], f.prototype, "searchResults", 2);
+b([
+  $()
+], f.prototype, "searching", 2);
+b([
+  $()
+], f.prototype, "searchError", 2);
+b([
+  $()
+], f.prototype, "searchPin", 2);
+b([
+  $()
+], f.prototype, "toastUndo", 2);
+b([
+  $()
+], f.prototype, "layersOpen", 2);
+b([
+  $()
+], f.prototype, "hover", 2);
+f = b([
+  gt("irrigation-planner-panel")
+], f);
+function m(t) {
   return Math.round(t * 100) / 100;
 }
-function Se(t) {
+function Oe(t) {
   return Math.round(t / 5) * 5 % 360;
 }
-function V(t) {
-  return t.type === "sprinkler" ? t.center && t.radius_m ? ht(t.radius_m, t.arc_deg) : null : t.polygon.length >= 3 ? dt(t.polygon) : null;
+function G(t) {
+  return t.type === "sprinkler" ? t.center && t.radius_m ? bt(t.radius_m, t.arc_deg) : null : t.polygon.length >= 3 ? Fe(t.polygon) : null;
 }
-function N(t) {
+function W(t) {
+  return t < 1 ? `${Math.round(t * 100)} cm` : `${t.toLocaleString("de-DE", { maximumFractionDigits: 2 })} m`;
+}
+function R(t) {
   return t == null ? "–" : `${t.toLocaleString("de-DE", { maximumFractionDigits: t < 10 ? 1 : 0 })} m²`;
 }
-function Me(t) {
+function Ce(t) {
   if (t < 60) return `${t} s`;
   const e = Math.round(t / 60);
   return e >= 60 ? `${Math.floor(e / 60)} h ${e % 60} min` : `${e} min`;
 }
-function Ne(t) {
+function Le(t) {
   const e = 10 ** Math.floor(Math.log10(t));
   for (const s of [1, 2, 5, 10]) if (s * e >= t) return s * e;
   return 10 * e;
 }
-function wt(t) {
-  const e = Ne(110 / t), s = e >= 1e3 ? `${e / 1e3} km` : e >= 1 ? `${e} m` : `${e * 100} cm`;
+function Rt(t) {
+  const e = Le(110 / t), s = e >= 1e3 ? `${e / 1e3} km` : e >= 1 ? `${e} m` : `${e * 100} cm`;
   return { px: e * t, label: s };
 }
 export {
-  g as IrrigationPlannerPanel
+  f as IrrigationPlannerPanel
 };

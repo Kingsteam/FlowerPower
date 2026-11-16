@@ -14,6 +14,7 @@ from .model import (
     BackgroundType,
     DurationMode,
     EntityRef,
+    Feature,
     Garden,
     GardenModel,
     Point,
@@ -84,6 +85,17 @@ def garden_to_dict(garden: Garden) -> Data:
         "map_zoom": garden.map_zoom,
         "map_provider": garden.map_provider,
         "map_url": garden.map_url,
+        "background_opacity": garden.background_opacity,
+        "features": [
+            {
+                "id": f.id,
+                "kind": f.kind,
+                "points": [_point_out(p) for p in f.points],
+                "radius_m": f.radius_m,
+                "label": f.label,
+            }
+            for f in garden.features
+        ],
     }
 
 
@@ -103,6 +115,17 @@ def garden_from_dict(raw: Data) -> Garden:
         map_zoom=raw.get("map_zoom"),
         map_provider=raw.get("map_provider"),
         map_url=raw.get("map_url"),
+        background_opacity=float(_opt(raw, "background_opacity", 1.0)),
+        features=[
+            Feature(
+                id=str(f["id"]),
+                kind=str(f["kind"]),
+                points=[_point_in(p) for p in _opt(f, "points", [])],  # type: ignore[misc]
+                radius_m=None if f.get("radius_m") is None else float(f["radius_m"]),
+                label=f.get("label"),
+            )
+            for f in _opt(raw, "features", [])
+        ],
     )
 
 

@@ -479,6 +479,242 @@ export const styles = css`
   .grid-layer.faint {
     opacity: 0.5;
   }
+  /* Grundriss: ruhige Farben, damit die Zonen im Vordergrund bleiben */
+  .feature {
+    vector-effect: non-scaling-stroke;
+    cursor: pointer;
+  }
+  polygon.feature {
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+  }
+  polygon.feature.building {
+    fill: #b0a9a1;
+    stroke: #6d655d;
+  }
+  polygon.feature.paving {
+    fill: #e8dfd2;
+    stroke: #a8998a;
+  }
+  polygon.feature.water {
+    fill: #9ccbea;
+    stroke: #3f8fc4;
+  }
+  polygon.feature.area {
+    fill: rgba(120, 120, 120, 0.12);
+    stroke: #8a8a8a;
+    stroke-dasharray: 6 4;
+  }
+  g.feature polyline {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  g.feature polyline.hit {
+    stroke: transparent;
+    vector-effect: none;
+  }
+  g.feature.fence polyline:not(.hit) {
+    stroke: #6d4c41;
+    stroke-width: 2;
+    stroke-dasharray: 7 3;
+  }
+  g.feature.hedge polyline:not(.hit) {
+    stroke: #4f7f2a;
+    stroke-width: 7;
+    stroke-opacity: 0.8;
+  }
+  g.feature.boundary polyline:not(.hit) {
+    stroke: #c0392b;
+    stroke-width: 2;
+    stroke-dasharray: 12 4 3 4;
+  }
+  g.feature.pipe polyline:not(.hit) {
+    stroke: #1e88e5;
+    stroke-width: 2;
+    stroke-dasharray: 2 4;
+  }
+  g.feature.tree circle {
+    fill: rgba(67, 160, 71, 0.35);
+    stroke: #2e7d32;
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+  g.feature.tree circle.trunk {
+    fill: #5d4037;
+    stroke: none;
+  }
+  g.feature.tap circle {
+    fill: #1e88e5;
+    stroke: #fff;
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+  g.feature.tap text {
+    fill: #fff;
+    font-weight: 700;
+    text-anchor: middle;
+    pointer-events: none;
+  }
+  text.feature-name {
+    fill: #4e4740;
+    stroke: rgba(255, 255, 255, 0.7);
+    paint-order: stroke;
+    stroke-linejoin: round;
+    text-anchor: middle;
+    pointer-events: none;
+  }
+  text.feature.label {
+    fill: var(--primary-text-color);
+    stroke: var(--card);
+    paint-order: stroke;
+    stroke-linejoin: round;
+    text-anchor: middle;
+    font-style: italic;
+  }
+  polygon.feature.selected,
+  g.feature.selected polyline:not(.hit),
+  g.feature.selected circle:not(.trunk) {
+    stroke: var(--accent);
+    stroke-width: 3;
+  }
+  text.feature.selected {
+    fill: var(--accent);
+  }
+  .feature-draft polyline {
+    fill: rgba(120, 120, 120, 0.15);
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-dasharray: 6 4;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
+  .feature-draft circle {
+    fill: #fff;
+    stroke: var(--accent);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
+  .measure polyline {
+    fill: none;
+    stroke: #ff6f00;
+    stroke-width: 2.5;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
+  .measure circle {
+    fill: #ff6f00;
+    pointer-events: none;
+  }
+  .measure-label {
+    fill: #ff6f00;
+    stroke: #fff;
+    paint-order: stroke;
+    stroke-linejoin: round;
+    text-anchor: middle;
+    font-weight: 700;
+    pointer-events: none;
+  }
+  .snap-hint {
+    fill: none;
+    stroke: #ff6f00;
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
+
+  /* Seitenleiste Grundriss */
+  .palette {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .palette .tool {
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--primary-text-color);
+    font-size: 13px;
+    text-align: left;
+    min-width: 0;
+  }
+  .palette .tool span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .palette .tool ha-icon {
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .palette .tool:hover {
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+  }
+  .palette .tool.active {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+  }
+  .palette .tool.active ha-icon {
+    color: var(--accent);
+  }
+  .slider {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 4px;
+    font-size: 13px;
+  }
+  .slider input {
+    padding: 0;
+    border: none;
+    background: none;
+    accent-color: var(--accent);
+  }
+  .slider output {
+    min-width: 3.2em;
+    text-align: right;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 16px 4px 4px;
+    font-size: 13.5px;
+  }
+  .check input {
+    width: auto;
+    accent-color: var(--accent);
+  }
+  .check small {
+    color: var(--muted);
+  }
+  .field.wide {
+    margin: 6px 0;
+  }
+  .edges {
+    margin: 8px 0;
+    font-size: 13px;
+  }
+  .edges summary {
+    cursor: pointer;
+    color: var(--accent);
+    font-weight: 500;
+    padding: 4px 0;
+  }
+  .edge-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 6px;
+  }
   .zone path,
   .zone polygon {
     fill: color-mix(in srgb, var(--zone) 30%, transparent);

@@ -13,6 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date
 from enum import StrEnum
+import math
 from typing import Any, Final
 
 from .const import DEFAULT_MAX_OPEN_VALVES
@@ -106,6 +107,35 @@ class Garden:
     map_zoom: float | None = None
     map_provider: str | None = None
     map_url: str | None = None  # nur für eigenen Dienst ({z}, {x}, {y})
+    # Deckkraft des Hintergrunds (0 = aus, 1 = voll), z. B. zum Abpausen.
+    background_opacity: float = 1.0
+    # Grundriss: abgepauste Formen (Haus, Weg, Zaun, Baum, …), nur zur
+    # Orientierung; für die Berechnung zählen allein die Zonen.
+    features: list[Feature] = field(default_factory=list)
+
+
+# Arten von Grundriss-Formen und wie viele Punkte sie brauchen.
+FEATURE_AREAS: Final = ("building", "paving", "water", "area")
+FEATURE_LINES: Final = ("fence", "hedge", "boundary", "pipe")
+FEATURE_POINTS: Final = ("tree", "label", "tap")
+FEATURE_KINDS: Final = (*FEATURE_AREAS, *FEATURE_LINES, *FEATURE_POINTS)
+MAX_FEATURES: Final = 500
+MAX_LABEL_LENGTH: Final = 60
+
+
+@dataclass(slots=True, kw_only=True)
+class Feature:
+    """Eine Form im Grundriss.
+
+    Flächen und Linien haben ``points``; Baum, Beschriftung und Wasserhahn
+    haben genau einen Punkt. Ein Baum hat dazu einen Kronenradius.
+    """
+
+    id: str
+    kind: str
+    points: list[Point] = field(default_factory=list)
+    radius_m: float | None = None
+    label: str | None = None
 
 
 @dataclass(slots=True, kw_only=True)
@@ -402,6 +432,41 @@ def _check_garden(garden: Garden) -> None:
         (x1, y1), (x2, y2) = garden.scale_points
         if garden.scale_distance_m <= 0 or (x1, y1) == (x2, y2):
             raise ValueError("Bild: Maßstab ungültig")
+    if not 0 <= garden.background_opacity <= 1:
+        raise ValueError("Deckkraft des Hintergrunds liegt zwischen 0 und 1")
+    _check_features(garden.features)
+
+
+def _check_features(features: list[Feature]) -> None:
+    if len(features) > MAX_FEATURES:
+        raise ValueError(f"Grundriss: höchstens {MAX_FEATURES} Formen")
+    _unique_ids("Form", features)
+    for feature in features:
+        name = f"Form {feature.id}"
+        if feature.kind not in FEATURE_KINDS:
+            raise ValueError(f"{name}: unbekannte Art {feature.kind!r}")
+        if any(not math.isfinite(c) for p in feature.points for c in p):
+            raise ValueError(f"{name}: ungültige Koordinate")
+        need = (
+            3
+            if feature.kind in FEATURE_AREAS
+            else 2
+            if feature.kind in FEATURE_LINES
+            else 1
+        )
+        if feature.kind in FEATURE_POINTS:
+            if len(feature.points) != 1:
+                raise ValueError(f"{name}: braucht genau einen Punkt")
+        elif len(feature.points) < need:
+            raise ValueError(f"{name}: braucht mindestens {need} Punkte")
+        if feature.kind == "tree" and not (feature.radius_m and feature.radius_m > 0):
+            raise ValueError(f"{name}: Kronenradius muss positiv sein")
+        if feature.kind == "label" and not (feature.label or "").strip():
+            raise ValueError(f"{name}: Beschriftung fehlt")
+        if feature.label is not None and len(feature.label) > MAX_LABEL_LENGTH:
+            raise ValueError(
+                f"{name}: Beschriftung höchstens {MAX_LABEL_LENGTH} Zeichen"
+            )
 
 
 def _unique_ids(kind: str, items: list[Any]) -> set[str]:

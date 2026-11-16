@@ -189,3 +189,57 @@ def test_map_providers_are_complete() -> None:
         assert provider["kind"] in ("photo", "map"), key
         assert provider["attribution"], key
         assert 1 <= provider["max_zoom"] <= 22, key
+
+
+# Grundriss ---------------------------------------------------------------------
+
+
+def _features(*features: dict) -> Garden:
+    return garden_from_dict({"features": list(features)})
+
+
+def test_features_round_trip() -> None:
+    garden = _features(
+        {"id": "haus", "kind": "building", "points": [[0, 0], [8, 0], [8, 6]]},
+        {"id": "zaun", "kind": "fence", "points": [[0, 10], [20, 10]]},
+        {"id": "baum", "kind": "tree", "points": [[3, 3]], "radius_m": 2.5},
+        {"id": "text", "kind": "label", "points": [[1, 1]], "label": "Gemüse"},
+    )
+    garden.background_opacity = 0.4
+    GardenModel(garden=garden).validate()
+    again = garden_from_dict(garden_to_dict(garden))
+    assert again == garden
+    assert again.features[2].radius_m == 2.5
+    assert garden_from_dict({}).features == []
+    assert garden_from_dict({}).background_opacity == 1.0
+
+
+@pytest.mark.parametrize(
+    ("feature", "message"),
+    [
+        ({"id": "a", "kind": "building", "points": [[0, 0], [1, 0]]}, "3 Punkte"),
+        ({"id": "a", "kind": "fence", "points": [[0, 0]]}, "2 Punkte"),
+        ({"id": "a", "kind": "tree", "points": [[0, 0]]}, "Kronenradius"),
+        (
+            {"id": "a", "kind": "tree", "points": [[0, 0], [1, 1]], "radius_m": 1},
+            "einen",
+        ),
+        ({"id": "a", "kind": "label", "points": [[0, 0]], "label": " "}, "fehlt"),
+        ({"id": "a", "kind": "label", "points": [[0, 0]], "label": "x" * 61}, "60"),
+        ({"id": "a", "kind": "rakete", "points": [[0, 0]]}, "unbekannte"),
+        ({"id": "a", "kind": "tap", "points": [[float("nan"), 0]]}, "Koordinate"),
+    ],
+)
+def test_feature_validation(feature: dict, message: str) -> None:
+    with pytest.raises(ValueError, match=message):
+        GardenModel(garden=_features(feature)).validate()
+
+
+def test_feature_ids_unique_and_opacity_range() -> None:
+    tap = {"id": "a", "kind": "tap", "points": [[0, 0]]}
+    with pytest.raises(ValueError, match="doppelt"):
+        GardenModel(garden=_features(tap, tap)).validate()
+    garden = _features(tap)
+    garden.background_opacity = 1.5
+    with pytest.raises(ValueError, match="Deckkraft"):
+        GardenModel(garden=garden).validate()

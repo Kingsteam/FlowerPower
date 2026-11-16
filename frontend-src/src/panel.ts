@@ -14,7 +14,11 @@ import {
   centroid,
   compass,
   distance,
+  edgeLengths,
   metersPerPixel,
+  pathLength,
+  setEdgeLength,
+  snapPoint,
   latLonToPlan,
   planToLatLon,
   polar,
@@ -24,9 +28,11 @@ import {
   tilesFor,
   zoomForScale,
 } from "./geometry";
+import { FEATURE_META, MAX_LABEL_LENGTH, family, featureName, newFeatureId } from "./features";
 import { type Place, SEARCH_ATTRIBUTION, searchAddress } from "./geocode";
 import { styles } from "./styles";
 import type {
+  Feature,
   Garden,
   Hass,
   PlanData,
@@ -61,15 +67,20 @@ const STATE_LABEL: Record<string, string> = {
 };
 const DEFAULT_IMAGE_MPP = 0.05;
 
-type Tool = "select" | "sprinkler" | "bed" | "place" | "scale";
-type Selection = { kind: "zone" | "valve" | "sensor"; id: string } | null;
+type Tool = "select" | "sprinkler" | "bed" | "place" | "scale" | "feature" | "measure";
+type Selection = { kind: "zone" | "valve" | "sensor" | "feature"; id: string } | null;
 type Drag =
   | { type: "pan"; sx: number; sy: number; cx: number; cy: number; moved: boolean }
   | { type: "new-sprinkler"; id: string }
   | { type: "move-zone"; id: string; start: Point; orig: PlanZone }
   | { type: "center" | "radius" | "start" | "end"; id: string }
   | { type: "vertex"; id: string; index: number }
-  | { type: "marker"; kind: "valve" | "sensor"; id: string };
+  | { type: "marker"; kind: "valve" | "sensor"; id: string }
+  | { type: "f-vertex"; id: string; index: number }
+  | { type: "f-move"; id: string; start: Point; orig: Feature }
+  | { type: "f-radius" | "new-tree"; id: string };
+// Fangen: so nah (Bildschirmpunkte) muss ein Punkt an einer Ecke liegen.
+const SNAP_PX = 10;
 
 interface Editable {
   garden: Garden;
@@ -88,7 +99,12 @@ export class IrrigationPlannerPanel extends LitElement {
   @state() private status?: Status;
   @state() private error = "";
   @state() private toast = "";
-  @state() private tab: "zones" | "background" = "zones";
+  @state() private tab: "zones" | "plan" | "background" = "zones";
+  // Grundriss
+  @state() private featureKind = "building";
+  @state() private measurePts: Point[] = [];
+  @state() private snapOn = true;
+  @state() private snapHint: Point | null = null;
   @state() private tool: Tool = "select";
   @state() private toolTarget = "";
   @state() private selected: Selection = null;
@@ -381,6 +397,13 @@ export class IrrigationPlannerPanel extends LitElement {
       if (m.position) pts.push(m.position);
     }
     const g = this.plan?.garden;
+    for (const f of g?.features ?? []) {
+      pts.push(...f.points);
+      if (f.kind === "tree" && f.radius_m) {
+        const [x, y] = f.points[0];
+        pts.push([x - f.radius_m, y - f.radius_m], [x + f.radius_m, y + f.radius_m]);
+      }
+    }
     if (g?.background === "image" && this.imageSize) {
       const mpp = this.imageMpp();
       pts.push([0, 0], [this.imageSize[0] * mpp, this.imageSize[1] * mpp]);
@@ -441,7 +464,82 @@ export class IrrigationPlannerPanel extends LitElement {
     this.draft = [];
     this.scaleDraft = [];
     this.scaleInput = "";
-    if (target && tool !== "place") this.selected = { kind: "zone", id: target };
+    this.measurePts = [];
+    this.hover = null;
+    this.snapHint = null;
+    if (tool === "feature") this.featureKind = target;
+    if (target && (tool === "sprinkler" || tool === "bed")) {
+      this.selected = { kind: "zone", id: target };
+    }
+  }
+
+  // Grundriss -------------------------------------------------------------------
+
+  private get features(): Feature[] {
+    return this.plan!.garden.features;
+  }
+
+  private feature(id: string): Feature {
+    return this.features.find((f) => f.id === id)!;
+  }
+
+  /** Alle Ecken und Mittelpunkte, an denen neue Punkte einrasten. */
+  private snapCandidates(skip?: Point): Point[] {
+    const pts: Point[] = [];
+    for (const f of this.features) pts.push(...f.points);
+    for (const z of this.plan!.zones) {
+      pts.push(...z.polygon);
+      if (z.center) pts.push(z.center);
+    }
+    for (const m of [...this.plan!.valves, ...this.plan!.sensors]) if (m.position) pts.push(m.position);
+    pts.push(...this.draft, ...this.measurePts);
+    return skip ? pts.filter((p) => p !== skip) : pts;
+  }
+
+  /** Punkt fangen (Alt-Taste: frei). Merkt den Fangpunkt für die Anzeige. */
+  private snap(p: Point, event?: MouseEvent, skip?: Point): Point {
+    if (!this.snapOn || event?.altKey) {
+      this.snapHint = null;
+      return p;
+    }
+    const hit = snapPoint(p, this.snapCandidates(skip), SNAP_PX / this.view.scale);
+    this.snapHint = hit;
+    return hit ? [hit[0], hit[1]] : p;
+  }
+
+  private finishFeature(): void {
+    const kind = this.featureKind;
+    const need = family(kind) === "area" ? 3 : 2;
+    if (this.draft.length < need) {
+      this.showToast(`${FEATURE_META[kind].label}: mindestens ${need} Punkte`, true);
+      return;
+    }
+    this.addFeature({ kind, points: this.draft.map((p) => [round(p[0]), round(p[1])]) });
+    this.cancelTool();
+  }
+
+  private addFeature(partial: Partial<Feature> & { kind: string; points: Point[] }): Feature {
+    this.remember();
+    const feature: Feature = {
+      id: newFeatureId(this.features),
+      radius_m: null,
+      label: null,
+      ...partial,
+    };
+    this.features.push(feature);
+    this.selected = { kind: "feature", id: feature.id };
+    this.tab = "plan";
+    this.changed();
+    return feature;
+  }
+
+  private deleteFeature(id: string): void {
+    const feature = this.feature(id);
+    this.remember();
+    this.plan!.garden.features = this.features.filter((f) => f.id !== id);
+    if (this.selected?.kind === "feature" && this.selected.id === id) this.selected = null;
+    this.changed();
+    this.removed(`${featureName(feature)} entfernt`);
   }
 
   private cancelTool(): void {
@@ -453,12 +551,16 @@ export class IrrigationPlannerPanel extends LitElement {
     if (target && ["INPUT", "SELECT", "TEXTAREA"].includes(target.tagName)) return;
     if (event.key === "Escape") this.cancelTool();
     if (event.key === "Enter" && this.tool === "bed") this.finishBed();
+    if (event.key === "Enter" && this.tool === "feature") this.finishFeature();
     if ((event.ctrlKey || event.metaKey) && event.key === "z") {
       event.preventDefault();
       this.undo();
     }
     if (event.key === "Delete" && this.selected?.kind === "zone") {
       this.clearGeometry(this.selected.id);
+    }
+    if (event.key === "Delete" && this.selected?.kind === "feature") {
+      this.deleteFeature(this.selected.id);
     }
   };
 
@@ -492,9 +594,44 @@ export class IrrigationPlannerPanel extends LitElement {
     if (event.button !== 0) return;
     const svgEl = event.currentTarget as SVGSVGElement;
     const p = this.toPlan(event);
+    if (this.tool === "feature") {
+      const kind = this.featureKind;
+      const q = this.snap(p, event);
+      const fam = family(kind);
+      if (fam === "point") {
+        const point: Point = [round(q[0]), round(q[1])];
+        if (kind === "tree") {
+          const f = this.addFeature({ kind, points: [point], radius_m: 0 });
+          this.drag = { type: "new-tree", id: f.id };
+          svgEl.setPointerCapture(event.pointerId);
+        } else {
+          this.addFeature({ kind, points: [point], label: kind === "label" ? "Beschriftung" : null });
+          this.cancelTool();
+          if (kind === "label") {
+            void this.updateComplete.then(() =>
+              (this.renderRoot.querySelector("#feature-label") as HTMLInputElement | null)?.select(),
+            );
+          }
+        }
+        return;
+      }
+      const near = (a: Point) => distance(q, a) * this.view.scale < 12;
+      if (fam === "area" && this.draft.length >= 3 && near(this.draft[0])) this.finishFeature();
+      else if (fam === "line" && this.draft.length >= 2 && near(this.draft[this.draft.length - 1])) {
+        this.finishFeature();
+      } else this.draft = [...this.draft, q];
+      return;
+    }
+    if (this.tool === "measure") {
+      this.measurePts = [...this.measurePts, this.snap(p, event)];
+      return;
+    }
     if (this.tool === "sprinkler") {
       this.remember();
       const zone = this.zone(this.toolTarget);
+      const c = this.snap(p, event);
+      p[0] = c[0];
+      p[1] = c[1];
       zone.center = [round(p[0]), round(p[1])];
       zone.radius_m = 0;
       this.drag = { type: "new-sprinkler", id: zone.id };
@@ -503,10 +640,11 @@ export class IrrigationPlannerPanel extends LitElement {
       return;
     }
     if (this.tool === "bed") {
-      if (this.draft.length >= 3 && distance(p, this.draft[0]) * this.view.scale < 12) {
+      const q = this.snap(p, event);
+      if (this.draft.length >= 3 && distance(q, this.draft[0]) * this.view.scale < 12) {
         this.finishBed();
       } else {
-        this.draft = [...this.draft, p];
+        this.draft = [...this.draft, q];
       }
       return;
     }
@@ -549,10 +687,16 @@ export class IrrigationPlannerPanel extends LitElement {
   private onPointerMove = (event: PointerEvent): void => {
     const drag = this.drag;
     if (!drag) {
-      if (this.tool === "bed" && this.draft.length) this.hover = this.toPlan(event);
+      if (["bed", "feature", "measure", "sprinkler"].includes(this.tool)) {
+        this.hover = this.snap(this.toPlan(event), event);
+      }
       return;
     }
     const p = this.toPlan(event);
+    if (drag.type.startsWith("f-") || drag.type === "new-tree") {
+      this.moveFeature(drag, p, event);
+      return;
+    }
     if (drag.type === "pan") {
       const dx = event.clientX - drag.sx;
       const dy = event.clientY - drag.sy;
@@ -597,9 +741,11 @@ export class IrrigationPlannerPanel extends LitElement {
         zone.arc_deg = arc;
         break;
       }
-      case "vertex":
-        zone.polygon[drag.index] = [round(p[0]), round(p[1])];
+      case "vertex": {
+        const q = this.snap(p, event, zone.polygon[drag.index]);
+        zone.polygon[drag.index] = [round(q[0]), round(q[1])];
         break;
+      }
       case "move-zone": {
         const dx = p[0] - drag.start[0];
         const dy = p[1] - drag.start[1];
@@ -616,10 +762,41 @@ export class IrrigationPlannerPanel extends LitElement {
 
   @state() private hover: Point | null = null;
 
+  private moveFeature(drag: Drag, p: Point, event: PointerEvent): void {
+    if (!("id" in drag)) return;
+    const f = this.feature(drag.id);
+    if (!f) return;
+    switch (drag.type) {
+      case "new-tree":
+      case "f-radius":
+        f.radius_m = round(Math.max(0.1, distance(f.points[0], p)));
+        break;
+      case "f-vertex": {
+        const q = this.snap(p, event, f.points[drag.index]);
+        f.points[drag.index] = [round(q[0]), round(q[1])];
+        break;
+      }
+      case "f-move": {
+        const dx = p[0] - drag.start[0];
+        const dy = p[1] - drag.start[1];
+        f.points = drag.orig.points.map((q) => [round(q[0] + dx), round(q[1] + dy)]);
+        break;
+      }
+    }
+    this.changed();
+  }
+
   private onPointerUp = (): void => {
     const drag = this.drag;
     this.drag = null;
+    this.snapHint = null;
     if (!drag) return;
+    if (drag.type === "new-tree") {
+      const f = this.feature(drag.id);
+      if (!f.radius_m || f.radius_m < 0.3) f.radius_m = 1.5;
+      this.cancelTool();
+      this.changed();
+    }
     if (drag.type === "pan") {
       if (!drag.moved) this.selected = null;
       return;
@@ -715,6 +892,7 @@ export class IrrigationPlannerPanel extends LitElement {
     for (const m of [...this.plan!.valves, ...this.plan!.sensors]) {
       if (m.position) m.position = shift(m.position);
     }
+    for (const f of this.features) f.points = f.points.map(shift);
     this.view = { ...this.view, cx: 0, cy: 0 };
     if (this.searchPin) {
       this.searchPin = { ...this.searchPin, point: shift(this.searchPin.point) };
@@ -766,7 +944,8 @@ export class IrrigationPlannerPanel extends LitElement {
    */
   private goToPlace(place: Place): void {
     const g = this.plan!.garden;
-    const scale = 1 / metersPerPixel(place.latitude, 19);
+    // Nah genug, dass ein Grundstück den Bildschirm füllt (etwa 15 Pixel je Meter).
+    const scale = 1 / metersPerPixel(place.latitude, 20.5);
     this.autoFit = false;
     const empty =
       !this.hasAnyDrawing() &&
@@ -933,6 +1112,9 @@ export class IrrigationPlannerPanel extends LitElement {
             <button class=${this.tab === "zones" ? "active" : ""} @click=${() => (this.tab = "zones")}>
               <ha-icon icon="mdi:sprinkler-variant"></ha-icon>Zonen
             </button>
+            <button class=${this.tab === "plan" ? "active" : ""} @click=${() => (this.tab = "plan")}>
+              <ha-icon icon="mdi:floor-plan"></ha-icon>Grundriss
+            </button>
             <button
               class=${this.tab === "background" ? "active" : ""}
               @click=${() => (this.tab = "background")}
@@ -941,7 +1123,11 @@ export class IrrigationPlannerPanel extends LitElement {
             </button>
           </div>
           <div class="side-body">
-            ${this.tab === "zones" ? this.renderZonesTab() : this.renderBackgroundTab()}
+            ${this.tab === "zones"
+              ? this.renderZonesTab()
+              : this.tab === "plan"
+                ? this.renderPlanTab()
+                : this.renderBackgroundTab()}
           </div>
         </aside>
       </div>
@@ -1035,14 +1221,22 @@ export class IrrigationPlannerPanel extends LitElement {
             this.draft = this.draft.slice(0, -1);
             this.finishBed();
           }
+          if (this.tool === "feature" && family(this.featureKind) !== "point") {
+            e.preventDefault();
+            this.draft = this.draft.slice(0, -1);
+            this.finishFeature();
+          }
         }}
       >
         <g transform=${transform}>
           ${this.renderBackground(px)}
+          <g class="features">${this.renderFeatures(px)}</g>
           ${this.plan!.zones.map((z, i) => this.renderZone(z, i, px))}
-          ${this.renderSelectedHandles(px)} ${this.renderDraft(px)} ${this.renderScaleDraft(px)}
+          ${this.renderSelectedHandles(px)} ${this.renderFeatureHandles(px)}
+          ${this.renderDraft(px)} ${this.renderScaleDraft(px)} ${this.renderMeasure(px)}
           ${this.plan!.valves.map((v) => this.renderMarker("valve", v, px))}
           ${this.plan!.sensors.map((s) => this.renderMarker("sensor", s, px))}
+          ${this.renderSnapHint(px)}
           ${this.searchPin && this.plan!.garden.background === "map"
             ? svg`<g class="pin" transform="translate(${this.searchPin.point[0]} ${this.searchPin.point[1]}) scale(${px})">
                 <path d="M0 0 C-3 -9 -11 -13 -11 -22 A11 11 0 1 1 11 -22 C11 -13 3 -9 0 0 Z"></path>
@@ -1096,8 +1290,13 @@ export class IrrigationPlannerPanel extends LitElement {
         svg`<image href=${this.imageUrl} x="0" y="0" width=${this.imageSize[0] * mpp} height=${this.imageSize[1] * mpp} preserveAspectRatio="none"></image>`,
       );
     }
-    if (g.background !== "map") parts.push(this.renderGrid(box, px, g.background === "image"));
-    return parts;
+    // Deckkraft: zum Abpausen das Luftbild oder Bild abblenden.
+    const result = [svg`<g class="bg" opacity=${g.background_opacity ?? 1}>${parts}</g>`];
+    const faded = (g.background_opacity ?? 1) < 0.35;
+    if (g.background !== "map" || faded) {
+      result.push(this.renderGrid(box, px, g.background === "image" && !faded));
+    }
+    return result;
   }
 
   private renderGrid(box: { x0: number; y0: number; x1: number; y1: number }, px: number, faint: boolean) {
@@ -1209,7 +1408,144 @@ export class IrrigationPlannerPanel extends LitElement {
     return nothing;
   }
 
+  private renderFeatures(px: number) {
+    return this.features.map((f) => {
+      const sel = this.selected?.kind === "feature" && this.selected.id === f.id;
+      const fam = family(f.kind);
+      const down = (e: PointerEvent) => {
+        if (this.tool !== "select") return;
+        this.selected = { kind: "feature", id: f.id };
+        this.tab = "plan";
+        this.startDrag(e, { type: "f-move", id: f.id, start: this.toPlan(e), orig: structuredClone(f) });
+      };
+      const cls = `feature ${f.kind} ${sel ? "selected" : ""}`;
+      if (fam === "area") {
+        const c = centroid(f.points);
+        return svg`<polygon class=${cls} points=${f.points.map((p) => p.join(",")).join(" ")}
+          @pointerdown=${down}><title>${featureName(f)}</title></polygon>
+          ${f.label
+            ? svg`<text class="feature-name" x=${c[0]} y=${c[1]} dy=${4 * px} font-size=${12 * px}
+                stroke-width=${3 * px}>${f.label}</text>`
+            : nothing}`;
+      }
+      if (fam === "line") {
+        return svg`<g class=${cls} @pointerdown=${down}>
+          <polyline class="hit" points=${f.points.map((p) => p.join(",")).join(" ")} stroke-width=${12 * px}></polyline>
+          <polyline points=${f.points.map((p) => p.join(",")).join(" ")}></polyline>
+          <title>${featureName(f)}</title></g>`;
+      }
+      const [x, y] = f.points[0];
+      if (f.kind === "tree") {
+        return svg`<g class=${cls} @pointerdown=${down}>
+          <circle cx=${x} cy=${y} r=${f.radius_m ?? 1}></circle>
+          <circle class="trunk" cx=${x} cy=${y} r=${3 * px}></circle>
+          <title>${featureName(f)}</title></g>`;
+      }
+      if (f.kind === "label") {
+        return svg`<text class=${cls} x=${x} y=${y} font-size=${14 * px} stroke-width=${3 * px}
+          @pointerdown=${down}>${f.label}</text>`;
+      }
+      return svg`<g class=${cls} @pointerdown=${down}>
+        <circle cx=${x} cy=${y} r=${8 * px}></circle>
+        <text x=${x} y=${y} dy=${4 * px} font-size=${11 * px}>H</text>
+        <title>${featureName(f)}</title></g>`;
+    });
+  }
+
+  private renderFeatureHandles(px: number) {
+    if (this.tool !== "select" || this.selected?.kind !== "feature") return nothing;
+    const f = this.feature(this.selected.id);
+    if (!f) return nothing;
+    const r = 7 * px;
+    const fam = family(f.kind);
+    if (fam === "point") {
+      if (f.kind !== "tree") return nothing;
+      const [x, y] = f.points[0];
+      const rp = polar(f.points[0], f.radius_m ?? 1, 135);
+      return svg`
+        <circle class="handle center" cx=${x} cy=${y} r=${r}
+          @pointerdown=${(e: PointerEvent) => this.startDrag(e, { type: "f-move", id: f.id, start: this.toPlan(e), orig: structuredClone(f) })}></circle>
+        <circle class="handle" cx=${rp[0]} cy=${rp[1]} r=${r}
+          @pointerdown=${(e: PointerEvent) => this.startDrag(e, { type: "f-radius", id: f.id })}><title>Kronengröße</title></circle>`;
+    }
+    const pts = f.points;
+    const closed = fam === "area";
+    const mids = (closed ? pts : pts.slice(0, -1)).map((p, i) => {
+      const q = pts[(i + 1) % pts.length];
+      const m: Point = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+      return svg`<circle class="handle mid" cx=${m[0]} cy=${m[1]} r=${r * 0.7}
+        @pointerdown=${(e: PointerEvent) => this.insertFeatureVertex(e, f, i)}><title>Ziehen: neuen Punkt einfügen</title></circle>`;
+    });
+    return [
+      ...mids,
+      ...pts.map(
+        (p, i) => svg`<circle class="handle" cx=${p[0]} cy=${p[1]} r=${r}
+          @pointerdown=${(e: PointerEvent) => this.startDrag(e, { type: "f-vertex", id: f.id, index: i })}
+          @contextmenu=${(e: MouseEvent) => this.removeFeatureVertex(e, f, i)}
+          @dblclick=${(e: MouseEvent) => this.removeFeatureVertex(e, f, i)}><title>Ziehen: verschieben · Doppelklick: löschen</title></circle>`,
+      ),
+    ];
+  }
+
+  private insertFeatureVertex(event: PointerEvent, f: Feature, index: number): void {
+    if (this.tool !== "select") return;
+    event.stopPropagation();
+    this.remember();
+    const a = f.points[index];
+    const b = f.points[(index + 1) % f.points.length];
+    f.points.splice(index + 1, 0, [round((a[0] + b[0]) / 2), round((a[1] + b[1]) / 2)]);
+    this.changed();
+    const svgEl = this.renderRoot.querySelector("svg.plan") as SVGSVGElement;
+    svgEl.setPointerCapture(event.pointerId);
+    this.drag = { type: "f-vertex", id: f.id, index: index + 1 };
+  }
+
+  private removeFeatureVertex(event: MouseEvent, f: Feature, index: number): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const min = family(f.kind) === "area" ? 3 : 2;
+    if (f.points.length <= min) {
+      this.showToast(`${FEATURE_META[f.kind].label}: mindestens ${min} Punkte`, true);
+      return;
+    }
+    this.remember();
+    f.points.splice(index, 1);
+    this.changed();
+  }
+
+  /** Messwerkzeug: Strecken mit Längen und Summe. */
+  private renderMeasure(px: number) {
+    if (this.tool !== "measure" || !this.measurePts.length) return nothing;
+    const pts = this.hover ? [...this.measurePts, this.hover] : this.measurePts;
+    const labels = pts.slice(1).map((q, i) => {
+      const p = pts[i];
+      if (distance(p, q) < 0.01) return nothing;
+      const m: Point = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+      return svg`<text class="measure-label" x=${m[0]} y=${m[1]} dy=${-6 * px} font-size=${13 * px}
+        stroke-width=${3 * px}>${fmtLength(distance(p, q))}</text>`;
+    });
+    return svg`<g class="measure">
+      <polyline points=${pts.map((p) => p.join(",")).join(" ")}></polyline>
+      ${this.measurePts.map((p) => svg`<circle cx=${p[0]} cy=${p[1]} r=${4 * px}></circle>`)}
+      ${labels}
+    </g>`;
+  }
+
+  private renderSnapHint(px: number) {
+    if (!this.snapHint) return nothing;
+    return svg`<circle class="snap-hint" cx=${this.snapHint[0]} cy=${this.snapHint[1]} r=${9 * px}></circle>`;
+  }
+
   private renderDraft(px: number) {
+    if (this.tool === "feature" && this.draft.length) {
+      const pts = this.hover ? [...this.draft, this.hover] : this.draft;
+      const closed = family(this.featureKind) === "area";
+      return svg`
+        <g class="draft feature-draft ${this.featureKind}">
+          <polyline points=${[...pts, ...(closed && pts.length > 2 ? [pts[0]] : [])].map((p) => p.join(",")).join(" ")}></polyline>
+          ${this.draft.map((p, i) => svg`<circle cx=${p[0]} cy=${p[1]} r=${(i === 0 ? 7 : 5) * px}></circle>`)}
+        </g>`;
+    }
     if (this.tool !== "bed" || !this.draft.length) return nothing;
     const pts = this.hover ? [...this.draft, this.hover] : this.draft;
     const index = this.plan!.zones.findIndex((z) => z.id === this.toolTarget);
@@ -1264,6 +1600,10 @@ export class IrrigationPlannerPanel extends LitElement {
         <button class="icon" title="Vergrößern" @click=${() => this.zoomBy(1.4)}><ha-icon icon="mdi:plus"></ha-icon></button>
         <button class="icon" title="Verkleinern" @click=${() => this.zoomBy(1 / 1.4)}><ha-icon icon="mdi:minus"></ha-icon></button>
         <button class="icon" title="Alles zeigen" @click=${this.fitView}><ha-icon icon="mdi:fit-to-screen-outline"></ha-icon></button>
+        <button class="icon ${this.tool === "measure" ? "on" : ""}" title="Abstand messen"
+          @click=${() => (this.tool === "measure" ? this.cancelTool() : this.startTool("measure"))}>
+          <ha-icon icon="mdi:tape-measure"></ha-icon>
+        </button>
         ${g.background === "map"
           ? html`<button class="icon ${this.layersOpen ? "on" : ""}" title="Kartenansicht wechseln"
               @click=${() => (this.layersOpen = !this.layersOpen)}>
@@ -1299,7 +1639,7 @@ export class IrrigationPlannerPanel extends LitElement {
   }
 
   private hasAnyDrawing(): boolean {
-    return this.plan!.zones.some((z) => liveArea(z) !== null);
+    return this.features.length > 0 || this.plan!.zones.some((z) => liveArea(z) !== null);
   }
 
   private toolBanner() {
@@ -1313,6 +1653,37 @@ export class IrrigationPlannerPanel extends LitElement {
       actions = html`<button class="text" ?disabled=${this.draft.length < 3} @click=${this.finishBed}>Fertig</button>`;
     }
     if (this.tool === "place") text = `${name}: Auf die Stelle im Plan klicken.`;
+    if (this.tool === "feature") {
+      const meta = FEATURE_META[this.featureKind];
+      const fam = meta.family;
+      text =
+        fam === "area"
+          ? `${meta.label}: Ecken anklicken, zum Schließen den ersten Punkt.`
+          : fam === "line"
+            ? `${meta.label}: Punkte anklicken, Doppelklick beendet.`
+            : this.featureKind === "tree"
+              ? `${meta.label}: In die Mitte drücken und bis zum Kronenrand ziehen.`
+              : `${meta.label}: Auf die Stelle klicken.`;
+      if (fam !== "point") {
+        actions = html`<button
+          class="text"
+          ?disabled=${this.draft.length < (fam === "area" ? 3 : 2)}
+          @click=${this.finishFeature}
+        >
+          Fertig
+        </button>`;
+      }
+    }
+    if (this.tool === "measure") {
+      const total = pathLength(this.measurePts);
+      text =
+        this.measurePts.length < 2
+          ? "Messen: Punkte anklicken. Alt-Taste: ohne Einrasten."
+          : `Gemessen: ${fmtLength(total)}${this.measurePts.length > 2 ? " (Summe)" : ""}`;
+      if (this.measurePts.length) {
+        actions = html`<button class="text" @click=${() => (this.measurePts = [])}>Neu</button>`;
+      }
+    }
     if (this.tool === "scale") {
       text =
         this.scaleDraft.length < 2
@@ -1439,6 +1810,9 @@ export class IrrigationPlannerPanel extends LitElement {
             </div>
             <p class="hint small">Richtung: Anfang des Bogens, 0° = Norden (oben), 90° = Osten.</p>`
           : nothing}
+        ${!isSprinkler && drawn
+          ? this.renderEdges(zone.polygon, true, (pts) => (zone.polygon = pts))
+          : nothing}
         <div class="actions">
           <button class="text" @click=${() => this.startTool(drawTool, zone.id)}>
             <ha-icon icon=${drawn ? "mdi:pencil" : "mdi:draw"}></ha-icon>${drawn ? "Neu zeichnen" : "Zeichnen"}
@@ -1489,6 +1863,189 @@ export class IrrigationPlannerPanel extends LitElement {
     `;
   }
 
+  /** Regler für die Deckkraft des Luftbilds oder Bilds (zum Abpausen). */
+  private renderOpacity(): TemplateResult | typeof nothing {
+    const g = this.plan!.garden;
+    if (g.background === "none") return nothing;
+    const value = Math.round((g.background_opacity ?? 1) * 100);
+    return html`
+      <label class="slider">
+        <span>${g.background === "map" ? "Luftbild" : "Bild"} sichtbar</span>
+        <input
+          id="opacity"
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          .value=${String(value)}
+          @pointerdown=${() => this.remember()}
+          @keydown=${() => this.remember()}
+          @input=${(e: Event) => {
+            this.plan!.garden.background_opacity = Number((e.target as HTMLInputElement).value) / 100;
+            this.changed();
+          }}
+        />
+        <output>${value} %</output>
+      </label>
+    `;
+  }
+
+  /** Kantenlängen ansehen und als Zahl eintippen (genauer als das Luftbild). */
+  private renderEdges(points: Point[], closed: boolean, apply: (pts: Point[]) => void): TemplateResult {
+    const lengths = edgeLengths(points, closed);
+    return html`
+      <details class="edges">
+        <summary>Seitenlängen (${lengths.length})</summary>
+        <div class="edge-list">
+          ${lengths.map(
+            (len, i) => html`<label class="field">
+              <span>Seite ${i + 1}</span>
+              <input
+                type="number"
+                step="0.05"
+                min="0.05"
+                .value=${len.toFixed(2)}
+                @change=${(e: Event) => {
+                  const v = parseFloat((e.target as HTMLInputElement).value.replace(",", "."));
+                  if (!(v > 0)) return;
+                  this.remember();
+                  apply(setEdgeLength(points, i, v).map((p) => [round(p[0]), round(p[1])] as Point));
+                  this.changed();
+                }}
+              />
+              <span class="unit">m</span>
+            </label>`,
+          )}
+        </div>
+        <p class="hint small">Eine Länge ändern verschiebt den Endpunkt dieser Seite.</p>
+      </details>
+    `;
+  }
+
+  private renderPlanTab(): TemplateResult {
+    const sel = this.selected?.kind === "feature" ? this.feature(this.selected.id) : null;
+    const tool = (kind: string) => {
+      const meta = FEATURE_META[kind];
+      const active = this.tool === "feature" && this.featureKind === kind;
+      return html`<button
+        class="tool ${active ? "active" : ""}"
+        title=${meta.label}
+        @click=${() => (active ? this.cancelTool() : this.startTool("feature", kind))}
+      >
+        <ha-icon icon=${meta.icon}></ha-icon><span>${meta.label}</span>
+      </button>`;
+    };
+    return html`
+      <p class="hint small">
+        Pause Haus, Wege, Zäune und Bäume vom Luftbild ab. Dann kannst du das Luftbild abblenden und
+        bleibst in jeder Zoomstufe scharf. Der Grundriss dient nur zur Orientierung.
+      </p>
+      ${this.renderOpacity()}
+      <h3>Flächen</h3>
+      <div class="palette">${["building", "paving", "water", "area"].map(tool)}</div>
+      <h3>Linien</h3>
+      <div class="palette">${["fence", "hedge", "boundary", "pipe"].map(tool)}</div>
+      <h3>Punkte</h3>
+      <div class="palette">${["tree", "tap", "label"].map(tool)}</div>
+      <label class="check">
+        <input type="checkbox" .checked=${this.snapOn} @change=${(e: Event) => (this.snapOn = (e.target as HTMLInputElement).checked)} />
+        An Ecken einrasten <small>(Alt-Taste: kurz aus)</small>
+      </label>
+      ${this.features.length
+        ? html`<h3>Im Plan (${this.features.length})</h3>
+            <ul class="list compact">
+              ${this.features.map((f) => this.renderFeatureItem(f, sel?.id === f.id))}
+            </ul>`
+        : nothing}
+    `;
+  }
+
+  private renderFeatureItem(f: Feature, open: boolean): TemplateResult {
+    const meta = FEATURE_META[f.kind];
+    const fam = meta?.family ?? "area";
+    const info =
+      fam === "area"
+        ? fmtArea(polygonArea(f.points))
+        : fam === "line"
+          ? fmtLength(pathLength(f.points))
+          : f.kind === "tree"
+            ? `Ø ${fmtLength(2 * (f.radius_m ?? 0))}`
+            : "";
+    const sameFamily = Object.entries(FEATURE_META).filter(([, m]) => m.family === fam);
+    return html`
+      <li class="item ${open ? "open" : ""}">
+        <div class="row" @click=${() => (this.selected = open ? null : { kind: "feature", id: f.id })}>
+          <ha-icon icon=${meta?.icon ?? "mdi:shape-outline"}></ha-icon>
+          <span class="name">${featureName(f)}</span>
+          <span class="meta">${info}</span>
+        </div>
+        ${open
+          ? html`<div class="inspector">
+              ${f.kind !== "label" && sameFamily.length > 1
+                ? html`<label class="field wide">
+                    <span>Art</span>
+                    <select
+                      .value=${f.kind}
+                      @change=${(e: Event) => {
+                        this.remember();
+                        f.kind = (e.target as HTMLSelectElement).value;
+                        this.changed();
+                      }}
+                    >
+                      ${sameFamily.map(([k, m]) => html`<option value=${k} ?selected=${k === f.kind}>${m.label}</option>`)}
+                    </select>
+                  </label>`
+                : nothing}
+              <label class="field wide">
+                <span>${f.kind === "label" ? "Text" : "Name (optional)"}</span>
+                <input
+                  id=${f.kind === "label" ? "feature-label" : "feature-name"}
+                  type="text"
+                  maxlength=${MAX_LABEL_LENGTH}
+                  .value=${f.label ?? ""}
+                  @change=${(e: Event) => {
+                    const v = (e.target as HTMLInputElement).value.trim();
+                    if (f.kind === "label" && !v) return;
+                    this.remember();
+                    f.label = v || null;
+                    this.changed();
+                  }}
+                />
+              </label>
+              ${f.kind === "tree"
+                ? html`<label class="field wide">
+                    <span>Kronendurchmesser</span>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0.2"
+                      .value=${(2 * (f.radius_m ?? 0)).toFixed(1)}
+                      @change=${(e: Event) => {
+                        const v = parseFloat((e.target as HTMLInputElement).value);
+                        if (!(v > 0)) return;
+                        this.remember();
+                        f.radius_m = round(v / 2);
+                        this.changed();
+                      }}
+                    />
+                    <span class="unit">m</span>
+                  </label>`
+                : nothing}
+              ${fam !== "point"
+                ? this.renderEdges(f.points, fam === "area", (pts) => (f.points = pts))
+                : nothing}
+              <div class="actions">
+                <span class="spacer"></span>
+                <button class="text danger" @click=${() => this.deleteFeature(f.id)}>
+                  <ha-icon icon="mdi:delete-outline"></ha-icon>Entfernen
+                </button>
+              </div>
+            </div>`
+          : nothing}
+      </li>
+    `;
+  }
+
   private renderBackgroundTab(): TemplateResult {
     const g = this.plan!.garden;
     const providers = this.plan!.providers;
@@ -1503,6 +2060,7 @@ export class IrrigationPlannerPanel extends LitElement {
         ${option("image", "mdi:image-outline", "Eigenes Bild", "Foto, Skizze oder Screenshot")}
         ${option("none", "mdi:grid", "Raster", "Leeres Raster in Metern")}
       </div>
+      ${this.renderOpacity()}
       ${g.background === "map" ? this.renderMapSettings(g, providers) : nothing}
       ${g.background === "image" ? this.renderImageSettings(g) : nothing}
     `;
@@ -1606,6 +2164,11 @@ function liveArea(zone: PlanZone): number | null {
     return zone.center && zone.radius_m ? sectorArea(zone.radius_m, zone.arc_deg) : null;
   }
   return zone.polygon.length >= 3 ? polygonArea(zone.polygon) : null;
+}
+
+function fmtLength(meters: number): string {
+  if (meters < 1) return `${Math.round(meters * 100)} cm`;
+  return `${meters.toLocaleString("de-DE", { maximumFractionDigits: 2 })} m`;
 }
 
 function fmtArea(area: number | null): string {

@@ -11,7 +11,8 @@ from . import IrrigationPlannerConfigEntry
 
 # Geokoordinaten des Gartens gehören nicht in einen Diagnose-Download.
 # Die eigene Kartenadresse kann einen Zugangsschlüssel enthalten.
-TO_REDACT = {"latitude", "longitude", "map_url"}
+# Beschriftungen im Grundriss sind freier Text (könnten Namen enthalten).
+TO_REDACT = {"latitude", "longitude", "map_url", "label"}
 
 
 async def async_get_config_entry_diagnostics(

@@ -53,3 +53,34 @@ describe("Karte", () => {
     expect(tiles[0].url).toMatch(/^t\/19\/\d+\/\d+$/);
   });
 });
+
+import { edgeLengths, pathLength, setEdgeLength, snapPoint } from "./geometry";
+
+describe("Grundriss", () => {
+  it("fängt den nächsten Punkt in Reichweite", () => {
+    const c: [number, number][] = [[0, 0], [1, 0], [5, 5]];
+    expect(snapPoint([0.9, 0.1], c, 0.3)).toEqual([1, 0]);
+    expect(snapPoint([3, 3], c, 0.3)).toBeNull();
+  });
+
+  it("misst Linien und Flächen", () => {
+    const square: [number, number][] = [[0, 0], [4, 0], [4, 3], [0, 3]];
+    expect(pathLength(square)).toBeCloseTo(11);
+    expect(pathLength(square, true)).toBeCloseTo(14);
+    expect(edgeLengths(square, true)).toEqual([4, 3, 4, 3]);
+    expect(edgeLengths(square, false)).toEqual([4, 3, 4]);
+  });
+
+  it("setzt eine Kantenlänge, ohne die Richtung zu ändern", () => {
+    const pts: [number, number][] = [[0, 0], [3, 4], [0, 8]];
+    const moved = setEdgeLength(pts, 0, 10);
+    expect(moved[1][0]).toBeCloseTo(6);
+    expect(moved[1][1]).toBeCloseTo(8);
+    expect(moved[0]).toEqual([0, 0]);
+    expect(moved[2]).toEqual([0, 8]);
+    // letzte Kante einer geschlossenen Form verschiebt den ersten Punkt
+    const closed = setEdgeLength(pts, 2, 4);
+    expect(closed[0][1]).toBeCloseTo(4);
+    expect(setEdgeLength(pts, 0, 0)).toBe(pts);
+  });
+});

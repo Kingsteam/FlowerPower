@@ -1,5 +1,8 @@
 // Daten, wie sie die WebSocket-Schnittstelle liefert (websocket_api.py).
+import type { Feature } from "./features";
 import type { Point } from "./geometry";
+
+export type { Feature };
 
 export interface Garden {
   background: "none" | "image" | "map";
@@ -12,6 +15,8 @@ export interface Garden {
   map_zoom: number | null;
   map_provider: string | null;
   map_url: string | null;
+  background_opacity: number;
+  features: Feature[];
 }
 
 export interface PlanZone {

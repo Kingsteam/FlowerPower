@@ -78,6 +78,44 @@ async def test_save_geometry(
     assert msg["result"]["zones"][0]["effective_area_m2"] == pytest.approx(6)
 
 
+async def test_save_features(
+    hass: HomeAssistant,
+    setup: Any,
+    sim: SimValves,
+    hass_ws_client: Any,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    await setup(make_model(1))
+    client = await _ws(hass_ws_client, hass)
+    features = [
+        {"id": "f1", "kind": "building", "points": [[0, 0], [8, 0], [8, 6], [0, 6]]},
+        {"id": "f2", "kind": "tree", "points": [[3, 3]], "radius_m": 2},
+    ]
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/plan/save",
+            "garden": {"features": features, "background_opacity": 0.3},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"], msg
+    garden = mock_config_entry.runtime_data.store.model.garden
+    assert [f.kind for f in garden.features] == ["building", "tree"]
+    assert garden.background_opacity == 0.3
+    assert msg["result"]["garden"]["features"][1]["radius_m"] == 2
+
+    # Ungültige Form: nichts wird übernommen
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/plan/save",
+            "garden": {"features": [{"id": "x", "kind": "fence", "points": [[0, 0]]}]},
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert len(garden.features) == 2
+
+
 @pytest.mark.parametrize(
     ("payload", "message"),
     [

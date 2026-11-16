@@ -144,3 +144,50 @@ export function tilesFor(
   }
   return tiles;
 }
+
+// Grundriss: Fangen, Messen, Kantenlängen ------------------------------------
+
+/** Nächster Fangpunkt innerhalb von `tolerance` Metern (sonst `null`). */
+export function snapPoint(point: Point, candidates: Point[], tolerance: number): Point | null {
+  let best: Point | null = null;
+  let bestDist = tolerance;
+  for (const c of candidates) {
+    const d = distance(point, c);
+    if (d <= bestDist) {
+      best = c;
+      bestDist = d;
+    }
+  }
+  return best;
+}
+
+/** Länge eines Linienzugs (geschlossen: mit der Kante zurück zum Anfang). */
+export function pathLength(points: Point[], closed = false): number {
+  let total = 0;
+  for (let i = 1; i < points.length; i++) total += distance(points[i - 1], points[i]);
+  if (closed && points.length > 2) total += distance(points[points.length - 1], points[0]);
+  return total;
+}
+
+/** Kantenlängen; bei geschlossenen Formen inklusive der letzten Kante. */
+export function edgeLengths(points: Point[], closed: boolean): number[] {
+  const n = closed ? points.length : points.length - 1;
+  const result: number[] = [];
+  for (let i = 0; i < n; i++) result.push(distance(points[i], points[(i + 1) % points.length]));
+  return result;
+}
+
+/**
+ * Setzt die Länge der Kante `index` (vom Punkt `index` zum nächsten). Der
+ * Endpunkt wandert auf der Richtung der Kante; alle anderen bleiben.
+ */
+export function setEdgeLength(points: Point[], index: number, length: number): Point[] {
+  const next = (index + 1) % points.length;
+  const a = points[index];
+  const b = points[next];
+  const current = distance(a, b);
+  if (!(length > 0) || current === 0) return points;
+  const k = length / current;
+  const moved: Point = [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+  return points.map((p, i) => (i === next ? moved : p));
+}
