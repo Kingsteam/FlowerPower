@@ -32,6 +32,7 @@ import {
 } from "./geometry";
 import { FEATURE_META, MAX_LABEL_LENGTH, SOIL_COLORS, family, featureName, newFeatureId } from "./features";
 import { type Place, SEARCH_ATTRIBUTION, searchAddress } from "./geocode";
+import "./schedule";
 import { styles } from "./styles";
 import { WET_STOPS, computeWetGrid, drawnArea, gridImage, inPolygon, mmPerRun, runSeconds } from "./wetmap";
 import type {
@@ -138,7 +139,7 @@ export class IrrigationPlannerPanel extends LitElement {
   @state() private toastUndo = false;
   @state() private layersOpen = false;
   // Seite: Plan oder Übersicht; Nässekarte über dem Plan
-  @state() private page: "plan" | "overview" = "plan";
+  @state() private page: "plan" | "overview" | "schedule" = "plan";
   @state() private wetOn = false;
   @state() private soilOn = false;
   private wetCache: { key: string; url: string; grid: ReturnType<typeof computeWetGrid> } | null = null;
@@ -1147,7 +1148,16 @@ export class IrrigationPlannerPanel extends LitElement {
     }
     return html`
       ${this.renderHeader()}
-      ${this.page === "overview" ? this.renderOverview() : this.renderPlanPage()}
+      ${this.page === "overview"
+        ? this.renderOverview()
+        : this.page === "schedule"
+          ? html`<ip-schedule
+              .hass=${this._hass}
+              .zones=${this.plan.zones}
+              @ip-toast=${(e: CustomEvent<{ text: string; isError: boolean }>) =>
+                this.showToast(e.detail.text, e.detail.isError)}
+            ></ip-schedule>`
+          : this.renderPlanPage()}
       ${this.renderToast()}
     `;
   }
@@ -1510,6 +1520,9 @@ export class IrrigationPlannerPanel extends LitElement {
               </button>
               <button class=${this.page === "overview" ? "active" : ""} @click=${() => (this.page = "overview")}>
                 <ha-icon icon="mdi:chart-box-outline"></ha-icon>Übersicht
+              </button>
+              <button class=${this.page === "schedule" ? "active" : ""} @click=${() => (this.page = "schedule")}>
+                <ha-icon icon="mdi:calendar-clock"></ha-icon>Zeitplan
               </button>
             </nav>`
           : nothing}

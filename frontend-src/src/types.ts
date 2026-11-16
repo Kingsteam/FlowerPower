@@ -111,6 +111,7 @@ export interface Status {
 
 /** Der Teil des `hass`-Objekts von Home Assistant, den das Panel nutzt. */
 export interface Hass {
+  config?: { time_zone?: string };
   callWS<T>(msg: Record<string, unknown>): Promise<T>;
   callService(domain: string, service: string, data: Record<string, unknown>): Promise<unknown>;
   fetchWithAuth(path: string, init?: RequestInit): Promise<Response>;

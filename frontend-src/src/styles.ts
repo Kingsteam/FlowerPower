@@ -913,6 +913,179 @@ export const styles = css`
     border-radius: 4px;
     border: 1px solid rgba(0, 0, 0, 0.2);
   }
+  /* Zeitplan */
+  ip-schedule {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .week-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-bottom: 6px;
+  }
+  .week-grid .hours {
+    position: relative;
+    height: 16px;
+    margin-left: 70px;
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .week-grid .hours span {
+    position: absolute;
+    transform: translateX(-50%);
+  }
+  .day {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .day-label {
+    width: 62px;
+    flex-shrink: 0;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .track {
+    position: relative;
+    flex: 1;
+    height: 26px;
+    border-radius: 6px;
+    background: repeating-linear-gradient(
+      to right,
+      color-mix(in srgb, var(--primary-text-color) 5%, transparent) 0 calc(12.5% - 1px),
+      color-mix(in srgb, var(--primary-text-color) 12%, transparent) calc(12.5% - 1px) 12.5%
+    );
+  }
+  .track .block {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    min-width: 6px;
+    border-radius: 4px;
+    background: var(--c);
+  }
+  .track .block.off {
+    opacity: 0.35;
+  }
+  .track .block span {
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 6px;
+    white-space: nowrap;
+    font-size: 11.5px;
+    color: var(--primary-text-color);
+  }
+  .track .now {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    width: 2px;
+    background: var(--bad);
+  }
+  .programs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+    align-items: start;
+  }
+  .program {
+    border-top: 4px solid var(--c);
+  }
+  .program-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .program-head h3 {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 17px;
+    color: var(--primary-text-color);
+    margin: 14px 0 6px;
+  }
+  .program-head .check {
+    margin: 0;
+  }
+  .program .when {
+    margin: 0 0 10px;
+    font-weight: 500;
+  }
+  .steps {
+    margin: 0;
+    padding-left: 18px;
+  }
+  .steps small {
+    color: var(--muted);
+  }
+  .editor {
+    border-top: 1px solid var(--line);
+    margin-top: 10px;
+    padding-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .zone-pick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .zone-pick button {
+    padding: 5px 10px;
+    font-size: 12.5px;
+    border: 1px solid var(--line);
+    color: var(--primary-text-color);
+  }
+  .zone-pick button.active {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  .zone-pick b {
+    display: inline-grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+  }
+  .checks {
+    display: flex;
+    flex-direction: column;
+  }
+  .checks .check {
+    margin: 4px 0;
+  }
+  .new-program input {
+    flex: 1;
+  }
+  .events {
+    margin: 0;
+    padding-left: 18px;
+    line-height: 1.7;
+    font-size: 13.5px;
+  }
+  code {
+    font-family: var(--code-font-family, ui-monospace, monospace);
+    font-size: 12.5px;
+    background: color-mix(in srgb, var(--primary-text-color) 7%, transparent);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  pre {
+    font-family: var(--code-font-family, ui-monospace, monospace);
+    font-size: 12.5px;
+    background: color-mix(in srgb, var(--primary-text-color) 6%, transparent);
+    padding: 10px 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+  }
   .valve-link {
     stroke: var(--zone);
     stroke-width: 1.5;

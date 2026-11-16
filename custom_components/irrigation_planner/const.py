@@ -84,6 +84,11 @@ LOW_FLOW_S: Final = 120
 LEARN_MIN_RUN_S: Final = 60  # nur aus Läufen ab dieser Länge lernen
 LEARN_WEIGHT: Final = 0.3  # Gewicht eines neuen Laufs im gleitenden Mittel
 EVENT_ALARM: Final = "irrigation_planner_alarm"
+# Ereignisse für eigene Home-Assistant-Automationen
+EVENT_RUN_STARTED: Final = "irrigation_planner_run_started"
+EVENT_RUN_FINISHED: Final = "irrigation_planner_run_finished"
+EVENT_PROGRAM_STARTED: Final = "irrigation_planner_program_started"
+EVENT_PROGRAM_SKIPPED: Final = "irrigation_planner_program_skipped"
 SERVICE_RELEASE_ZONE: Final = "release_zone"
 
 # Phase 2: Berechnung

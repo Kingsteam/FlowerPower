@@ -35,6 +35,7 @@ from .drivers.ha import resolve_entity_id
 from .geocode import GeocodeError, async_search
 from .geometry import geometry_area, overlaps, zone_area
 from .model import GardenModel, Point
+from .schedule_api import ALL_COMMANDS as SCHEDULE_COMMANDS
 from .scheduler import RunState
 from .serialize import garden_from_dict, garden_to_dict
 
@@ -82,6 +83,8 @@ def async_register(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_geocode)
     websocket_api.async_register_command(hass, ws_export)
     websocket_api.async_register_command(hass, ws_import)
+    for command in SCHEDULE_COMMANDS:
+        websocket_api.async_register_command(hass, command)
 
 
 @websocket_api.websocket_command(

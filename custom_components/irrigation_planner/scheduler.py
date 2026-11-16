@@ -38,6 +38,8 @@ from .const import (
     CLOSE_CONFIRM_TIMEOUT_S,
     CLOSE_RETRY_INTERVAL_S,
     DEFAULT_MAX_OPEN_VALVES,
+    EVENT_RUN_FINISHED,
+    EVENT_RUN_STARTED,
     HARDWARE_TEST_MAX_S,
     HARDWARE_TEST_MIN_S,
     LOGGER,
@@ -502,6 +504,7 @@ class IrrigationScheduler:
                 run.started_at = dt_util.utcnow()
                 run.ends_at = run.started_at + timedelta(seconds=run.duration_s)
                 run.state = RunState.RUNNING
+                self._fire(EVENT_RUN_STARTED, run)
                 self._notify()
                 if not run.stop_requested:
                     await self._sleep(run, run.duration_s)
@@ -540,10 +543,31 @@ class IrrigationScheduler:
                         listener(run, max(0.0, seconds))
                     except Exception:
                         LOGGER.exception("Fehler beim Verbuchen eines Laufs")
+            if run.started_at is not None:
+                self._fire(EVENT_RUN_FINISHED, run)
             if not confirmed_closed and not self._stopping:
                 self._mark_stuck(supply, run.valve_id)
             self._notify()
             self._kick(supply)
+
+    @callback
+    def _fire(self, event: str, run: Run) -> None:
+        """Ereignis für Automationen (Zone, Ventil, Dauer, Quelle, Ergebnis)."""
+        data: dict[str, Any] = {
+            "zone_id": run.zone_id,
+            "zone_name": self._zone_name(run.zone_id),
+            "valve_id": run.valve_id,
+            "source": run.source,
+            "duration_s": run.duration_s,
+        }
+        if event == EVENT_RUN_FINISHED:
+            data["state"] = run.state.value
+            data["error"] = run.error
+            if run.started_at and run.ends_at:
+                data["seconds_open"] = round(
+                    min((run.ends_at - run.started_at).total_seconds(), run.duration_s)
+                )
+        self.hass.bus.async_fire(event, data)
 
     async def _sleep(self, run: Run | None, seconds: float) -> None:
         """Wartet; ein Lauf kann das Warten mit ``interrupt`` abbrechen."""

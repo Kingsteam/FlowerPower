@@ -36,6 +36,8 @@ from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConver
 
 from .const import (
     CYCLE_DEFAULT_S,
+    EVENT_PROGRAM_SKIPPED,
+    EVENT_PROGRAM_STARTED,
     FORECAST_RAIN_SKIP_MM,
     FROST_THRESHOLD_C,
     LOGGER,
@@ -418,6 +420,16 @@ class ProgramManager:
         program.last_run = dt_util.now().date().isoformat()
         self.store.async_schedule_save()
         self.results[program.id] = ProgramResult(dt_util.now(), True, source)
+        self.hass.bus.async_fire(
+            EVENT_PROGRAM_STARTED,
+            {
+                "program_id": program.id,
+                "program_name": program.name,
+                "source": source,
+                "zones": [s.zone_id for s in steps],
+                "total_s": plan_total_s(steps),
+            },
+        )
         LOGGER.info(
             "Programm %s gestartet (%s, %s Schritte)", program.name, source, len(steps)
         )
@@ -454,6 +466,14 @@ class ProgramManager:
                     reason = f"{rain:.1f} mm Regen erwartet"
             if reason is not None:
                 LOGGER.info("Programm %s übersprungen: %s", program.name, reason)
+                self.hass.bus.async_fire(
+                    EVENT_PROGRAM_SKIPPED,
+                    {
+                        "program_id": program.id,
+                        "program_name": program.name,
+                        "reason": reason,
+                    },
+                )
                 self.results[program.id] = ProgramResult(now, False, reason)
                 self._notify()
                 continue

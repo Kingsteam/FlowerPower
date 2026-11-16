@@ -28,6 +28,9 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 - Pflanzen und Boden im Plan-Editor: je Zone „Was wächst hier?“, Wasserbedarf in fünf Stufen (sehr wenig bis sehr viel), Bodenart; Pflanzenkatalog um Stauden, Bodendecker, Hecke, Obstbäume, Beeren, Erdbeeren, Tomaten, Kräuter, Steingarten und Hortensien erweitert.
 - Bodenflächen im Grundriss (mit Bodenart); Zonen übernehmen den Boden mit einem Klick; Bodenansicht färbt Zonen nach Bodenart.
 - Testinstanz auf dem eigenen Mac mit einer Zeile im Terminal (`devtools/testinstanz/mac-start.sh`).
+- Seite „Zeitplan“ im Panel: Wochenansicht aller Programme (nächste 7 Tage, in der Zeitzone von Home Assistant), Programm-Karten mit Ablauf, nächstem Start und letztem Ergebnis; Programme bearbeiten (Zonen, Reihenfolge, Startzeit oder „fertig bis“ mit Sonnenzeit, Wochentage, Wetter-Überspringen), neu anlegen und löschen (nicht während gegossen wird); „Jetzt starten“ reiht nur ein.
+- Ereignisse für eigene Automationen: `irrigation_planner_run_started`, `irrigation_planner_run_finished` (mit Ergebnis und Sekunden), `irrigation_planner_program_started`, `irrigation_planner_program_skipped` (mit Grund). Die Zeitplan-Seite zeigt sie zusammen mit den Entitäten je Programm.
+- WebSocket-Befehle `irrigation_planner/programs/get`, `programs/save`, `programs/create`, `programs/delete` (Ändern nur für Admins).
 
 ### Behoben
 - Die Vorlage `configuration.yaml` der Testinstanz fehlte im Repo (wurde von `.gitignore` ausgeblendet).
