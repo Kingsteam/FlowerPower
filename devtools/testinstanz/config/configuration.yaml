@@ -94,6 +94,14 @@ template:
         device_class: precipitation
         state_class: measurement
         state: "{{ states('input_number.sim_regen') | float }}"
+      # Eigener Fühler im Garten (zum Ausprobieren: Sensor „Temperatur“
+      # auf der Seite Geräte). Etwas kühler als der Wetterdienst.
+      - name: Simulierter Temperaturfühler Garten
+        unique_id: sim_garden_temperature
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: "{{ (states('input_number.sim_temperatur') | float - 1.5) | round(1) }}"
 
 # Der Regen-Regler gilt für „heute“: um Mitternacht zurück auf 0, sonst würde
 # derselbe Regen jeden Tag wieder gezählt.

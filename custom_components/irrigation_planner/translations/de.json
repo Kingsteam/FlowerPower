@@ -673,7 +673,10 @@
     "sensor_kind": {
       "options": {
         "soil_moisture": "Bodenfeuchte",
-        "rain_mm": "Regen (mm)"
+        "rain_mm": "Regen (mm)",
+        "temperature": "Temperatur",
+        "humidity": "Luftfeuchte",
+        "wind_speed": "Windgeschwindigkeit"
       }
     },
     "sun_event": {

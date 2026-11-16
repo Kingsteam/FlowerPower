@@ -8,15 +8,19 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 import pytest
 from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
 from custom_components.irrigation_planner.const import DOMAIN
 from custom_components.irrigation_planner.model import (
+    EntityRef,
     GardenModel,
     Program,
     ProgramMode,
+    Sensor,
+    SensorKind,
     Zone,
     ZoneType,
 )
@@ -280,6 +284,40 @@ async def test_weather_skip(
         hass, "weather.test", Program(id="p", name="P", **program_kw)
     )
     assert (reason.split(" ")[0] if reason else None) == expected
+
+
+async def test_local_sensors_for_frost_and_wind(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Eigene Fühler gehen vor; ohne Wetter-Entität geht es auch."""
+    temp = entity_registry.async_get_or_create("sensor", "test", "t")
+    wind = entity_registry.async_get_or_create("sensor", "test", "w")
+    model = GardenModel(
+        sensors=[
+            Sensor(
+                id="t",
+                name="T",
+                kind=SensorKind.TEMPERATURE,
+                entity=EntityRef(domain="sensor", platform="test", unique_id="t"),
+            ),
+            Sensor(
+                id="w",
+                name="W",
+                kind=SensorKind.WIND_SPEED,
+                entity=EntityRef(domain="sensor", platform="test", unique_id="w"),
+            ),
+        ]
+    )
+    program = Program(id="p", name="P", skip_on_wind=True)
+    hass.states.async_set("weather.test", "sunny", {"temperature": 15})
+    hass.states.async_set(temp.entity_id, "1.5", {"unit_of_measurement": "°C"})
+    hass.states.async_set(wind.entity_id, "3", {"unit_of_measurement": "m/s"})
+    assert weather_skip_reason(hass, "weather.test", program, model) == "Frost (1.5 °C)"
+    assert weather_skip_reason(hass, None, program, model) == "Frost (1.5 °C)"
+    hass.states.async_set(temp.entity_id, "12", {"unit_of_measurement": "°C"})
+    assert weather_skip_reason(hass, None, program, model) is None
+    hass.states.async_set(wind.entity_id, "40", {"unit_of_measurement": "km/h"})
+    assert weather_skip_reason(hass, None, program, model) == "Wind (40 km/h)"
 
 
 async def test_weather_missing_does_not_skip(hass: HomeAssistant) -> None:

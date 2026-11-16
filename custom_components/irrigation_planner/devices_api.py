@@ -33,7 +33,14 @@ from homeassistant.helpers import (
 from homeassistant.util import slugify
 import voluptuous as vol
 
-from .const import DOMAIN, HARDWARE_TEST_MAX_S, HARDWARE_TEST_MIN_S
+from .const import (
+    CONF_WEATHER_ENTITY,
+    CONF_WINDOW_END,
+    CONF_WINDOW_START,
+    DOMAIN,
+    HARDWARE_TEST_MAX_S,
+    HARDWARE_TEST_MIN_S,
+)
 from .discovery import suggest
 from .drivers.base import Capability, SafetyLevel
 from .drivers.registry import DRIVERS, create_driver
@@ -60,7 +67,15 @@ if TYPE_CHECKING:
 NEW: Final = "__new__"
 TIMER_DRIVERS: Final = ("zigbee2mqtt", "service_call")
 VALVE_DOMAINS: Final = ("switch", "valve")
-SENSOR_KINDS: Final = (SensorKind.SOIL_MOISTURE, SensorKind.RAIN_MM)
+SENSOR_KINDS: Final = (
+    SensorKind.SOIL_MOISTURE,
+    SensorKind.RAIN_MM,
+    SensorKind.TEMPERATURE,
+    SensorKind.HUMIDITY,
+    SensorKind.WIND_SPEED,
+)
+TIME = vol.Match(r"^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$")
+DATE = vol.Any(None, "", vol.Match(r"^\d{2}-\d{2}$"))
 BUSY: Final = "Bitte warten, bis die Bewässerung fertig ist"
 
 
@@ -256,6 +271,14 @@ def devices_payload(
             for p in data.profiles.values()
         ],
         "candidates": candidates,
+        "settings": {
+            "weather_entity": entry.data.get(CONF_WEATHER_ENTITY),
+            "window_start": entry.data.get(CONF_WINDOW_START),
+            "window_end": entry.data.get(CONF_WINDOW_END),
+            "winter_start": model.settings.winter_start,
+            "winter_end": model.settings.winter_end,
+            "winter_mode": model.settings.winter_mode,
+        },
         "busy": _busy(entry),
         "test_min_s": HARDWARE_TEST_MIN_S,
         "test_max_s": HARDWARE_TEST_MAX_S,
@@ -617,6 +640,59 @@ async def ws_devices_delete_sensor(
     connection.send_result(msg["id"], {"reloaded": True})
 
 
+def _full_time(value: str) -> str:
+    return value if value.count(":") == 2 else f"{value}:00"
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/devices/save_settings",
+        vol.Optional("weather_entity"): vol.Any(None, "", vol.Match(r"^weather\.\w+$")),
+        vol.Required("window_start"): TIME,
+        vol.Required("window_end"): TIME,
+        vol.Optional("winter_start"): DATE,
+        vol.Optional("winter_end"): DATE,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def ws_devices_save_settings(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Wetterquelle, Zeitfenster, Winterpause nach Datum. Lädt danach neu."""
+    if (entry := _entry(hass)) is None:
+        connection.send_error(msg["id"], "not_loaded", "Nicht eingerichtet")
+        return
+    if _busy(entry):
+        connection.send_error(msg["id"], "busy", BUSY)
+        return
+    start = _full_time(msg["window_start"])
+    end = _full_time(msg["window_end"])
+    if start == end:
+        connection.send_error(
+            msg["id"], "invalid", "Das Zeitfenster braucht verschiedene Uhrzeiten"
+        )
+        return
+    data = entry.runtime_data
+    draft = model_from_dict(model_to_dict(data.store.model))
+    draft.settings.winter_start = msg.get("winter_start") or None
+    draft.settings.winter_end = msg.get("winter_end") or None
+    try:
+        draft.validate()
+    except ValueError as err:
+        connection.send_error(msg["id"], "invalid", str(err))
+        return
+    data.store.model = draft
+    await data.store.async_save()
+    new = {**entry.data, CONF_WINDOW_START: start, CONF_WINDOW_END: end}
+    new.pop(CONF_WEATHER_ENTITY, None)
+    if msg.get("weather_entity"):
+        new[CONF_WEATHER_ENTITY] = msg["weather_entity"]
+    hass.config_entries.async_update_entry(entry, data=new)
+    async_reload_keep_panel(hass, entry.entry_id)
+    connection.send_result(msg["id"], {"reloaded": True})
+
+
 def _outcome(result: HardwareTestResult) -> tuple[str, str]:
     """(Stufe, Text) zum Ergebnis eines Testlaufs."""
     if not result.opened:
@@ -730,4 +806,5 @@ ALL_COMMANDS: Final = (
     ws_devices_save_sensor,
     ws_devices_delete_sensor,
     ws_devices_test_valve,
+    ws_devices_save_settings,
 )

@@ -290,6 +290,33 @@ def ws_set_automatic(
 
 @websocket_api.websocket_command(
     {
+        vol.Required("type"): f"{DOMAIN}/settings/winter",
+        vol.Required("on"): bool,
+    }
+)
+@websocket_api.require_admin
+@callback
+def ws_set_winter(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Winterpause ein oder aus (wie der Schalter „Winterpause“).
+
+    Ein: alle Ventile schließen und bestätigen, Zeitpläne ruhen, Geräte werden
+    deaktiviert (nur wenn alles zu ist). Aus: genau diese Geräte wieder an.
+    Läuft im Hintergrund, weil das Schließen auf die Geräte wartet.
+    """
+    data = _data(hass)
+    if data is None:
+        connection.send_error(msg["id"], "not_loaded", "Nicht eingerichtet")
+        return
+    hass.async_create_background_task(
+        data.async_set_winter_mode(msg["on"]), "irrigation_planner Winterpause"
+    )
+    connection.send_result(msg["id"], {"winter_mode": msg["on"]})
+
+
+@websocket_api.websocket_command(
+    {
         vol.Required("type"): f"{DOMAIN}/settings/water_saving",
         vol.Required("percent"): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=MAX_WATER_SAVING_PCT)
@@ -337,6 +364,7 @@ def ws_balance_reset(
 
 
 ALL_COMMANDS: Final = (
+    ws_set_winter,
     ws_set_water_saving,
     ws_balance_reset,
     ws_operation_subscribe,

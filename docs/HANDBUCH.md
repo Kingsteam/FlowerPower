@@ -2,7 +2,7 @@
 
 # Bewässerungsplaner – Benutzerhandbuch
 
-> ⚠️ **Stand 0.5.0: noch nicht mit echter Hardware getestet.** Alle Funktionen sind mit simulierten Ventilen und Sensoren erprobt (automatische Tests und eine simulierte Test-Instanz). Mit echten Ventilen, z. B. SONOFF über Zigbee2MQTT, ist die Erweiterung noch nicht gelaufen. Richte am Anfang **nur ein Ventil** ein, mach einen kurzen Testlauf und bleib dabei, bis du siehst, dass das Ventil wirklich selbst schließt.
+> ⚠️ **Stand 0.6.0: noch nicht mit echter Hardware getestet.** Alle Funktionen sind mit simulierten Ventilen und Sensoren erprobt (automatische Tests und eine simulierte Test-Instanz). Mit echten Ventilen, z. B. SONOFF über Zigbee2MQTT, ist die Erweiterung noch nicht gelaufen. Richte am Anfang **nur ein Ventil** ein, mach einen kurzen Testlauf und bleib dabei, bis du siehst, dass das Ventil wirklich selbst schließt.
 
 Die Bilder stammen aus der simulierten Test-Instanz (Beispielgarten, kein echter Ort).
 
@@ -35,7 +35,7 @@ Voraussetzung: **Home Assistant 2026.11 oder neuer**.
 2. **Bewässerungsplaner** herunterladen und Home Assistant neu starten.
 3. **Einstellungen → Geräte & Dienste → Integration hinzufügen → Bewässerungsplaner.**
 4. Im Dialog wählst du:
-   - die **Wetterquelle** (eine Wetter-Entität, z. B. deine Wetterstation oder ein Wetterdienst). Ohne Wetterquelle rechnet die Erweiterung keine Verdunstung, dann bleibt nur die Dauer von Hand.
+   - die **Wetterquelle** (eine Wetter-Entität, z. B. deine Wetterstation oder ein Wetterdienst). Ohne Wetterquelle (und ohne eigenen Temperaturfühler) rechnet die Erweiterung keine Verdunstung, dann bleibt nur die Dauer von Hand. Die Wetterquelle lässt sich später auf der Seite **Geräte** ändern.
    - das **Zeitfenster**, in dem gegossen werden darf (z. B. 4 bis 7 Uhr).
 
 Danach gibt es in der Seitenleiste den Eintrag **Bewässerung** und in Home Assistant ein Gerät „Bewässerungsplaner“ mit Schaltern (Automatik, Winterpause), dem Regler **Wassersparen** und je Zone und Programm eigenen Geräten.
@@ -71,7 +71,25 @@ Am einfachsten geht es im Panel: **Bewässerung → Geräte**. Dort stehen alle 
 
 **Ändern und Löschen:** In der Zeile auf **„Ändern“**. Beim Löschen eines Ventils bleiben seine Zonen erhalten (ohne Ventil). Wo das Ventil auf dem Plan liegt und wie die Leitung läuft, zeichnest du auf der Seite **Plan**.
 
-**Sensoren:** Unter der Ventil-Tabelle. **Bodenfeuchte** ersetzt für ihre Zonen die Schätzung (dazu die Messwerte bei „voll“ und „leer“ eintragen). Ein **Regensensor** (mm) ohne Zonen gilt für den ganzen Garten.
+**Sensoren:** Unter der Ventil-Tabelle, mit **„Sensor hinzufügen“**:
+
+- **Bodenfeuchte** ersetzt für ihre Zonen die Schätzung (dazu die Messwerte bei „voll“ und „leer“ eintragen).
+- **Regenmenge** (mm) ohne Zonen gilt für den ganzen Garten.
+- **Temperatur**, **Luftfeuchte** und **Wind**: eigene Fühler im Garten. Sie ersetzen die Werte der Wetter-Entität, für die Verdunstung und für „bei Frost/Wind überspringen“. Fällt ein Fühler aus, gilt wieder die Wetter-Entität. Je Art zählt der erste Fühler.
+
+Bei der Auswahl der Entität stehen oben die, die zur Art passen (z. B. alle Temperaturen), jeweils mit dem Wert jetzt. Tippen sucht in Name und Entität, mehrere Wörter gehen auch („garten temp“). „Alle Entitäten anzeigen“ holt den Rest dazu.
+
+![Sensor auswählen](bilder/23-sensor-auswahl.png)
+
+**Wetter, Zeitfenster und Saison:** Ganz unten auf der Seite **Geräte**. Dort stellst du ein:
+
+- die **Wetter-Entität** (Wetterdienst oder Wetterstation, auch „keine“);
+- das **Zeitfenster** zum Gießen;
+- die **Winterpause nach Datum** (nur Tag und Monat).
+
+Der Knopf **„Winterpause einschalten/beenden“** schaltet sofort um.
+
+![Wetter, Zeitfenster und Saison](bilder/24-wetter-saison.png)
 
 Dasselbe geht weiterhin auch über **Einstellungen → Geräte & Dienste → Bewässerungsplaner → Konfigurieren** (Assistent Schritt für Schritt).
 
@@ -214,7 +232,7 @@ show_zones: true
 
 Gilt für Zonen mit der Dauer-Art „berechnet“. Gerechnet wird mit einem **Wasserkonto** je Zone (FAO-56, das Standardverfahren der Welternährungsorganisation):
 
-1. **Verdunstung:** Jeden Tag wird aus Temperatur, Luftfeuchte und Wind deiner Wetterquelle die Verdunstung (ET₀) berechnet. Fehlen Luftfeuchte oder Wind, gibt es eine einfachere Formel, die nur die Temperatur braucht.
+1. **Verdunstung:** Jeden Tag wird aus Temperatur, Luftfeuchte und Wind deiner Wetterquelle (oder deiner eigenen Fühler) die Verdunstung (ET₀) berechnet. Fehlen Luftfeuchte oder Wind, gibt es eine einfachere Formel, die nur die Temperatur braucht.
 2. **Pflanzenfaktor:** ET₀ × Pflanzenfaktor (z. B. Rasen 0,8) ist der Verbrauch der Zone. Er wird vom Konto abgezogen.
 3. **Auffüllen:** Wirksamer Regen und Gießen füllen das Konto wieder auf.
 4. **Kontogröße:** das Wasser, das der Boden im Wurzelraum halten kann. Es hängt von Bodenart und Wurzeltiefe ab.
@@ -244,7 +262,14 @@ Alarme kommen als Benachrichtigung und stehen im Verlauf. Eine gesperrte Zone gi
 
 ## 11. Winterpause
 
-Schalter **Winterpause** (beim Gerät „Bewässerungsplaner“), auch automatisch nach Datum:
+Ein- und ausschalten:
+
+- oben in der Kopfzeile mit **☀ Saison / ❄ Winterpause** (Klick und Bestätigen);
+- auf der Seite **Geräte** unter „Wetter, Zeitfenster und Saison“;
+- mit dem Schalter **Winterpause** beim Gerät „Bewässerungsplaner“;
+- automatisch nach Datum (einstellbar auf der Seite **Geräte**).
+
+Beim Einschalten passiert Folgendes:
 
 1. Alle Ventile werden geschlossen und geprüft.
 2. Programme und Wasserhaushalt ruhen.

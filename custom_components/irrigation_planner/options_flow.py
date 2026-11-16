@@ -1103,7 +1103,13 @@ class IrrigationPlannerOptionsFlow(OptionsFlow):
                     "kind", default=SensorKind.SOIL_MOISTURE.value
                 ): _translated(
                     "sensor_kind",
-                    [SensorKind.SOIL_MOISTURE.value, SensorKind.RAIN_MM.value],
+                    [
+                        SensorKind.SOIL_MOISTURE.value,
+                        SensorKind.RAIN_MM.value,
+                        SensorKind.TEMPERATURE.value,
+                        SensorKind.HUMIDITY.value,
+                        SensorKind.WIND_SPEED.value,
+                    ],
                 ),
                 vol.Required("entity"): EntitySelector(
                     EntitySelectorConfig(domain="sensor")

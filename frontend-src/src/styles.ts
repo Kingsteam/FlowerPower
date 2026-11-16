@@ -2225,6 +2225,13 @@ export const styles = css`
     vertical-align: -2px;
     margin-right: 6px;
   }
+  .season-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 4px 0 8px;
+  }
   .test-box .fields {
     max-width: 420px;
   }

@@ -708,6 +708,19 @@ export class IrrigationPlannerPanel extends LitElement {
     this.cancelTool();
   }
 
+  private async toggleWinter(on: boolean): Promise<void> {
+    const text = on
+      ? "Winterpause einschalten?\n\nAlle Ventile werden geschlossen, Zeitpläne ruhen, und die Ventil-Geräte werden deaktiviert."
+      : "Winterpause beenden?\n\nDie Ventil-Geräte werden wieder aktiviert, und die Zeitpläne laufen wieder (wenn die Automatik an ist).";
+    if (!confirm(text)) return;
+    try {
+      await this._hass!.callWS({ type: `${DOMAIN}/settings/winter`, on });
+      this.showToast(on ? "Winterpause ein: nichts wird gegossen" : "Winterpause aus: Saison läuft");
+    } catch (err) {
+      this.showToast(this.message(err), true);
+    }
+  }
+
   private async toggleAutomatic(on: boolean): Promise<void> {
     try {
       await this._hass!.callWS({ type: `${DOMAIN}/settings/automatic`, on });
@@ -1902,8 +1915,16 @@ export class IrrigationPlannerPanel extends LitElement {
         ${s
           ? html`<div class="chips">
               ${s.winter_mode
-                ? html`<span class="chip winter"><ha-icon icon="mdi:snowflake"></ha-icon>Winterpause</span>`
-                : html`<button class="chip toggle ${s.automatic ? "on" : ""}" role="switch"
+                ? html`<button class="chip toggle winter" role="switch" aria-checked="true"
+                    title="Winterpause: nichts wird gegossen. Klicken: Winterpause beenden (Saison)"
+                    @click=${() => this.toggleWinter(false)}
+                    ><ha-icon icon="mdi:snowflake"></ha-icon>Winterpause</button
+                  >`
+                : html`<button class="chip toggle season" role="switch" aria-checked="false"
+                    title="Saison: Bewässerung aktiv. Klicken: Winterpause einschalten"
+                    @click=${() => this.toggleWinter(true)}
+                    ><ha-icon icon="mdi:weather-sunny"></ha-icon>Saison</button
+                  ><button class="chip toggle ${s.automatic ? "on" : ""}" role="switch"
                     aria-checked=${s.automatic ? "true" : "false"}
                     title=${s.automatic
                       ? "Programme starten nach Zeitplan. Klicken: Automatik aus (was läuft, läuft zu Ende)"

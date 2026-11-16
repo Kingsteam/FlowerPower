@@ -306,3 +306,43 @@ def test_zone_defaults() -> None:
     assert zone_taw(Zone(id="c", name="c", type=ZoneType.DRIP, plant_type="roses")) == (
         pytest.approx(160 * 0.5)
     )
+
+
+async def test_local_temperature_sensor_replaces_weather(
+    hass: HomeAssistant,
+    setup: Any,
+    sim: SimValves,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Eigener Temperaturfühler geht vor der Wetter-Entität (hier in °F)."""
+    temp = entity_registry.async_get_or_create("sensor", "test", "garten_temp")
+    model = garden()
+    model["sensors"] = [
+        {
+            "id": "temp",
+            "name": "Temperatur Garten",
+            "kind": "temperature",
+            "entity": {
+                "domain": "sensor",
+                "platform": "test",
+                "unique_id": "garten_temp",
+            },
+        }
+    ]
+    freezer.move_to(at(1, 6))
+    weather(hass, 0)  # Wetterdienst meint 0 °C, der Fühler weiß es besser
+    hass.states.async_set(temp.entity_id, "57.2", {"unit_of_measurement": "°F"})
+    await setup(model)
+    data = mock_config_entry.runtime_data
+    zone = data.store.model.zones[0]
+    hass.states.async_set(temp.entity_id, "82.4", {"unit_of_measurement": "°F"})
+    await _to(hass, freezer, at(1, 14))
+    # Fühler fällt aus: dann gilt wieder die Wetter-Entität
+    hass.states.async_set(temp.entity_id, "unavailable")
+    weather(hass, 20)
+    await _to(hass, freezer, at(1, 22))
+    await _to(hass, freezer, at(2, 0, 1))
+    et0 = expected_et0(hass, 14, 28, 1)  # 57,2 °F = 14 °C, 82,4 °F = 28 °C
+    assert data.balance.deficit_mm(zone) == pytest.approx(et0 * 0.8, abs=0.01)

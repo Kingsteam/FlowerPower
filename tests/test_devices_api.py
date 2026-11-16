@@ -321,3 +321,68 @@ async def test_sensors(
     assert msg["success"], msg
     await hass.async_block_till_done()
     assert _model(mock_config_entry).sensors == []
+
+
+async def test_settings_and_winter_toggle(
+    hass: HomeAssistant,
+    setup: Any,
+    sim: SimValves,
+    hass_ws_client: Any,
+    mock_config_entry: MockConfigEntry,
+    hass_read_only_access_token: str,
+) -> None:
+    await setup(make_model(1))
+    client = await hass_ws_client(hass)
+    settings = (await _call(client, type=f"{DOMAIN}/devices/get"))["result"]["settings"]
+    assert settings["weather_entity"] == "weather.test"
+    assert settings["window_start"] == "04:00:00"
+
+    msg = await _call(
+        client,
+        type=f"{DOMAIN}/devices/save_settings",
+        weather_entity="weather.garten",
+        window_start="03:30",
+        window_end="06:00",
+        winter_start="11-01",
+        winter_end="03-31",
+    )
+    assert msg["success"], msg
+    await hass.async_block_till_done()
+    assert mock_config_entry.data["weather_entity"] == "weather.garten"
+    assert mock_config_entry.data["window_start"] == "03:30:00"
+    data = mock_config_entry.runtime_data
+    assert data.programs.weather_entity == "weather.garten"  # neu geladen
+    assert data.store.model.settings.winter_start == "11-01"
+    assert "bewaesserung" in hass.data[frontend.DATA_PANELS]
+
+    for bad in (
+        {"window_start": "05:00", "window_end": "05:00"},
+        {"window_start": "05:00", "window_end": "06:00", "winter_start": "13-45"},
+        {"window_start": "5 Uhr", "window_end": "06:00"},
+    ):
+        msg = await _call(client, type=f"{DOMAIN}/devices/save_settings", **bad)
+        assert not msg["success"], bad
+    # Ohne Wetter-Entität ist auch erlaubt
+    msg = await _call(
+        client,
+        type=f"{DOMAIN}/devices/save_settings",
+        weather_entity=None,
+        window_start="04:00",
+        window_end="07:00",
+    )
+    assert msg["success"], msg
+    await hass.async_block_till_done()
+    assert "weather_entity" not in mock_config_entry.data
+    assert mock_config_entry.runtime_data.store.model.settings.winter_start is None
+
+    # Winterpause per Knopf
+    msg = await _call(client, type=f"{DOMAIN}/settings/winter", on=True)
+    assert msg["success"], msg
+    await hass.async_block_till_done()
+    assert mock_config_entry.runtime_data.store.model.settings.winter_mode is True
+    msg = await _call(client, type=f"{DOMAIN}/settings/winter", on=False)
+    await hass.async_block_till_done()
+    assert mock_config_entry.runtime_data.store.model.settings.winter_mode is False
+    other = await hass_ws_client(hass, access_token=hass_read_only_access_token)
+    msg = await _call(other, type=f"{DOMAIN}/settings/winter", on=True)
+    assert msg["error"]["code"] == "unauthorized"

@@ -92,6 +92,10 @@ class SensorKind(StrEnum):
     RAIN_MM = "rain_mm"
     SOIL_MOISTURE = "soil_moisture"
     WATER_METER = "water_meter"
+    # Eigene Wetterfühler im Garten: ersetzen die Werte der Wetter-Entität.
+    TEMPERATURE = "temperature"
+    HUMIDITY = "humidity"
+    WIND_SPEED = "wind_speed"
 
 
 @dataclass(slots=True, kw_only=True)

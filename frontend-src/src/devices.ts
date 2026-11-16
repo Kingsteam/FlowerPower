@@ -9,6 +9,8 @@
 import { LitElement, html, nothing, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { styles } from "./styles";
+import "./entity-pick";
+import type { EntityFilter } from "./entity-pick";
 import type { Hass } from "./types";
 
 const DOMAIN = "irrigation_planner";
@@ -32,9 +34,32 @@ export const DRIVER_LABELS: Record<string, string> = {
   ha_valve: "Ventil-Entität (nur Home Assistant überwacht)",
 };
 
-const KIND_LABELS: Record<string, string> = {
+export const KIND_LABELS: Record<string, string> = {
   soil_moisture: "Bodenfeuchte",
   rain_mm: "Regenmenge (mm)",
+  temperature: "Temperatur",
+  humidity: "Luftfeuchte",
+  wind_speed: "Wind",
+};
+
+/** Eigene Wetterfühler: gelten für den ganzen Garten, ersetzen die Wetter-Entität. */
+export const LOCAL_WEATHER_KINDS = ["temperature", "humidity", "wind_speed"];
+
+/** Welche Entitäten zu einer Sensorart passen (für die Auswahl). */
+export const KIND_FILTERS: Record<string, EntityFilter> = {
+  soil_moisture: { domains: ["sensor"], deviceClasses: ["moisture"], units: ["%"] },
+  rain_mm: { domains: ["sensor"], deviceClasses: ["precipitation"], units: ["mm"] },
+  temperature: { domains: ["sensor"], deviceClasses: ["temperature"], units: ["°C", "°F"] },
+  humidity: { domains: ["sensor"], deviceClasses: ["humidity"], units: ["%"] },
+  wind_speed: { domains: ["sensor"], deviceClasses: ["wind_speed"], units: ["km/h", "m/s", "mph", "kn"] },
+};
+
+const KIND_UNITS: Record<string, string> = {
+  soil_moisture: "%",
+  rain_mm: "mm",
+  temperature: "°C",
+  humidity: "%",
+  wind_speed: "",
 };
 
 export interface DeviceEntity {
@@ -88,7 +113,17 @@ interface Candidate {
   used_by: string | null;
 }
 
+export interface SettingsInfo {
+  weather_entity: string | null;
+  window_start: string | null;
+  window_end: string | null;
+  winter_start: string | null;
+  winter_end: string | null;
+  winter_mode: boolean;
+}
+
 interface DevicesData {
+  settings: SettingsInfo;
   valves: ValveInfo[];
   sensors: SensorInfo[];
   supplies: { id: string; name: string; valve_ids: string[]; max_open_valves: number }[];
@@ -216,6 +251,7 @@ export class DevicesView extends LitElement {
   @state() private testSeconds = 10;
   @state() private testing = false;
   @state() private testResult: (TestResult & { valve: string }) | null = null;
+  @state() private settingsDraft: SettingsInfo | null = null;
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -376,23 +412,16 @@ export class DevicesView extends LitElement {
 
   // Sensoren ---------------------------------------------------------------------
 
-  private sensorEntities(): { entity_id: string; name: string; unit: string }[] {
-    const states = this.hass?.states ?? {};
-    return Object.entries(states)
-      .filter(([id]) => id.startsWith("sensor.") && !id.startsWith(`sensor.${DOMAIN}`))
-      .map(([id, s]) => ({
-        entity_id: id,
-        name: String(s.attributes.friendly_name ?? id),
-        unit: String(s.attributes.unit_of_measurement ?? ""),
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name, "de"));
-  }
-
   private async saveSensor(): Promise<void> {
     const d = this.sensorDraft!;
     this.saving = true;
     try {
-      await this.hass!.callWS({ type: `${DOMAIN}/devices/save_sensor`, ...d, name: d.name.trim() });
+      await this.hass!.callWS({
+        type: `${DOMAIN}/devices/save_sensor`,
+        ...d,
+        name: d.name.trim(),
+        zone_ids: LOCAL_WEATHER_KINDS.includes(d.kind) ? [] : d.zone_ids,
+      });
       this.sensorDraft = null;
       this.reloaded(`„${d.name}“ gespeichert`);
     } catch (err) {
@@ -400,6 +429,125 @@ export class DevicesView extends LitElement {
     } finally {
       this.saving = false;
     }
+  }
+
+  // Wetter, Zeitfenster, Winterpause -----------------------------------------------
+
+  private async saveSettings(): Promise<void> {
+    const d = this.settingsDraft!;
+    this.saving = true;
+    try {
+      await this.hass!.callWS({
+        type: `${DOMAIN}/devices/save_settings`,
+        weather_entity: d.weather_entity || null,
+        window_start: (d.window_start ?? "").slice(0, 5),
+        window_end: (d.window_end ?? "").slice(0, 5),
+        winter_start: d.winter_start || null,
+        winter_end: d.winter_end || null,
+      });
+      this.settingsDraft = null;
+      this.reloaded("Einstellungen gespeichert");
+    } catch (err) {
+      this.toast(`Nicht gespeichert: ${this.message(err)}`, true);
+    } finally {
+      this.saving = false;
+    }
+  }
+
+  private async setWinter(on: boolean): Promise<void> {
+    const text = on
+      ? "Winterpause einschalten? Alle Ventile werden geschlossen, Zeitpläne ruhen, und die Ventil-Geräte werden deaktiviert."
+      : "Winterpause beenden? Die Ventil-Geräte werden wieder aktiviert, Zeitpläne laufen wieder (wenn die Automatik an ist).";
+    if (!confirm(text)) return;
+    try {
+      await this.hass!.callWS({ type: `${DOMAIN}/settings/winter`, on });
+      this.toast(on ? "Winterpause ein" : "Winterpause aus: Saison läuft");
+      setTimeout(() => void this.load(), 1500);
+    } catch (err) {
+      this.toast(this.message(err), true);
+    }
+  }
+
+  private renderSettings(): TemplateResult {
+    const d = this.data!;
+    const cur = d.settings;
+    const s = this.settingsDraft;
+    const weather = cur.weather_entity ? this.hass?.states?.[cur.weather_entity] : undefined;
+    const hm = (t: string | null) => (t ?? "").slice(0, 5) || "–";
+    const date = (t: string | null) => (t ? `${t.slice(3, 5)}.${t.slice(0, 2)}.` : "–");
+    return html`
+      <section class="card">
+        <div class="section-head">
+          <h2>Wetter, Zeitfenster und Saison</h2>
+          <span class="spacer"></span>
+          ${s ? nothing : html`<button class="text" ?disabled=${d.busy} @click=${() => (this.settingsDraft = { ...cur })}>Ändern</button>`}
+        </div>
+        <div class="season-row">
+          <span class="pill ${cur.winter_mode ? "warn" : "ok"}">
+            ${cur.winter_mode ? "❄ Winterpause: nichts wird gegossen" : "☀ Saison: Bewässerung aktiv"}
+          </span>
+          <button class="primary" @click=${() => this.setWinter(!cur.winter_mode)}>
+            <ha-icon icon=${cur.winter_mode ? "mdi:weather-sunny" : "mdi:snowflake"}></ha-icon>
+            ${cur.winter_mode ? "Winterpause beenden" : "Winterpause einschalten"}
+          </button>
+        </div>
+        ${s
+          ? this.renderSettingsEditor(s)
+          : html`<div class="table-wrap"><table>
+              <tbody>
+                <tr><td>Wetter-Entität</td><td>${cur.weather_entity
+                  ? html`${String(weather?.attributes.friendly_name ?? cur.weather_entity)} <small class="hint">${cur.weather_entity}</small>`
+                  : html`<span class="hint">keine (dann nur eigene Fühler oder Dauer von Hand)</span>`}</td></tr>
+                <tr><td>Zeitfenster</td><td>${hm(cur.window_start)} bis ${hm(cur.window_end)} Uhr</td></tr>
+                <tr><td>Winterpause automatisch</td><td>${cur.winter_start || cur.winter_end
+                  ? `vom ${date(cur.winter_start)} bis ${date(cur.winter_end)}`
+                  : html`<span class="hint">aus (nur von Hand)</span>`}</td></tr>
+              </tbody></table></div>`}
+      </section>
+    `;
+  }
+
+  private renderSettingsEditor(s: SettingsInfo): TemplateResult {
+    const d = this.data!;
+    const update = () => (this.settingsDraft = { ...s });
+    // Datum als MM-TT gespeichert; im Formular ein Datumsfeld (Jahr egal).
+    const toInput = (v: string | null) => (v ? `2000-${v}` : "");
+    const fromInput = (v: string) => (v ? v.slice(5) : null);
+    const canSave = !!s.window_start && !!s.window_end && !this.saving && !d.busy;
+    return html`
+      <div class="editor">
+        <div class="field wide"><span>Wetter-Entität (Wetterdienst oder Wetterstation)</span>
+          <ip-entity-pick
+            .hass=${this.hass}
+            .value=${s.weather_entity ?? ""}
+            .filter=${{ domains: ["weather"] }}
+            @value-changed=${(e: CustomEvent<{ value: string }>) => ((s.weather_entity = e.detail.value), update())}
+          ></ip-entity-pick>
+          ${s.weather_entity
+            ? html`<button class="text small" @click=${() => ((s.weather_entity = null), update())}>keine Wetter-Entität</button>`
+            : nothing}
+          <small class="hint">Liefert Temperatur, Luftfeuchte, Wind, Regen und die Vorhersage. Eigene Fühler (Sensoren oben) gehen vor.</small>
+        </div>
+        <div class="fields">
+          <label class="field"><span>Gießen ab</span>
+            <input type="time" .value=${(s.window_start ?? "").slice(0, 5)} @change=${(e: Event) => ((s.window_start = (e.target as HTMLInputElement).value), update())} /></label>
+          <label class="field"><span>Fertig bis</span>
+            <input type="time" .value=${(s.window_end ?? "").slice(0, 5)} @change=${(e: Event) => ((s.window_end = (e.target as HTMLInputElement).value), update())} /></label>
+        </div>
+        <div class="fields">
+          <label class="field"><span>Winterpause automatisch ab</span>
+            <input type="date" .value=${toInput(s.winter_start)} @change=${(e: Event) => ((s.winter_start = fromInput((e.target as HTMLInputElement).value)), update())} /></label>
+          <label class="field"><span>bis (danach Saison)</span>
+            <input type="date" .value=${toInput(s.winter_end)} @change=${(e: Event) => ((s.winter_end = fromInput((e.target as HTMLInputElement).value)), update())} /></label>
+        </div>
+        <small class="hint">Nur Tag und Monat zählen, das Jahr ist egal. Leer lassen = Winterpause nur von Hand.</small>
+        <div class="actions">
+          <span class="spacer"></span>
+          <button class="text" @click=${() => (this.settingsDraft = null)}>Abbrechen</button>
+          <button class="primary" ?disabled=${!canSave} @click=${this.saveSettings}>Speichern</button>
+        </div>
+      </div>
+    `;
   }
 
   private async deleteSensor(d: SensorDraft): Promise<void> {
@@ -446,6 +594,7 @@ export class DevicesView extends LitElement {
             : html`<p class="hint">Noch kein Ventil. „Ventil hinzufügen“ und das Gerät wählen, den Rest schlägt der Bewässerungsplaner vor.</p>`}
         </section>
         ${this.renderSensors()}
+        ${this.renderSettings()}
         <p class="hint small">
           Neue Ventile, Zonen und Sensoren brauchen ein Neuladen des Bewässerungsplaners; das passiert beim Speichern
           von selbst (nur wenn gerade nicht gegossen wird). Die Lage auf dem Plan und die Leitung zeichnest du auf der Seite „Plan“.
@@ -744,7 +893,8 @@ export class DevicesView extends LitElement {
             <ha-icon icon="mdi:plus"></ha-icon>Sensor hinzufügen
           </button>
         </div>
-        <p class="hint small">Bodenfeuchte ersetzt für ihre Zonen die Schätzung. Ein Regensensor (mm) ohne Zonen gilt für den ganzen Garten.</p>
+        <p class="hint small">Bodenfeuchte ersetzt für ihre Zonen die Schätzung. Ein Regensensor (mm) ohne Zonen gilt für den ganzen Garten.
+          Eigene Fühler für Temperatur, Luftfeuchte und Wind ersetzen die Werte der Wetter-Entität.</p>
         ${s && !s.sensor_id ? this.renderSensorEditor(s) : nothing}
         ${d.sensors.length
           ? html`<div class="table-wrap"><table>
@@ -756,8 +906,10 @@ export class DevicesView extends LitElement {
                       <td><strong>${x.name}</strong></td>
                       <td>${KIND_LABELS[x.kind] ?? x.kind}</td>
                       <td><small>${x.entity_id ?? html`<span class="bad-text">fehlt</span>`}</small></td>
-                      <td class="n">${shortState(x.state, x.kind === "rain_mm" ? "mm" : "%")}</td>
-                      <td>${zoneNames(x.zone_ids) || (x.kind === "rain_mm" ? "ganzer Garten" : html`<span class="hint">keine</span>`)}</td>
+                      <td class="n">${shortState(x.state, KIND_UNITS[x.kind] ?? "")}</td>
+                      <td>${LOCAL_WEATHER_KINDS.includes(x.kind)
+                        ? "ganzer Garten (statt Wetterdienst)"
+                        : zoneNames(x.zone_ids) || (x.kind === "rain_mm" ? "ganzer Garten" : html`<span class="hint">keine</span>`)}</td>
                       <td class="n">${x.kind === "soil_moisture" ? `${x.field_capacity_pct} / ${x.wilting_point_pct} %` : "–"}</td>
                       <td class="row-actions"><button class="text small" ?disabled=${d.busy}
                         @click=${() => (this.sensorDraft = editing ? null : { sensor_id: x.id, name: x.name, kind: x.kind, entity_id: x.entity_id ?? "", zone_ids: [...x.zone_ids], field_capacity_pct: x.field_capacity_pct, wilting_point_pct: x.wilting_point_pct })}>
@@ -774,7 +926,7 @@ export class DevicesView extends LitElement {
   private renderSensorEditor(s: SensorDraft): TemplateResult {
     const d = this.data!;
     const update = () => (this.sensorDraft = { ...s });
-    const entities = this.sensorEntities();
+    const local = LOCAL_WEATHER_KINDS.includes(s.kind);
     const canSave = !!s.name.trim() && !!s.entity_id && !this.saving && !d.busy;
     return html`
       <div class="editor">
@@ -786,16 +938,25 @@ export class DevicesView extends LitElement {
               ${Object.entries(KIND_LABELS).map(([k, label]) => html`<option value=${k} ?selected=${k === s.kind}>${label}</option>`)}
             </select></label>
         </div>
-        <label class="field wide"><span>Entität</span>
-          <select @change=${(e: Event) => {
-            s.entity_id = (e.target as HTMLSelectElement).value;
-            if (!s.name.trim()) s.name = entities.find((x) => x.entity_id === s.entity_id)?.name ?? "";
-            update();
-          }}>
-            <option value="" ?selected=${!s.entity_id}>(bitte wählen)</option>
-            ${entities.map((x) => html`<option value=${x.entity_id} ?selected=${x.entity_id === s.entity_id}>${x.name}${x.unit ? ` (${x.unit})` : ""} – ${x.entity_id}</option>`)}
-          </select></label>
-        ${d.zones.length
+        <div class="field wide"><span>Entität</span>
+          <ip-entity-pick
+            .hass=${this.hass}
+            .value=${s.entity_id}
+            .filter=${KIND_FILTERS[s.kind] ?? { domains: ["sensor"] }}
+            @value-changed=${(e: CustomEvent<{ value: string }>) => {
+              s.entity_id = e.detail.value;
+              if (!s.name.trim())
+                s.name = String(this.hass?.states?.[s.entity_id]?.attributes.friendly_name ?? "");
+              update();
+            }}
+          ></ip-entity-pick>
+          <small class="hint">Oben stehen die Entitäten, die zur Art passen. Tippen sucht in Name und Entität.</small>
+        </div>
+        ${local
+          ? html`<p class="hint small">Gilt für den ganzen Garten und ersetzt den Wert der Wetter-Entität (Verdunstung, Frost und Wind).
+              Fällt der Fühler aus, gilt wieder die Wetter-Entität.</p>`
+          : nothing}
+        ${d.zones.length && !local
           ? html`<div class="field wide"><span>Zonen</span><div class="zone-pick">
               ${d.zones.map((z) => {
                 const on = s.zone_ids.includes(z.id);

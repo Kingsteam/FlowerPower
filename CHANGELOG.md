@@ -5,6 +5,17 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 
 ## [Unveröffentlicht]
 
+## [0.6.0] – 2026-11-17
+
+> **Noch nicht mit echter Hardware getestet.**
+
+### Neu
+- Winterpause im Panel ein- und ausschalten: Knopf **☀ Saison / ❄ Winterpause** oben in der Kopfzeile (mit Rückfrage) und auf der Seite „Geräte“. WebSocket-Befehl `irrigation_planner/settings/winter` (nur Admin).
+- Seite „Geräte“, Abschnitt **„Wetter, Zeitfenster und Saison“**: Wetter-Entität wählen (oder keine), Zeitfenster und Winterpause nach Datum einstellen. Befehl `devices/save_settings`.
+- Eigene **Wetterfühler** als Sensoren: Temperatur, Luftfeuchte, Wind. Sie ersetzen die Werte der Wetter-Entität für die Verdunstung und für „bei Frost/Wind überspringen“; fällt ein Fühler aus, gilt wieder die Wetter-Entität. Auch im Assistenten unter „Konfigurieren“.
+- Neue Auswahl für Entitäten: Suchfeld mit Liste (Name, Entität, Wert jetzt), passende Entitäten zuerst, Suche über mehrere Wörter, Tastatur (Pfeile, Enter).
+- Test-Instanz: simulierter Temperaturfühler im Garten.
+
 ## [0.5.0] – 2026-11-16
 
 > **Noch nicht mit echter Hardware getestet.** Alles ist mit simulierten Ventilen und Sensoren erprobt. Vor dem ersten echten Einsatz ein Ventil einrichten und einen kurzen Testlauf machen.

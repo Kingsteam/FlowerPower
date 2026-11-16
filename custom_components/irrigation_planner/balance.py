@@ -45,6 +45,7 @@ from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConver
 from .const import DOMAIN, LOGGER, MIN_NEED_MM
 from .drivers.ha import resolve_entity_id
 from .geometry import zone_area
+from .local_weather import local_humidity, local_temperature_c, local_wind_ms
 from .model import DurationMode, GardenModel, Sensor, SensorKind, Zone, ZoneType
 from .scheduler import IrrigationScheduler, Run
 from .store import IrrigationPlannerStore
@@ -433,29 +434,44 @@ class BalanceManager:
         self._schedule_save()
 
     def _sample_weather(self, aggregate: DayAggregate) -> None:
-        if not self.weather_entity:
-            return
-        state = self.hass.states.get(self.weather_entity)
-        if state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return
-        attrs = state.attributes
-        try:
-            if isinstance(temp := attrs.get("temperature"), (int, float)):
-                unit = attrs.get("temperature_unit", UnitOfTemperature.CELSIUS)
-                aggregate.add_temperature(
-                    TemperatureConverter.convert(temp, unit, UnitOfTemperature.CELSIUS)
-                )
-            if isinstance(humidity := attrs.get("humidity"), (int, float)):
-                aggregate.rh_sum += float(humidity)
-                aggregate.rh_count += 1
-            if isinstance(wind := attrs.get("wind_speed"), (int, float)):
-                unit = attrs.get("wind_speed_unit", UnitOfSpeed.KILOMETERS_PER_HOUR)
-                aggregate.wind_sum += SpeedConverter.convert(
-                    wind, unit, UnitOfSpeed.METERS_PER_SECOND
-                )
-                aggregate.wind_count += 1
-        except HomeAssistantError as err:
-            LOGGER.debug("Wetterwerte nicht lesbar: %s", err)
+        """Temperatur, Luftfeuchte, Wind: eigene Fühler vor der Wetter-Entität."""
+        temp = local_temperature_c(self.hass, self.model)
+        humidity = local_humidity(self.hass, self.model)
+        wind = local_wind_ms(self.hass, self.model)
+        state = (
+            self.hass.states.get(self.weather_entity) if self.weather_entity else None
+        )
+        if state is not None and state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            attrs = state.attributes
+            try:
+                if temp is None and isinstance(
+                    t := attrs.get("temperature"), (int, float)
+                ):
+                    unit = attrs.get("temperature_unit", UnitOfTemperature.CELSIUS)
+                    temp = TemperatureConverter.convert(
+                        t, unit, UnitOfTemperature.CELSIUS
+                    )
+                if humidity is None and isinstance(
+                    h := attrs.get("humidity"), (int, float)
+                ):
+                    humidity = float(h)
+                if wind is None and isinstance(
+                    w := attrs.get("wind_speed"), (int, float)
+                ):
+                    unit = attrs.get("wind_speed_unit", UnitOfSpeed.KILOMETERS_PER_HOUR)
+                    wind = SpeedConverter.convert(
+                        w, unit, UnitOfSpeed.METERS_PER_SECOND
+                    )
+            except HomeAssistantError as err:
+                LOGGER.debug("Wetterwerte nicht lesbar: %s", err)
+        if temp is not None:
+            aggregate.add_temperature(temp)
+        if humidity is not None:
+            aggregate.rh_sum += humidity
+            aggregate.rh_count += 1
+        if wind is not None:
+            aggregate.wind_sum += wind
+            aggregate.wind_count += 1
 
     def _rain_sensor(self) -> Sensor | None:
         return next(

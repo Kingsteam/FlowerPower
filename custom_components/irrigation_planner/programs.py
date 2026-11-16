@@ -44,6 +44,7 @@ from .const import (
     RAIN_CONDITIONS,
     WIND_THRESHOLD_KMH,
 )
+from .local_weather import local_temperature_c, local_wind_ms
 from .model import SUN_EVENTS, GardenModel, Program, ProgramMode, Zone
 from .scheduler import IrrigationScheduler, QueueError
 from .store import IrrigationPlannerStore
@@ -237,25 +238,43 @@ def next_start(
 
 
 def weather_skip_reason(
-    hass: HomeAssistant, weather_entity: str | None, program: Program
+    hass: HomeAssistant,
+    weather_entity: str | None,
+    program: Program,
+    model: GardenModel | None = None,
 ) -> str | None:
-    """Grund, das Programm wegen des Wetters zu überspringen (oder ``None``)."""
-    if not weather_entity or (state := hass.states.get(weather_entity)) is None:
-        return None
-    attrs = state.attributes
-    if program.skip_on_rain and state.state in RAIN_CONDITIONS:
+    """Grund, das Programm wegen des Wetters zu überspringen (oder ``None``).
+
+    Eigene Fühler (Temperatur, Wind) gehen vor der Wetter-Entität.
+    """
+    state = hass.states.get(weather_entity) if weather_entity else None
+    attrs = state.attributes if state is not None else {}
+    if program.skip_on_rain and state is not None and state.state in RAIN_CONDITIONS:
         return f"Regen ({state.state})"
-    temp = attrs.get("temperature")
-    if program.skip_on_frost and isinstance(temp, (int, float)):
-        unit = attrs.get("temperature_unit", UnitOfTemperature.CELSIUS)
-        celsius = TemperatureConverter.convert(temp, unit, UnitOfTemperature.CELSIUS)
-        if celsius < FROST_THRESHOLD_C:
+    if program.skip_on_frost:
+        celsius = local_temperature_c(hass, model) if model is not None else None
+        temp = attrs.get("temperature")
+        if celsius is None and isinstance(temp, (int, float)):
+            unit = attrs.get("temperature_unit", UnitOfTemperature.CELSIUS)
+            celsius = TemperatureConverter.convert(
+                temp, unit, UnitOfTemperature.CELSIUS
+            )
+        if celsius is not None and celsius < FROST_THRESHOLD_C:
             return f"Frost ({celsius:.1f} °C)"
-    wind = attrs.get("wind_speed")
-    if program.skip_on_wind and isinstance(wind, (int, float)):
-        unit = attrs.get("wind_speed_unit", UnitOfSpeed.KILOMETERS_PER_HOUR)
-        kmh = SpeedConverter.convert(wind, unit, UnitOfSpeed.KILOMETERS_PER_HOUR)
-        if kmh > WIND_THRESHOLD_KMH:
+    if program.skip_on_wind:
+        ms = local_wind_ms(hass, model) if model is not None else None
+        kmh = (
+            SpeedConverter.convert(
+                ms, UnitOfSpeed.METERS_PER_SECOND, UnitOfSpeed.KILOMETERS_PER_HOUR
+            )
+            if ms is not None
+            else None
+        )
+        wind = attrs.get("wind_speed")
+        if kmh is None and isinstance(wind, (int, float)):
+            unit = attrs.get("wind_speed_unit", UnitOfSpeed.KILOMETERS_PER_HOUR)
+            kmh = SpeedConverter.convert(wind, unit, UnitOfSpeed.KILOMETERS_PER_HOUR)
+        if kmh is not None and kmh > WIND_THRESHOLD_KMH:
             return f"Wind ({kmh:.0f} km/h)"
     return None
 
@@ -459,7 +478,9 @@ class ProgramManager:
                 self._skip_next.discard(program.id)
                 reason = "von Hand übersprungen"
             else:
-                reason = weather_skip_reason(self.hass, self.weather_entity, program)
+                reason = weather_skip_reason(
+                    self.hass, self.weather_entity, program, self.store.model
+                )
             if reason is None and program.skip_on_rain:
                 rain = await async_forecast_rain_mm(self.hass, self.weather_entity)
                 if rain is not None and rain >= FORECAST_RAIN_SKIP_MM:
