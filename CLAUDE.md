@@ -1,10 +1,10 @@
 # Bewässerungsplaner (`irrigation_planner`): Hinweise für Claude
 
-Das Repo heißt **FlowerPower** (github.com/Kingsteam/FlowerPower, privat). Die Erweiterung selbst heißt in Home Assistant weiterhin `irrigation_planner`.
+Das Repo heißt **FlowerPower** (github.com/Kingsteam/FlowerPower, öffentlich). Die Erweiterung selbst heißt in Home Assistant weiterhin `irrigation_planner`.
 
 Eigene Home-Assistant-Integration (HACS) für die Gartenbewässerung. Der Besitzer ist kein Entwickler: antworte auf Deutsch, in einfacher Sprache, und erkläre, was du änderst und warum.
 
-**Dieses Repo ist privat und bleibt privat.**
+**Dieses Repo ist öffentlich.** Alles, was hier landet (auch Commits, Tests, Bilder und die Git-Historie), kann jeder lesen. Deshalb gilt Regel 5 besonders streng.
 
 ## Zweck
 
@@ -23,7 +23,7 @@ Stand 0.1.0: **Grundgerüst, steuert noch nichts.** Es gibt keine Plattformen, k
 
 ## Hauswissen
 
-Das Wissen über die konkrete Anlage des Besitzers liegt im separaten privaten Repo `Kingsteam/.homeassistant` (`projekte/bewaesserung/`, Skill `zuhause-hw18`). Von dort werden nur Konzept und Handbuch nach `docs/` übernommen; sonst nichts in dieses Repo kopieren. Die Integration selbst darf keine hausspezifischen Namen, Entitäten oder Werte fest eingebaut haben.
+Das Wissen über die konkrete Anlage des Besitzers liegt im separaten privaten Repo `Kingsteam/.homeassistant` (`projekte/bewaesserung/`). Von dort werden nur Konzept und Handbuch nach `docs/` übernommen, und zwar ohne echte Entitätsnamen, Wetterstation, Ort oder andere persönliche Angaben; sonst nichts in dieses Repo kopieren. Die Integration selbst darf keine hausspezifischen Namen, Entitäten oder Werte fest eingebaut haben.
 
 ## Aufbau
 

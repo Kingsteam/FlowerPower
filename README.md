@@ -66,3 +66,7 @@ custom_components/irrigation_planner/   die Integration
 tests/              automatische Tests
 docs/               Konzept und Handbuch
 ```
+
+## Lizenz
+
+MIT, siehe [LICENSE](LICENSE).

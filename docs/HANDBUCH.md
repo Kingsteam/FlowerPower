@@ -218,7 +218,7 @@ Du musst nichts davon selbst rechnen. Es hilft aber zu verstehen, woher die Zahl
 
 1. **Fläche:** aus der Zeichnung. Bei Sprinklern ist das ein Kreissegment, z. B. ein Halbkreis mit 5,5 m Radius = 47,5 m². Bei Beeten ist es das Polygon.
 2. **Wasserbedarf in mm:**
-   - Aus Temperatur, Luftfeuchte, Wind und Sonne rechnet das System die **Verdunstung** (ET₀). Die Daten kommen z. B. von GeoSphere Austria.
+   - Aus Temperatur, Luftfeuchte, Wind und Sonne rechnet das System die **Verdunstung** (ET₀). Die Daten kommen von deiner Wetter-Entität in Home Assistant.
    - Diese wird mit dem **Pflanzenfaktor** multipliziert, z. B. Rasen 0,8.
    - Abgezogen wird der **Regen**, der gefallen ist bzw. vorhergesagt wird.
    - Ein **Bodenfeuchtesensor**, wenn vorhanden, korrigiert das Ergebnis.
@@ -261,4 +261,4 @@ Im Verlauf steht der Grund: Regen erwartet, Frost, Ventil nicht erreichbar, Zone
 Für den Umstieg kann der Bewässerungsplaner die Werte von Smart Irrigation übernehmen. Später rechnet er selbst, und Smart Irrigation kann deinstalliert werden.
 
 **Was passiert mit meinen alten Bewässerungsskripten?**
-Sie sind im privaten Haus-Repo unter `ha_backup/scripts/` gesichert. Nach der Umstellung werden sie deaktiviert und später gelöscht.
+Sichere sie vorher. Nach der Umstellung werden sie deaktiviert und später gelöscht.

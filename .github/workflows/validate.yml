@@ -26,7 +26,7 @@ jobs:
       - uses: hacs/action@main
         with:
           category: integration
-          # Solange das Repo privat ist und keine Beschreibung, Topics und
-          # Releases hat, schlagen diese Prüfungen fehl. Vor einer
-          # Veröffentlichung entfernen.
+          # brands: eigenes Logo im home-assistant/brands-Repo fehlt noch.
+          # description/topics: auf GitHub noch nicht gesetzt. Vor einer
+          # Aufnahme in den HACS-Standardkatalog nachholen und entfernen.
           ignore: brands description topics

@@ -30,27 +30,27 @@ Eine sauber gekapselte HACS-Integration mit eigener Oberfläche, die **mit belie
 **Ventile:** SONOFF „Zigbee smart water valve“ (SWV), angebunden über Zigbee2MQTT 2.14.3. Batterie 4× AA.
 Jedes Ventil liefert: `flow` (m³/h), `current_device_status` (`normal_state` / `water_shortage` / `water_leakage`), `real_time_irrigation_volume` (L), `real_time_irrigation_duration` (s), `daily_irrigation_volume`, `cyclic_timed_irrigation`, `cyclic_quantitative_irrigation` und `auto_close_when_water_shortage`.
 
-| Zone (Z2M-Name) | HA-Schalter | Status | zuletzt gemessen |
-|---|---|---|---|
-| Bewässerung Vorgarten | `switch.bewasserung_vorgarten` | ok | 45 L in 600 s → **4,5 L/min** |
-| Bewässerung Vorgarten Rosen | `switch.bewasserung_vorgarten_rosen` | ok | 96 L in 600 s → **9,6 L/min** |
-| Bewässerung Terrasse 2 | `switch.bewasserung_terrasse_2` | ok | 20 L in 205 s → **5,9 L/min** |
-| Bewässerung Wiese 4 | `switch.bewasserung_wiese_4` | ok | – |
-| Bewässerung Wiese 1 / 2 / 3 | `switch.bewasserung_wiese_1/2/3` | **nicht erreichbar** | – |
-| Bewässerung Wiese Seitenbeet | `switch.bewasserung_wiese_seitenbeet` | **nicht erreichbar** | – |
-| Bewässerung Hochbeet | `switch.bewasserung_hochbeet` | **nicht erreichbar** | – |
-| Bewässerung Terrasse | `switch.bewasserung_terrasse` | **nicht erreichbar** | – |
+| Zone | Status | zuletzt gemessen |
+|---|---|---|
+| Vorgarten | ok | 45 L in 600 s → **4,5 L/min** |
+| Vorgarten Rosen | ok | 96 L in 600 s → **9,6 L/min** |
+| Terrasse 2 | ok | 20 L in 205 s → **5,9 L/min** |
+| Wiese 4 | ok | – |
+| Wiese 1 / 2 / 3 | **nicht erreichbar** | – |
+| Wiese Seitenbeet | **nicht erreichbar** | – |
+| Hochbeet | **nicht erreichbar** | – |
+| Terrasse | **nicht erreichbar** | – |
 
 **Geklärt (14.11.2026):** Alle 10 Ventile sind in Gebrauch. Die als „nicht erreichbar“ markierten haben über den Winter nur keine Batterien. Alle Ventile tragen in Home Assistant das Label `pausiert`. Für die Winterpause (Abschnitt 8) heißt das: Ventile ohne Batterie sind im Winter der Normalfall und dürfen keinen Alarm auslösen.
 
 **Heutige Steuerung:**
-- Die HACS-Erweiterung **Smart Irrigation** berechnet die Sekunden pro Zone (`sensor.smart_irrigation_<zone>`).
+- Die HACS-Erweiterung **Smart Irrigation** berechnet die Sekunden pro Zone (je Zone ein Sensor).
 - Keine Pumpe; alle Ventile hängen an der Hauswasserleitung und dürfen nur einzeln öffnen.
 - 12 fast gleiche Skripte schicken per `mqtt.publish` an `zigbee2mqtt/<Name>/set` den Befehl `{"state":"ON","on_time":<s>}`, warten auf das Schließen (über Geräte-ID) und setzen dann den Wasserhaushalt zurück.
-- Das Skript `script.bewasserung_durchfuhren` ruft sie der Reihe nach auf.
+- Ein übergeordnetes Skript ruft sie der Reihe nach auf.
 - Smart Irrigation will im November rund 1 Stunde pro Zone gießen, weil sich ein Defizit von etwa 29 mm angesammelt hat. Eine Winterpause fehlt also.
 
-**Wetter:** `weather.zamg_wien_hohe_warte` (GeoSphere Austria), `weather.openweathermap`, `weather.forecast_home` (Met.no), `sensor.openweathermap_rain`.
+**Wetter:** drei `weather`-Entitäten (ein nationaler Wetterdienst, OpenWeatherMap, Met.no) und ein Regensensor von OpenWeatherMap.
 
 **Sensoren:** 5 Bodenfeuchtesensoren über Zigbee2MQTT: Tuya „Soil sensor“ in Vorgarten, Vorgarten Rosen, Hochbeet und Terrasse, dazu „Sensor Wiese“. Wiese wird in Zigbee2MQTT als *Automatically generated definition* geführt, ist also kein offiziell unterstütztes Modell. Alle laufen mit 2× AAA und sind im Winter ohne Batterie (Label `pausiert`). In Home Assistant haben sie derzeit nur noch die Entitäten von Battery Notes; die Messwerte erscheinen erst wieder, wenn sie sich melden. Einen Regensensor gibt es nicht. Die Erweiterung muss auch ohne Boden- und Regensensoren funktionieren.
 
