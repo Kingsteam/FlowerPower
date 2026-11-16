@@ -142,6 +142,7 @@ class IrrigationScheduler:
         self._supply_of_valve: dict[str, str] = {}
         self._tasks: set[asyncio.Task[Any]] = set()
         self._listeners: list[Callable[[], None]] = []
+        self._run_listeners: list[Callable[[Run, float], None]] = []
         self._unsubs: list[CALLBACK_TYPE] = []
         self._stopping = False
         # Zonen, die nach einem Alarm gesperrt sind (Zone → Grund).
@@ -399,6 +400,14 @@ class IrrigationScheduler:
         ]
 
     @callback
+    def async_add_run_listener(
+        self, listener: Callable[[Run, float], None]
+    ) -> CALLBACK_TYPE:
+        """Meldet sich für beendete Läufe an (Lauf, Sekunden offen)."""
+        self._run_listeners.append(listener)
+        return lambda: self._run_listeners.remove(listener)
+
+    @callback
     def async_add_listener(self, update: Callable[[], None]) -> CALLBACK_TYPE:
         """Meldet sich für Änderungen an (für Entitäten in Schritt 5)."""
         self._listeners.append(update)
@@ -521,6 +530,16 @@ class IrrigationScheduler:
             supply.active.pop(run.valve_id, None)
             run.ends_at = dt_util.utcnow() if run.started_at else run.ends_at
             self.last_runs[run.zone_id] = run
+            if run.started_at is not None and run.ends_at is not None:
+                # Wie lange das Ventil wirklich offen war (für den Wasserhaushalt).
+                seconds = min(
+                    (run.ends_at - run.started_at).total_seconds(), run.duration_s
+                )
+                for listener in list(self._run_listeners):
+                    try:
+                        listener(run, max(0.0, seconds))
+                    except Exception:
+                        LOGGER.exception("Fehler beim Verbuchen eines Laufs")
             if not confirmed_closed and not self._stopping:
                 self._mark_stuck(supply, run.valve_id)
             self._notify()

@@ -6,6 +6,7 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 ## [Unveröffentlicht]
 
 ### Neu
+- Wasserhaushalt im Betrieb (`balance.py`): sammelt alle 10 Minuten Temperatur, Luftfeuchte, Wind (Wetter-Entität) und Regen (Regensensor), schließt nach Mitternacht den Tag ab (ET0, je Zone Defizit fortschreiben), verbucht jede Bewässerung, nutzt Bodenfeuchtesensoren, ruht in der Winterpause und beginnt danach bei 0. Eigener Speicher `.storage/irrigation_planner.balance`.
 - Rechenkern für Phase 2 (`water_balance.py`): Verdunstung ET0 nach FAO-56 Penman-Monteith (Strahlung aus dem Temperaturunterschied geschätzt), sonst Hargreaves; Pflanzenfaktoren, Bodenarten, nutzbare Feldkapazität, wirksamer Regen, Bedarf → Liter → Dauer. Geprüft mit den Rechenbeispielen aus FAO-56.
 - Zonen: Fläche, Effizienz und Dauer-Art (von Hand, berechnet, aus einer Entität); Bodenfeuchtesensoren: Feldkapazität und Welkepunkt.
 

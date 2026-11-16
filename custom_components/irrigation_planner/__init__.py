@@ -17,6 +17,7 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
+from .balance import BalanceManager
 from .const import CONF_WEATHER_ENTITY, CONF_WINDOW_END, DOMAIN, LOGGER, NAME
 from .drivers.ha import HassValveDriver
 from .drivers.registry import create_driver
@@ -50,6 +51,7 @@ class IrrigationPlannerData:
     scheduler: IrrigationScheduler
     programs: ProgramManager
     watchdog: Watchdog
+    balance: BalanceManager
     season: Season | None = None
     # Geräte-ID des Hauptgeräts (Zonen und Programme hängen daran).
     main_device_id: str = ""
@@ -119,6 +121,10 @@ async def async_setup_entry(
         window_end=entry.data.get(CONF_WINDOW_END),
     )
     watchdog = Watchdog(hass, store, scheduler, drivers)
+    balance = BalanceManager(
+        hass, store, scheduler, weather_entity=entry.data.get(CONF_WEATHER_ENTITY)
+    )
+    await balance.async_load()
     entry.runtime_data = IrrigationPlannerData(
         store=store,
         profiles=profiles,
@@ -126,6 +132,7 @@ async def async_setup_entry(
         scheduler=scheduler,
         programs=programs,
         watchdog=watchdog,
+        balance=balance,
     )
     main_device = dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -140,6 +147,7 @@ async def async_setup_entry(
     await scheduler.async_start()
     programs.async_start()
     watchdog.async_start()
+    balance.async_start()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     LOGGER.debug(
         "Bewässerungsplaner eingerichtet: %s Zonen, %s steuerbare Ventile",
@@ -159,4 +167,5 @@ async def async_unload_entry(
     if entry.runtime_data.season is not None:
         entry.runtime_data.season.async_stop()
     await entry.runtime_data.scheduler.async_shutdown()
+    await entry.runtime_data.balance.async_stop()
     return unloaded

@@ -139,11 +139,14 @@ class Season:
                 enabled += 1
         settings.winter_disabled_devices = []
         settings.winter_mode = False
+        # Über den Winter wurde nicht gerechnet: mit vollem Boden neu beginnen.
+        self.data.balance.async_reset()
         LOGGER.info("Winterpause beendet, %s Geräte wieder aktiviert", enabled)
         persistent_notification.async_create(
             self.hass,
             f"- {enabled} Geräte wieder aktiviert\n"
             "- Zeitpläne laufen wieder (wenn die Automatik an ist)\n"
+            "- Wasserhaushalt aller Zonen auf 0 gesetzt\n"
             "- Sobald sich die Ventile melden: je Zone einen kurzen Testlauf "
             "machen (Einstellungen → Bewässerungsplaner → Konfigurieren → "
             "Ventil ändern)",
