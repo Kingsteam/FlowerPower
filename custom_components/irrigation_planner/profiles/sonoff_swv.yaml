@@ -1,0 +1,44 @@
+# SONOFF „Zigbee smart water valve“ (SWV) über Zigbee2MQTT.
+#
+# Das Ventil schließt selbst nach `on_time` Sekunden (Zigbee „On with timed
+# off“). Vor dem ersten Einsatz auf echter Hardware muss der Testlauf zeigen,
+# dass das Gerät den Timer wirklich selbst einhält (Konzept, Abschnitt 6).
+# Hält es ihn nicht ein, ist die Alternative die gerätegesteuerte Funktion
+# `cyclic_timed_irrigation` (total_number: 1, irrigation_duration: <s>).
+id: sonoff_swv
+name: SONOFF SWV (Zigbee2MQTT)
+driver: zigbee2mqtt
+match:
+  - manufacturer: SONOFF
+    model_id: SWV
+  - manufacturer: SONOFF
+    model: Zigbee smart water valve
+capabilities:
+  - device_timer
+  - flow
+  - volume
+  - status
+open_payload:
+  state: "ON"
+  on_time: "{duration}"
+close_payload:
+  state: "OFF"
+entities:
+  valve:
+    domain: switch
+  flow:
+    domain: sensor
+    device_class: volume_flow_rate
+  volume:
+    domain: sensor
+    unique_id_suffix: real_time_irrigation_volume
+  status:
+    domain: sensor
+    unique_id_suffix: current_device_status
+  battery:
+    domain: sensor
+    device_class: battery
+status_map:
+  normal_state: ok
+  water_shortage: shortage
+  water_leakage: leak

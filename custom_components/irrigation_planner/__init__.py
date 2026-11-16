@@ -10,6 +10,7 @@ from dataclasses import dataclass
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
 from .const import LOGGER
 from .store import IrrigationPlannerStore
@@ -30,7 +31,12 @@ async def async_setup_entry(
 ) -> bool:
     """Richtet den Bewässerungsplaner aus einem Config-Entry ein."""
     store = IrrigationPlannerStore(hass)
-    await store.async_load()
+    try:
+        await store.async_load()
+    except ValueError as err:
+        # Nicht still mit leerem Modell weitermachen: Das würde die
+        # gespeicherten Daten beim nächsten Speichern überschreiben.
+        raise ConfigEntryError(f"Gespeicherte Daten sind fehlerhaft: {err}") from err
     entry.runtime_data = IrrigationPlannerData(store=store)
 
     # Noch keine Plattformen. Sobald es welche gibt:

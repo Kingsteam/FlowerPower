@@ -38,3 +38,8 @@ HARDWARE_TEST_MAX_S: Final = 60
 STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 1
 STORAGE_MINOR_VERSION: Final = 1
+
+# Sicherheits-Schließen durch Home Assistant: Nach jeder Öffnung schickt
+# der Treiber nach Ablauf der Dauer selbst ein Schließen. Bei Geräten mit
+# eigenem Timer erst etwas später, damit das Gerät zuerst schließt.
+FAILSAFE_GRACE_S: Final = 10

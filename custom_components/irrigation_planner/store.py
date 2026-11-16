@@ -4,7 +4,9 @@ Dünne Hülle um den Home-Assistant-``Store``. Das Format ist versioniert
 (``STORAGE_VERSION``/``STORAGE_MINOR_VERSION``); spätere Formatänderungen
 bekommen eine Migration in ``_IrrigationPlannerStorage._async_migrate_func``.
 
-TODO: Umwandlung zwischen ``model.Garden`` und dem gespeicherten dict.
+Im Speicher liegt das Modell als ``GardenModel``; die Umwandlung steht in
+``serialize.py``. Defekte Daten werden nie still überschrieben: Das Laden
+bricht dann mit ``ValueError`` ab.
 """
 
 from __future__ import annotations
@@ -15,6 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import STORAGE_KEY, STORAGE_MINOR_VERSION, STORAGE_VERSION
+from .model import GardenModel
+from .serialize import model_from_dict, model_to_dict
 
 type StoredData = dict[str, Any]
 
@@ -57,14 +61,26 @@ class IrrigationPlannerStore:
             STORAGE_KEY,
             minor_version=STORAGE_MINOR_VERSION,
         )
-        self.data: StoredData = _empty_data()
+        self.model = GardenModel()
 
-    async def async_load(self) -> StoredData:
-        """Lädt die gespeicherten Daten oder legt ein leeres Modell an."""
+    @property
+    def data(self) -> StoredData:
+        """Das Modell so, wie es gespeichert wird."""
+        return model_to_dict(self.model)
+
+    async def async_load(self) -> GardenModel:
+        """Lädt die gespeicherten Daten oder legt ein leeres Modell an.
+
+        Löst ``ValueError`` aus, wenn die Daten nicht zusammenpassen.
+        """
         stored = await self._store.async_load()
-        self.data = {**_empty_data(), **stored} if stored else _empty_data()
-        return self.data
+        try:
+            self.model = model_from_dict({**_empty_data(), **(stored or {})})
+        except (KeyError, TypeError) as err:
+            raise ValueError(f"Gespeicherte Daten sind unvollständig: {err}") from err
+        return self.model
 
     async def async_save(self) -> None:
-        """Speichert die aktuellen Daten."""
-        await self._store.async_save(self.data)
+        """Prüft und speichert das aktuelle Modell."""
+        self.model.validate()
+        await self._store.async_save(model_to_dict(self.model))

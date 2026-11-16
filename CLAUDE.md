@@ -10,7 +10,7 @@ Eigene Home-Assistant-Integration (HACS) für die Gartenbewässerung. Der Besitz
 
 Gartenplan, berechnete Gießdauer je Zone, ausfallsichere Ventilsteuerung, Überwachung des Durchflusses und Winterpause, unabhängig von der Hardware. Ziel und Architektur: `docs/KONZEPT.md`. Geplante Bedienung: `docs/HANDBUCH.md`.
 
-Stand 0.1.0: **Grundgerüst, steuert noch nichts.** Es gibt keine Plattformen, keine Dienste und keine Ventilsteuerung.
+Stand: Phase 1, Schritte 1–2 fertig (Speichern des Modells, Treiber, Profile). **Die Integration steuert noch nichts:** Die Treiber sind gebaut und getestet, werden aber erst mit der Warteschlange (Schritt 3) verwendet. Es gibt noch keine Plattformen und keine Dienste.
 
 ## Sicherheitsregeln (nicht verhandelbar)
 
@@ -32,9 +32,13 @@ Das Wissen über die konkrete Anlage des Besitzers liegt im separaten privaten R
 | `custom_components/irrigation_planner/__init__.py` | `async_setup_entry`/`async_unload_entry`, `entry.runtime_data` (`IrrigationPlannerData`), Typ `IrrigationPlannerConfigEntry` |
 | `config_flow.py` | Einrichtung: Wetterquelle (optional), Zeitfenster; nur eine Instanz |
 | `const.py` | Konstanten und Sicherheitsgrenzen |
-| `model.py` | Datenklassen (Konzept Abschnitt 4); Bezüge über `device_id` + `EntityRef` (unique_id), nie über `entity_id` |
+| `model.py` | Datenklassen (Konzept Abschnitt 4), `GardenModel.validate()` prüft IDs und Bezüge; Bezüge über `device_id` + `EntityRef` (unique_id), nie über `entity_id` |
+| `serialize.py` | Modell ↔ gespeichertes JSON, ausgeschrieben je Klasse; fehlende Felder bekommen Standardwerte |
 | `store.py` | `Store`-Hülle, Schlüssel `irrigation_planner`, versioniert |
-| `drivers/base.py` | `ValveDriver`, `Capability`, `SafetyLevel`, `validate_duration` |
+| `drivers/base.py` | `ValveDriver`, `Capability`, `SafetyLevel`, `validate_duration`, Haken `_async_after_open` |
+| `drivers/ha.py` | `HassValveDriver`: Entitäten auflösen, `is_open`, **Sicherheits-Schließen** nach Ablauf (bei Gerätetimer + `FAILSAFE_GRACE_S`), `async_shutdown` schließt offene Ventile |
+| `drivers/ha_switch.py`, `ha_valve.py`, `zigbee2mqtt.py`, `service_call.py` | die vier Treiber; `drivers/registry.py` baut sie (`create_driver`), nicht in `drivers/__init__.py` importieren (Kreisimport) |
+| `profiles/` | Geräteprofile als YAML + Lader; `device_timer` ohne `{duration}` im Befehl wird abgelehnt |
 | `diagnostics.py` | Diagnosedaten (Koordinaten geschwärzt) |
 | `geometry.py`, `water_balance.py`, `scheduler.py`, `watchdog.py`, `season.py`, `websocket_api.py` | nur Platzhalter mit Docstring |
 | `strings.json`, `translations/` | Texte (en = `strings.json`, de) |
@@ -42,7 +46,7 @@ Das Wissen über die konkrete Anlage des Besitzers liegt im separaten privaten R
 | `docs/` | `KONZEPT.md`, `HANDBUCH.md`, `bilder/`, `entwuerfe.html` |
 | `devtools/testinstanz/` | simulierte Test-Home-Assistant-Instanz: `start.py`, Simulator `irrigation_sim` (10 Ventile, Bodenfeuchte, Wasserzähler, Störungen); nicht Teil der Auslieferung |
 
-Noch nicht angelegt (siehe Konzept Abschnitt 3): weitere Treiber (`ha_valve`, `ha_switch`, `zigbee2mqtt`, `service_call`), `profiles/`, `discovery.py`, Plattformen (`sensor`, `switch`, `binary_sensor`, `button`, `select`), `frontend/`, `frontend-src/`. Sobald es Plattformen gibt: `PLATFORMS` definieren und `async_forward_entry_setups`/`async_unload_platforms` verwenden.
+Noch nicht angelegt (siehe Konzept Abschnitt 3): `discovery.py`, Plattformen (`sensor`, `switch`, `binary_sensor`, `button`, `select`), `frontend/`, `frontend-src/`. Sobald es Plattformen gibt: `PLATFORMS` definieren und `async_forward_entry_setups`/`async_unload_platforms` verwenden.
 
 ## Tests und Prüfungen
 

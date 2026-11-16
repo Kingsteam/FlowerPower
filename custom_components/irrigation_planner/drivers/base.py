@@ -87,7 +87,16 @@ class ValveDriver(ABC):
 
         Die Dauer ist Pflicht und muss positiv sein, sonst ``ValueError``.
         """
-        await self._async_open(validate_duration(duration_s))
+        duration_s = validate_duration(duration_s)
+        await self._async_open(duration_s)
+        await self._async_after_open(duration_s)
+
+    async def _async_after_open(self, duration_s: int) -> None:  # noqa: B027
+        """Wird nach erfolgreichem Öffnen aufgerufen (z. B. Schließen einplanen).
+
+        Absichtlich leer und nicht abstrakt: Treiber ohne Home Assistant
+        (z. B. in Tests) brauchen ihn nicht.
+        """
 
     @abstractmethod
     async def _async_open(self, duration_s: int) -> None:
