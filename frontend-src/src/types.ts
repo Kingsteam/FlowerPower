@@ -91,6 +91,7 @@ export interface ZoneStatus {
   ends_at: string | null;
   need_mm: number;
   capacity_mm?: number;
+  efficiency?: number;
   planned_s: number;
   reason: string;
   locked_reason: string | null;

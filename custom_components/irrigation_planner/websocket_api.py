@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant, callback
 import voluptuous as vol
 
 from .backup import ws_export, ws_import
-from .balance import zone_taw
+from .balance import zone_efficiency, zone_taw
 from .catalog import catalog
 from .const import DOMAIN, MAP_PROVIDER_CUSTOM, MAP_PROVIDERS
 from .drivers.ha import resolve_entity_id
@@ -236,6 +236,7 @@ def status_payload(data: IrrigationPlannerData) -> dict[str, Any]:
             "ends_at": run.ends_at.isoformat() if run and run.ends_at else None,
             "need_mm": round(data.balance.deficit_mm(zone), 1),
             "capacity_mm": round(zone_taw(zone), 1),
+            "efficiency": zone_efficiency(zone),
             "planned_s": planned.seconds,
             "reason": planned.reason,
             "locked_reason": data.scheduler.locked_zones.get(zone.id),

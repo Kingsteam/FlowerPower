@@ -188,7 +188,14 @@ export function computeRaster(
   const trees = features.filter((f) => f.kind === "tree" && (f.trunk_m ?? 0) > 0);
   const active = zones
     .filter((z) => z.enabled && drawnArea(z) !== null)
-    .map((z) => ({ zone: z, mm: mmPerRun(z, valves, status), fill: zoneFill(z, status), cap: status?.zones[z.id]?.capacity_mm ?? null }));
+    .map((z) => ({
+      zone: z,
+      mm: mmPerRun(z, valves, status),
+      fill: zoneFill(z, status),
+      cap: status?.zones[z.id]?.capacity_mm ?? null,
+      // Anteil, der im Boden ankommt (Sprinkler verlieren mehr durch Verdunstung)
+      eff: status?.zones[z.id]?.efficiency ?? (z.type === "sprinkler" ? 0.75 : 0.9),
+    }));
   const cells: RasterCell[] = [];
   let max = 0;
   for (let y = y0; y < by1; y += step) {
@@ -212,7 +219,7 @@ export function computeRaster(
         } else {
           const fill = here.reduce((s, h) => s + (h.fill ?? 0), 0) / here.length;
           const cap = here.reduce((s, h) => s + (h.cap ?? 0), 0) / here.length;
-          const added = layer === "after" ? here.reduce((s, h) => s + (h.mm ?? 0), 0) : 0;
+          const added = layer === "after" ? here.reduce((s, h) => s + (h.mm ?? 0) * h.eff, 0) : 0;
           v = fill + (cap > 0 ? added / cap : 0);
         }
       }

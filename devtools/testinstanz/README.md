@@ -10,6 +10,12 @@ Terminal öffnen und diese eine Zeile einfügen:
 curl -fsSL https://raw.githubusercontent.com/Kingsteam/FlowerPower/main/devtools/testinstanz/mac-start.sh | bash
 ```
 
+Den **Beispielgarten neu anlegen** (alle Zonen gezeichnet, Zuleitungen mit Abzweig, 14 Tage Wetter, unterschiedlich trockene Zonen, Verlauf der letzten Woche); der eigene Garten bleibt als `.bak`-Datei im Ordner `daten/.storage` liegen:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Kingsteam/FlowerPower/main/devtools/testinstanz/mac-start.sh | bash -s -- --beispiel-neu
+```
+
 Das Skript legt alles im Ordner `~/FlowerPower-Test` ab, installiert bei Bedarf `uv` (lädt Python 3.14), holt den aktuellen Stand von GitHub, installiert Home Assistant und öffnet danach den Browser. Benutzer und Passwort stehen am Ende im Terminal. Der erste Durchlauf dauert 5–10 Minuten, spätere nur noch kurz. Beenden mit Ctrl+C; zum Entfernen den Ordner `~/FlowerPower-Test` löschen.
 
 ## Starten (Entwicklung)
@@ -22,7 +28,7 @@ python devtools/testinstanz/start.py
 
 Dann <http://127.0.0.1:8123> öffnen. Benutzer und Passwort stehen in `../testinstanz-daten/zugang.txt`. Der Datenordner liegt außerhalb des Repos und kann jederzeit gelöscht werden; beim nächsten Start entsteht eine frische Instanz.
 
-Der Plan-Editor ist unter **Bewässerung** in der Seitenleiste. Im Beispielgarten sind die Zonen 1 bis 5 schon gezeichnet, 6 bis 10 sind zum Ausprobieren frei. Der Testort ist ein neutraler Platz in Niederösterreich (Wald), damit das Luftbild von basemap.at etwas zeigt.
+Der Plan-Editor ist unter **Bewässerung** in der Seitenleiste. Der Beispielgarten hat alle zehn Zonen gezeichnet (Sprinkler, Beete, Gießschläuche), zwei Ventilverteiler mit Zuleitung vom Wasserhahn und einem Abzweig, Leitungen mit Knicken, einen gesperrten Grundriss, einen Wasserhaushalt mit 14 Tagen Wetter (die Zonen sind unterschiedlich trocken) und einen Verlauf der letzten Woche. So zeigen die Wasser-Ansichten (geplante Gießmenge, Bodenfeuchte) und die Seite „Betrieb“ gleich etwas. `--beispiel-neu` legt ihn neu an, der bisherige Stand bleibt als `.bak` liegen. Der Testort ist ein neutraler Platz in Niederösterreich (Wald), damit das Luftbild von basemap.at etwas zeigt.
 
 Beim ersten Start erledigt das Skript die Ersteinrichtung und legt den Bewässerungsplaner an (Wetter: „Simuliertes Wetter“). Der Code des Bewässerungsplaners ist verlinkt: nach einer Änderung Home Assistant neu starten.
 

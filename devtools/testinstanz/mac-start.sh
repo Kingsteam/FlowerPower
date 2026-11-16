@@ -4,6 +4,9 @@
 # Aufruf im Terminal (eine Zeile):
 #   curl -fsSL https://raw.githubusercontent.com/Kingsteam/FlowerPower/main/devtools/testinstanz/mac-start.sh | bash
 #
+# Beispielgarten neu anlegen (der eigene wird als .bak gesichert):
+#   curl -fsSL https://raw.githubusercontent.com/Kingsteam/FlowerPower/main/devtools/testinstanz/mac-start.sh | bash -s -- --beispiel-neu
+#
 # Was passiert:
 # - Alles landet im Ordner ~/FlowerPower-Test (zum Entfernen einfach löschen).
 # - uv (Python-Werkzeug) wird installiert, falls es fehlt; es lädt Python 3.14.
@@ -41,4 +44,4 @@ VIRTUAL_ENV="$ZIEL/venv" uv pip install --quiet \
 
 echo "==> Starte die Testinstanz (der erste Start dauert 1–2 Minuten) …"
 exec "$ZIEL/venv/bin/python" code/devtools/testinstanz/start.py \
-  --daten "$ZIEL/daten" --oeffnen
+  --daten "$ZIEL/daten" --oeffnen "$@"

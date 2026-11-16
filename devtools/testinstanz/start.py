@@ -17,7 +17,10 @@ Die Instanz ist komplett simuliert und verbindet sich mit keinem echten Gerät.
 from __future__ import annotations
 
 import argparse
+import datetime as dt
+import itertools
 import json
+import math
 from pathlib import Path
 import secrets
 import shutil
@@ -125,11 +128,29 @@ BERECHNUNG = {
     1: {"area_m2": 12.6, "plant_type": "flower_bed", "kc": 0.9},
     2: {"area_m2": 9.0, "plant_type": "roses", "kc": 0.9},
     3: {"area_m2": 6.0, "plant_type": "pots", "kc": 1.1},
-    4: {"area_m2": 47.5, "plant_type": "lawn", "kc": 0.8, "type": "sprinkler"},
-    5: {"area_m2": 47.5, "plant_type": "lawn", "kc": 0.8, "type": "sprinkler"},
+    4: {
+        "area_m2": 47.5,
+        "plant_type": "lawn",
+        "kc": 0.8,
+        "type": "sprinkler",
+        "soil_type": "sandy_loam",
+    },
+    5: {
+        "area_m2": 47.5,
+        "plant_type": "lawn",
+        "kc": 0.8,
+        "type": "sprinkler",
+        "soil_type": "sandy_loam",
+    },
+    6: {"area_m2": 16.0, "plant_type": "berries", "kc": 0.85},
+    7: {"area_m2": 20.5, "plant_type": "hedge", "kc": 0.7, "soil_type": "sandy_loam"},
+    8: {"area_m2": 6.4, "plant_type": "vegetables", "kc": 1.05},
+    10: {"area_m2": 4.5, "plant_type": "herbs", "kc": 0.5},
 }
 for _werte in BERECHNUNG.values():
     _werte["duration_mode"] = "calculated"
+# Zone 9 (Hortensien) bleibt bei der Dauer von Hand, damit beides zu sehen ist.
+BERECHNUNG[9] = {"plant_type": "hydrangeas", "kc": 1.1}
 
 # Phase 3: Zonen 1 bis 5 sind schon auf dem Plan gezeichnet (Meter, x nach
 # Osten, y nach Süden); 6 bis 10 bleiben zum Ausprobieren leer.
@@ -139,10 +160,30 @@ PLAN = {
     3: {"polygon": [[4, -8], [10, -8], [10, -7], [4, -7]]},
     4: {"center": [-6.5, 0.5], "radius_m": 5.5, "start_angle_deg": 90, "arc_deg": 180},
     5: {"center": [4, 1], "radius_m": 5.5, "start_angle_deg": 270, "arc_deg": 180},
+    # Beerenstreifen am Ostrand
+    6: {"polygon": [[11.5, -4], [13.5, -4], [13.5, 4], [11.5, 4]]},
     # Gießschlauch an der Hecke entlang (0,4 m je Seite)
     7: {"type": "hose", "polygon": [[-13, 8.6], [12, 8.6]], "radius_m": 0.4},
-    # Gießschlauch zum Selberzeichnen
-    8: {"type": "hose"},
+    # Gießschlauch im Gemüsebeet am Westrand (mit Knick)
+    8: {
+        "type": "hose",
+        "polygon": [[-14, -9.5], [-14, -4.5], [-13, -3.6]],
+        "radius_m": 0.6,
+    },
+    # Hortensien vor dem Haus, Kräuter vor der Terrasse
+    9: {"polygon": [[-8, -10.6], [-4.5, -10.6], [-4.5, -9.2], [-8, -9.2]]},
+    10: {"polygon": [[6, -5.6], [10.5, -5.6], [10.5, -4.6], [6, -4.6]]},
+}
+# Leitung vom Ventil zur Zone mit Knicken (sonst gerade)
+ROUTEN = {
+    2: [[-1.8, -9.0], [-10.5, -9.0]],
+    4: [[1.8, -8.4], [-6.5, -8.4]],
+    6: [[-4.0, -3.6], [12.5, -3.6]],
+    8: [[-2.0, -5.4], [-12.5, -5.4]],
+}
+# Ventile: Verteiler 1 am Haus (Ventile 1 bis 5), Verteiler 2 im Garten (6 bis 10)
+VENTIL_ORT = {n: [-3 + 1.2 * n, -10.2] for n in range(1, 6)} | {
+    n: [-4.0 + (n - 6), -4.5] for n in range(6, 11)
 }
 # Abgepauster Grundriss (nur Orientierung): Haus, Terrasse, Hecke, Baum, Hahn.
 GRUNDRISS = [
@@ -179,10 +220,45 @@ GRUNDRISS = [
         "trunk_m": 0.5,
     },
     {"id": "hahn", "kind": "tap", "points": [[-1, -10.8]]},
+    # Zuleitungen: Hahn → Verteiler am Haus → Abzweig zum Verteiler im Garten
+    {"id": "zuleitung_hahn", "kind": "pipe", "points": [[-1, -10.8], [-1, -10.2]]},
+    {
+        "id": "verteiler_haus",
+        "kind": "pipe",
+        "points": [
+            [-2.4, -10.2],
+            [-1.8, -10.2],
+            [-1, -10.2],
+            [-0.6, -10.2],
+            [0.6, -10.2],
+            [1.8, -10.2],
+            [3.0, -10.2],
+        ],
+    },
+    {"id": "abzweig_garten", "kind": "pipe", "points": [[-1, -10.2], [-1, -4.5]]},
+    {
+        "id": "verteiler_garten",
+        "kind": "pipe",
+        "points": [
+            [-4.4, -4.5],
+            [-4, -4.5],
+            [-3, -4.5],
+            [-2, -4.5],
+            [-1, -4.5],
+            [0, -4.5],
+        ],
+    },
 ]
+# Feste Teile des Grundrisses sind gesperrt (zum Ausprobieren des Schlosses).
+for _form in GRUNDRISS:
+    if _form["kind"] in ("building", "paving", "boundary", "hedge", "soil"):
+        _form["locked"] = True
 NAMEN = {
+    6: "Beeren",
     7: "Schlauch Hecke",
     8: "Schlauch Gemüse",
+    9: "Hortensien",
+    10: "Kräuter",
     1: "Blumenbeet Süd",
     2: "Rosen",
     3: "Töpfe Terrasse",
@@ -231,6 +307,7 @@ def _beispielgarten() -> dict:
                 # Phase 2: Zonen 1 bis 5 mit berechneter Dauer.
                 **(BERECHNUNG.get(n, {})),
                 **(PLAN.get(n, {})),
+                "valve_route": ROUTEN.get(n, []),
             }
         )
         ventile.append(
@@ -245,7 +322,7 @@ def _beispielgarten() -> dict:
                 "water_supply_id": "hauswasser",
                 # Durchfluss wie im Simulator (sonst erst nach dem ersten Lauf).
                 "learned_flow_l_min": FLUSS[n - 1],
-                "position": [-3 + 1.2 * n, -10.5] if n <= 5 else None,
+                "position": VENTIL_ORT[n],
                 "safety_level": "device" if n <= 8 else "ha_only",
             }
         )
@@ -312,22 +389,167 @@ def _beispielgarten() -> dict:
     }
 
 
-def _garten_anlegen(daten: Path) -> None:
-    """Legt den Beispielgarten an, falls es noch keinen gibt."""
-    datei = daten / ".storage" / "irrigation_planner"
+# Wasserhaushalt: wie viel mm im Wasserkonto fehlen (unterschiedlich trocken).
+DEFIZIT = {1: 12, 2: 50, 3: 6, 4: 3, 5: 14, 6: 60, 7: 20, 8: 30, 9: 10, 10: 40}
+# 14 Tage Wetter: Verdunstung ET0 und Regen in mm (ältester Tag zuerst).
+WETTER = [
+    (3.1, 0),
+    (3.8, 0),
+    (4.2, 0),
+    (2.0, 8.5),
+    (1.6, 12.0),
+    (2.9, 0),
+    (3.6, 0),
+    (4.4, 0),
+    (4.9, 0),
+    (5.2, 0),
+    (2.4, 2.0),
+    (3.3, 0),
+    (4.0, 0),
+    (4.6, 0),
+]
+
+
+def _flaeche(zone: dict) -> float:
+    """Fläche einer Zone in m² (wie geometry.py, vereinfacht)."""
+    if zone.get("center") and zone.get("radius_m"):
+        return math.pi * zone["radius_m"] ** 2 * zone.get("arc_deg", 360) / 360
+    punkte = zone.get("polygon") or []
+    if zone.get("type") == "hose" and len(punkte) >= 2:
+        laenge = sum(math.dist(a, b) for a, b in itertools.pairwise(punkte))
+        r = zone["radius_m"]
+        return laenge * 2 * r + math.pi * r * r
+    if len(punkte) >= 3:
+        return (
+            abs(
+                sum(
+                    a[0] * b[1] - b[0] * a[1]
+                    for a, b in zip(punkte, punkte[1:] + punkte[:1], strict=True)
+                )
+            )
+            / 2
+        )
+    return zone.get("area_m2") or 0.0
+
+
+def _wasserhaushalt() -> dict:
+    """Bilanz-Speicher: Defizit je Zone und die letzten 14 Tage."""
+    heute = dt.date.today()
+    return {
+        "zones": {
+            f"zone_{n}": {
+                "deficit_mm": float(d),
+                "measured": False,
+                "last_irrigation_mm": 0.0,
+            }
+            for n, d in DEFIZIT.items()
+        },
+        "today": None,
+        "history": [
+            {
+                "day": (heute - dt.timedelta(days=len(WETTER) - i)).isoformat(),
+                "et0_mm": et0,
+                "rain_mm": regen,
+            }
+            for i, (et0, regen) in enumerate(WETTER)
+        ],
+    }
+
+
+def _verlauf(garten: dict) -> dict:
+    """Verlauf der letzten Woche: Morgenprogramm, ein Regentag, ein Abbruch."""
+    zonen = {z["id"]: z for z in garten["zones"]}
+    fluss = {v["id"]: v["learned_flow_l_min"] for v in garten["valves"]}
+    eintraege: list[dict] = []
+    jetzt = dt.datetime.now(dt.UTC).replace(microsecond=0)
+    for tage in range(7, 0, -1):
+        start = (jetzt - dt.timedelta(days=tage)).replace(hour=3, minute=20, second=0)
+        if tage == 4:
+            eintraege.append(
+                {
+                    "at": start.isoformat(),
+                    "kind": "program_skipped",
+                    "program_id": "morgens",
+                    "program_name": "Morgenprogramm",
+                    "reason": "8,5 mm Regen erwartet",
+                }
+            )
+            continue
+        eintraege.append(
+            {
+                "at": start.isoformat(),
+                "kind": "program_started",
+                "program_id": "morgens",
+                "program_name": "Morgenprogramm",
+                "source": "schedule",
+                "planned_s": 3600,
+            }
+        )
+        moment = start
+        for n in range(1, 9):
+            zone = zonen[f"zone_{n}"]
+            sekunden = 240 + 40 * n
+            zustand, fehler = "done", None
+            if tage == 2 and n == 5:
+                sekunden, zustand = 95, "skipped"  # von Hand übersprungen
+            liter = fluss[zone["valve_id"]] * sekunden / 60
+            effizienz = 0.75 if zone.get("type") == "sprinkler" else 0.9
+            flaeche = _flaeche(zone)
+            eintraege.append(
+                {
+                    "at": moment.isoformat(),
+                    "end": (moment + dt.timedelta(seconds=sekunden)).isoformat(),
+                    "kind": "run",
+                    "zone_id": zone["id"],
+                    "zone_name": zone["name"],
+                    "source": "program:morgens",
+                    "source_text": "Programm Morgenprogramm",
+                    "planned_s": 240 + 40 * n,
+                    "seconds": sekunden,
+                    "state": zustand,
+                    "error": fehler,
+                    "liters": round(liter, 1),
+                    "measured": True,
+                    "mm": round(liter * effizienz / flaeche, 1) if flaeche else None,
+                }
+            )
+            moment += dt.timedelta(seconds=sekunden + 20)
+    return {"entries": eintraege}
+
+
+def _speichern(datei: Path, key: str, daten: dict, sichern: bool) -> None:
     if datei.exists():
-        return
+        if not sichern:
+            return
+        datei.replace(datei.with_name(datei.name + ".bak"))
     datei.parent.mkdir(parents=True, exist_ok=True)
     datei.write_text(
         json.dumps(
-            {
-                "version": 1,
-                "minor_version": 1,
-                "key": "irrigation_planner",
-                "data": _beispielgarten(),
-            },
-            indent=2,
+            {"version": 1, "minor_version": 1, "key": key, "data": daten}, indent=2
         )
+    )
+
+
+def _garten_anlegen(daten: Path, neu: bool = False) -> None:
+    """Legt den Beispielgarten an (Plan, Wasserhaushalt, Verlauf).
+
+    Ohne ``neu`` nur, was noch fehlt. Mit ``neu`` wird alles ersetzt; die
+    alten Dateien bleiben als ``.bak`` liegen.
+    """
+    speicher = daten / ".storage"
+    garten = _beispielgarten()
+    _speichern(speicher / "irrigation_planner", "irrigation_planner", garten, neu)
+    _speichern(
+        speicher / "irrigation_planner.balance",
+        "irrigation_planner.balance",
+        _wasserhaushalt(),
+        neu,
+    )
+    _speichern(
+        speicher / "irrigation_planner.history",
+        "irrigation_planner.history",
+        _verlauf(garten),
+        neu,
     )
 
 
@@ -338,6 +560,11 @@ def main() -> None:
     parser.add_argument("--port", type=int, default=8123)
     parser.add_argument(
         "--oeffnen", action="store_true", help="danach den Browser öffnen"
+    )
+    parser.add_argument(
+        "--beispiel-neu",
+        action="store_true",
+        help="Beispielgarten neu anlegen (eigener Garten wird als .bak gesichert)",
     )
     args = parser.parse_args()
 
@@ -357,7 +584,7 @@ def main() -> None:
         if link.is_symlink() or link.exists():
             link.unlink()
         link.symlink_to(ziel)
-    _garten_anlegen(daten)
+    _garten_anlegen(daten, neu=args.beispiel_neu)
 
     with (daten / "start.log").open("w") as log:
         prozess = subprocess.Popen(

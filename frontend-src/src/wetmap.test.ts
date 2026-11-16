@@ -77,9 +77,9 @@ describe("Nässekarte", () => {
     const now = computeRaster("moisture", [bed], valves, status, [plot], [0, 0, 4, 4], 200);
     expect(now.cells.filter((c) => c.kind === "none").length).toBeGreaterThan(0); // Rest des Grundstücks
     expect(now.cells.find((c) => c.kind === "value")?.v).toBeCloseTo(0.75);
-    // 600 s × 10 L/min = 100 L auf 16 m² = 6,25 mm; 80 mm Kapazität
+    // 600 s × 10 L/min = 100 L auf 16 m² = 6,25 mm, davon 90 % im Boden; 80 mm Kapazität
     const after = computeRaster("after", [bed], valves, status, [plot], [0, 0, 4, 4], 200);
-    expect(after.cells.find((c) => c.kind === "value")?.v).toBeCloseTo(0.75 + 6.25 / 80);
+    expect(after.cells.find((c) => c.kind === "value")?.v).toBeCloseTo(0.75 + (6.25 * 0.9) / 80);
   });
 
   it("wählt runde Kachelgrößen", () => {

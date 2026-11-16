@@ -75,7 +75,7 @@ const { is: Nt, defineProperty: Ct, getOwnPropertyDescriptor: Zt, getOwnProperty
   return n;
 } }, Ne = (e, t) => !Nt(e, t), Ke = { attribute: !0, type: String, converter: we, reflect: !1, useDefault: !1, hasChanged: Ne };
 Symbol.metadata ??= Symbol("metadata"), Se.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
-let se = class extends HTMLElement {
+let ie = class extends HTMLElement {
   static addInitializer(t) {
     this._$Ei(), (this.l ??= []).push(t);
   }
@@ -256,7 +256,7 @@ let se = class extends HTMLElement {
   firstUpdated(t) {
   }
 };
-se.elementStyles = [], se.shadowRootOptions = { mode: "open" }, se[de("elementProperties")] = /* @__PURE__ */ new Map(), se[de("finalized")] = /* @__PURE__ */ new Map(), Wt?.({ ReactiveElement: se }), (Se.reactiveElementVersions ??= []).push("2.1.2");
+ie.elementStyles = [], ie.shadowRootOptions = { mode: "open" }, ie[de("elementProperties")] = /* @__PURE__ */ new Map(), ie[de("finalized")] = /* @__PURE__ */ new Map(), Wt?.({ ReactiveElement: ie }), (Se.reactiveElementVersions ??= []).push("2.1.2");
 /**
  * @license
  * Copyright 2017 Google LLC
@@ -276,8 +276,8 @@ const Gt = (e, t) => {
     const o = e[l];
     let h, m, u = -1, b = 0;
     for (; b < o.length && (r.lastIndex = b, m = r.exec(o), m !== null); ) b = r.lastIndex, r === le ? m[1] === "!--" ? r = Xe : m[1] !== void 0 ? r = Ye : m[2] !== void 0 ? (vt.test(m[2]) && (i = RegExp("</" + m[2], "g")), r = K) : m[3] !== void 0 && (r = K) : r === K ? m[0] === ">" ? (r = i ?? le, u = -1) : m[1] === void 0 ? u = -2 : (u = r.lastIndex - m[2].length, h = m[1], r = m[3] === void 0 ? K : m[3] === '"' ? et : Qe) : r === et || r === Qe ? r = K : r === Xe || r === Ye ? r = le : (r = K, i = void 0);
-    const k = r === K && e[l + 1].startsWith("/>") ? " " : "";
-    a += r === le ? o + Ut : u >= 0 ? (s.push(h), o.slice(0, u) + bt + o.slice(u) + V + k) : o + V + (u === -2 ? l : k);
+    const w = r === K && e[l + 1].startsWith("/>") ? " " : "";
+    a += r === le ? o + Ut : u >= 0 ? (s.push(h), o.slice(0, u) + bt + o.slice(u) + V + w) : o + V + (u === -2 ? l : w);
   }
   return [xt(e, a + (e[n] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), s];
 };
@@ -294,14 +294,14 @@ class ue {
     for (; (i = X.nextNode()) !== null && o.length < l; ) {
       if (i.nodeType === 1) {
         if (i.hasAttributes()) for (const u of i.getAttributeNames()) if (u.endsWith(bt)) {
-          const b = m[r++], k = i.getAttribute(u).split(V), d = /([.?@])?(.*)/.exec(b);
-          o.push({ type: 1, index: a, name: d[2], strings: k, ctor: d[1] === "." ? qt : d[1] === "?" ? Jt : d[1] === "@" ? Xt : Me }), i.removeAttribute(u);
+          const b = m[r++], w = i.getAttribute(u).split(V), d = /([.?@])?(.*)/.exec(b);
+          o.push({ type: 1, index: a, name: d[2], strings: w, ctor: d[1] === "." ? qt : d[1] === "?" ? Jt : d[1] === "@" ? Xt : Me }), i.removeAttribute(u);
         } else u.startsWith(V) && (o.push({ type: 6, index: a }), i.removeAttribute(u));
         if (vt.test(i.tagName)) {
           const u = i.textContent.split(V), b = u.length - 1;
           if (b > 0) {
             i.textContent = _e ? _e.emptyScript : "";
-            for (let k = 0; k < b; k++) i.append(u[k], he()), X.nextNode(), o.push({ type: 2, index: ++a });
+            for (let w = 0; w < b; w++) i.append(u[w], he()), X.nextNode(), o.push({ type: 2, index: ++a });
             i.append(u[b], he());
           }
         }
@@ -318,11 +318,11 @@ class ue {
     return s.innerHTML = t, s;
   }
 }
-function ae(e, t, n = e, s) {
+function re(e, t, n = e, s) {
   if (t === G) return t;
   let i = s !== void 0 ? n._$Co?.[s] : n._$Cl;
   const a = pe(t) ? void 0 : t._$litDirective$;
-  return i?.constructor !== a && (i?._$AO?.(!1), a === void 0 ? i = void 0 : (i = new a(e), i._$AT(e, n, s)), s !== void 0 ? (n._$Co ??= [])[s] = i : n._$Cl = i), i !== void 0 && (t = ae(e, i._$AS(e, t.values), i, s)), t;
+  return i?.constructor !== a && (i?._$AO?.(!1), a === void 0 ? i = void 0 : (i = new a(e), i._$AT(e, n, s)), s !== void 0 ? (n._$Co ??= [])[s] = i : n._$Cl = i), i !== void 0 && (t = re(e, i._$AS(e, t.values), i, s)), t;
 }
 class Kt {
   constructor(t, n) {
@@ -371,7 +371,7 @@ class fe {
     return this._$AB;
   }
   _$AI(t, n = this) {
-    t = ae(this, t, n), pe(t) ? t === p || t == null || t === "" ? (this._$AH !== p && this._$AR(), this._$AH = p) : t !== this._$AH && t !== G && this._(t) : t._$litType$ !== void 0 ? this.$(t) : t.nodeType !== void 0 ? this.T(t) : Vt(t) ? this.k(t) : this._(t);
+    t = re(this, t, n), pe(t) ? t === p || t == null || t === "" ? (this._$AH !== p && this._$AR(), this._$AH = p) : t !== this._$AH && t !== G && this._(t) : t._$litType$ !== void 0 ? this.$(t) : t.nodeType !== void 0 ? this.T(t) : Vt(t) ? this.k(t) : this._(t);
   }
   O(t) {
     return this._$AA.parentNode.insertBefore(t, this._$AB);
@@ -424,11 +424,11 @@ class Me {
   _$AI(t, n = this, s, i) {
     const a = this.strings;
     let r = !1;
-    if (a === void 0) t = ae(this, t, n, 0), r = !pe(t) || t !== this._$AH && t !== G, r && (this._$AH = t);
+    if (a === void 0) t = re(this, t, n, 0), r = !pe(t) || t !== this._$AH && t !== G, r && (this._$AH = t);
     else {
       const l = t;
       let o, h;
-      for (t = a[0], o = 0; o < a.length - 1; o++) h = ae(this, l[s + o], n, o), h === G && (h = this._$AH[o]), r ||= !pe(h) || h !== this._$AH[o], h === p ? t = p : t !== p && (t += (h ?? "") + a[o + 1]), this._$AH[o] = h;
+      for (t = a[0], o = 0; o < a.length - 1; o++) h = re(this, l[s + o], n, o), h === G && (h = this._$AH[o]), r ||= !pe(h) || h !== this._$AH[o], h === p ? t = p : t !== p && (t += (h ?? "") + a[o + 1]), this._$AH[o] = h;
     }
     r && !i && this.j(t);
   }
@@ -457,7 +457,7 @@ class Xt extends Me {
     super(t, n, s, i, a), this.type = 5;
   }
   _$AI(t, n = this) {
-    if ((t = ae(this, t, n, 0) ?? p) === G) return;
+    if ((t = re(this, t, n, 0) ?? p) === G) return;
     const s = this._$AH, i = t === p && s !== p || t.capture !== s.capture || t.once !== s.once || t.passive !== s.passive, a = t !== p && (s === p || i);
     i && this.element.removeEventListener(this.name, this, s), a && this.element.addEventListener(this.name, this, t), this._$AH = t;
   }
@@ -473,7 +473,7 @@ class Yt {
     return this._$AM._$AU;
   }
   _$AI(t) {
-    ae(this, t);
+    re(this, t);
   }
 }
 const Qt = Ce.litHtmlPolyfillSupport;
@@ -493,7 +493,7 @@ const en = (e, t, n) => {
  * SPDX-License-Identifier: BSD-3-Clause
  */
 const je = globalThis;
-let Q = class extends se {
+let Q = class extends ie {
   constructor() {
     super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
   }
@@ -627,12 +627,12 @@ function an(e, t) {
   ];
 }
 function at(e, t, n, s, i = 200) {
-  const [a, r] = t, l = Math.PI / 180, o = 1 / Math.cos(a * l), h = j * r * l, m = j * Math.log(Math.tan(Math.PI / 4 + a * l / 2)), u = 2 ** s, b = 2 * ce / u, k = (A) => (h + A * o + ce) / b, d = (A) => (ce - (m - A * o)) / b, g = Math.max(0, Math.floor(k(n.x0))), v = Math.min(u - 1, Math.floor(k(n.x1))), _ = Math.max(0, Math.floor(d(n.y0))), M = Math.min(u - 1, Math.floor(d(n.y1))), S = [];
-  if ((v - g + 1) * (M - _ + 1) > i) return S;
-  for (let A = _; A <= M; A++)
+  const [a, r] = t, l = Math.PI / 180, o = 1 / Math.cos(a * l), h = j * r * l, m = j * Math.log(Math.tan(Math.PI / 4 + a * l / 2)), u = 2 ** s, b = 2 * ce / u, w = (A) => (h + A * o + ce) / b, d = (A) => (ce - (m - A * o)) / b, g = Math.max(0, Math.floor(w(n.x0))), v = Math.min(u - 1, Math.floor(w(n.x1))), S = Math.max(0, Math.floor(d(n.y0))), M = Math.min(u - 1, Math.floor(d(n.y1))), k = [];
+  if ((v - g + 1) * (M - S + 1) > i) return k;
+  for (let A = S; A <= M; A++)
     for (let z = g; z <= v; z++) {
       const O = z * b - ce, H = ce - A * b;
-      S.push({
+      k.push({
         url: e.replace("{z}", String(s)).replace("{x}", String(z)).replace("{y}", String(A)),
         key: `${s}/${z}/${A}`,
         x: (O - h) / o,
@@ -640,7 +640,7 @@ function at(e, t, n, s, i = 200) {
         size: b / o
       });
     }
-  return S;
+  return k;
 }
 function rn(e, t, n) {
   let s = null, i = n;
@@ -650,7 +650,7 @@ function rn(e, t, n) {
   }
   return s;
 }
-function ie(e, t = !1) {
+function ae(e, t = !1) {
   let n = 0;
   for (let s = 1; s < e.length; s++) n += P(e[s - 1], e[s]);
   return t && e.length > 2 && (n += P(e[e.length - 1], e[0])), n;
@@ -667,10 +667,10 @@ function ln(e, t, n) {
   return e.map((h, m) => m === s ? o : h);
 }
 function _t(e, t) {
-  return e.length < 2 || t <= 0 ? 0 : ie(e) * 2 * t + Math.PI * t * t;
+  return e.length < 2 || t <= 0 ? 0 : ae(e) * 2 * t + Math.PI * t * t;
 }
 function cn(e, t) {
-  let n = ie(e) * Math.max(0, Math.min(1, t));
+  let n = ae(e) * Math.max(0, Math.min(1, t));
   for (let s = 1; s < e.length; s++) {
     const i = P(e[s - 1], e[s]);
     if (n <= i && i > 0) {
@@ -709,8 +709,8 @@ function ot(e, t) {
       s += ` L${n(l[0])} ${n(l[1])}`;
       continue;
     }
-    const b = [l[0] + (r[0] - l[0]) / h * u, l[1] + (r[1] - l[1]) / h * u], k = [l[0] + (o[0] - l[0]) / m * u, l[1] + (o[1] - l[1]) / m * u];
-    s += ` L${n(b[0])} ${n(b[1])} Q${n(l[0])} ${n(l[1])} ${n(k[0])} ${n(k[1])}`;
+    const b = [l[0] + (r[0] - l[0]) / h * u, l[1] + (r[1] - l[1]) / h * u], w = [l[0] + (o[0] - l[0]) / m * u, l[1] + (o[1] - l[1]) / m * u];
+    s += ` L${n(b[0])} ${n(b[1])} Q${n(l[0])} ${n(l[1])} ${n(w[0])} ${n(w[1])}`;
   }
   const i = e[e.length - 1];
   return `${s} L${n(i[0])} ${n(i[1])}`;
@@ -741,34 +741,34 @@ function hn(e, t = 0.05) {
 function pn(e, t, n, s = 0.3) {
   const i = (g) => `${g[0].toFixed(2)},${g[1].toFixed(2)}`, a = e.flatMap((g) => [g[0], g[g.length - 1]]), r = e.map((g) => {
     const v = [g[0]];
-    for (let _ = 1; _ < g.length; _++) {
-      const [M, S] = [g[_ - 1], g[_]], A = a.filter((z) => P(St(z, M, S), z) < 0.05 && P(z, M) > 0.05 && P(z, S) > 0.05).sort((z, O) => P(M, z) - P(M, O));
-      v.push(...A, S);
+    for (let S = 1; S < g.length; S++) {
+      const [M, k] = [g[S - 1], g[S]], A = a.filter((z) => P(St(z, M, k), z) < 0.05 && P(z, M) > 0.05 && P(z, k) > 0.05).sort((z, O) => P(M, z) - P(M, O));
+      v.push(...A, k);
     }
     return v;
   }), l = /* @__PURE__ */ new Map(), o = /* @__PURE__ */ new Map(), h = (g, v) => {
-    const [_, M] = [i(g), i(v)];
-    l.set(_, g), l.set(M, v), o.has(_) || o.set(_, /* @__PURE__ */ new Set()), o.has(M) || o.set(M, /* @__PURE__ */ new Set()), o.get(_).add(M), o.get(M).add(_);
+    const [S, M] = [i(g), i(v)];
+    l.set(S, g), l.set(M, v), o.has(S) || o.set(S, /* @__PURE__ */ new Set()), o.has(M) || o.set(M, /* @__PURE__ */ new Set()), o.get(S).add(M), o.get(M).add(S);
   };
   for (const g of r) for (let v = 1; v < g.length; v++) h(g[v - 1], g[v]);
   const m = (g) => [...l.entries()].filter(([, v]) => P(v, g) <= s).map(([v]) => v), u = new Set(m(n));
   if (!u.size) return [];
-  const b = t.flatMap(m), k = /* @__PURE__ */ new Map(), d = [];
+  const b = t.flatMap(m), w = /* @__PURE__ */ new Map(), d = [];
   for (const g of b)
-    k.has(g) || (k.set(g, null), d.push(g));
+    w.has(g) || (w.set(g, null), d.push(g));
   for (; d.length; ) {
     const g = d.shift();
     if (u.has(g)) {
       const v = [];
-      let _ = g;
-      for (; _ && k.get(_); ) {
-        const M = k.get(_);
-        v.unshift([l.get(M), l.get(_)]), _ = M;
+      let S = g;
+      for (; S && w.get(S); ) {
+        const M = w.get(S);
+        v.unshift([l.get(M), l.get(S)]), S = M;
       }
       return v;
     }
     for (const v of o.get(g) ?? [])
-      k.has(v) || (k.set(v, g), d.push(v));
+      w.has(v) || (w.set(v, g), d.push(v));
   }
   return [];
 }
@@ -3141,7 +3141,7 @@ let B = class extends Q {
   }
   // Wetter -----------------------------------------------------------------------------
   renderWeather(e) {
-    const n = this.getBoundingClientRect().width < 640 && !this.showTable ? e.days.slice(-7) : e.days, s = n.flatMap((d) => [d.et0_mm ?? 0, d.rain_mm ?? 0]), i = Math.max(4, ...s), a = 1e3, r = 190, l = 10, o = r - 24, h = a / n.length, m = Math.min(14, h / 3), u = (d) => o - d / i * (o - l), b = [0, i / 2, i].map((d) => Math.round(d * 10) / 10), k = n.some((d) => d.et0_mm != null);
+    const n = this.getBoundingClientRect().width < 640 && !this.showTable ? e.days.slice(-7) : e.days, s = n.flatMap((d) => [d.et0_mm ?? 0, d.rain_mm ?? 0]), i = Math.max(4, ...s), a = 1e3, r = 190, l = 10, o = r - 24, h = a / n.length, m = Math.min(14, h / 3), u = (d) => o - d / i * (o - l), b = [0, i / 2, i].map((d) => Math.round(d * 10) / 10), w = n.some((d) => d.et0_mm != null);
     return c`<section class="card">
       <div class="card-head">
         <h2>Wetter und Wasserhaushalt (${n.length} Tage)</h2>
@@ -3166,13 +3166,13 @@ let B = class extends Q {
                 <text class="tick" x="2" y=${u(d) - 3}>${E(d)} mm</text>`
     )}
             ${n.map((d, g) => {
-      const v = g * h + h / 2, _ = (M, S, A, z) => M == null ? p : f`<path d=${kn(v + S, u(M), m, o - u(M))} fill=${A}>
+      const v = g * h + h / 2, S = (M, k, A, z) => M == null ? p : f`<path d=${kn(v + k, u(M), m, o - u(M))} fill=${A}>
                       <title>${this.dayLabel(d.day)}: ${z} ${E(M)} mm</title></path>`;
       return f`<g>
                 <rect class="hit" x=${g * h} y=${l} width=${h} height=${o - l}>
                   <title>${this.dayLabel(d.day)}: Verdunstung ${E(d.et0_mm)} mm, Regen ${E(d.rain_mm)} mm, gegossen ${E(d.liters, 0)} L</title>
                 </rect>
-                ${_(d.et0_mm, -m - 1, lt, "Verdunstung")} ${_(d.rain_mm, 1, ct, "Regen")}
+                ${S(d.et0_mm, -m - 1, lt, "Verdunstung")} ${S(d.rain_mm, 1, ct, "Regen")}
                 <text class="day" x=${v} y=${o + 14}>${this.dayLabel(d.day, !0)}</text>
                 ${d.liters ? f`<text class="liters" x=${v} y=${o + 28}>${E(d.liters, 0)} L</text>` : p}
               </g>`;
@@ -3180,7 +3180,7 @@ let B = class extends Q {
             <line class="axis" x1="0" x2=${a} y1=${o} y2=${o}></line>
           </svg>`}
       <p class="hint small">
-        ${k ? p : c`<strong>Noch keine abgeschlossenen Wettertage. </strong>`}
+        ${w ? p : c`<strong>Noch keine abgeschlossenen Wettertage. </strong>`}
         So rechnet die Planung (bei Zonen mit berechneter Dauer): Aus Temperatur, Luftfeuchte und Wind ergibt sich jeden
         Tag die Verdunstung. Mal Pflanzenfaktor ist das der Wasserverbrauch der Zone. Wirksamer Regen und gegossenes Wasser
         werden abgezogen. Was fehlt, ist der Bedarf („Bedarf jetzt“); daraus folgen Liter und Gießdauer.
@@ -3257,7 +3257,7 @@ var wn = Object.defineProperty, _n = Object.getOwnPropertyDescriptor, F = (e, t,
     (r = e[a]) && (i = (s ? r(t, n, i) : r(i)) || i);
   return s && i && wn(t, n, i), i;
 };
-const te = "irrigation_planner", Pt = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"], xe = ["#1565c0", "#2e7d32", "#ef6c00", "#6a1b9a", "#00838f", "#c62828"], dt = {
+const ne = "irrigation_planner", Pt = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"], xe = ["#1565c0", "#2e7d32", "#ef6c00", "#6a1b9a", "#00838f", "#c62828"], dt = {
   sequence: "Nacheinander",
   cycle_soak: "Abwechselnd (mit Einziehzeit)",
   priority: "Nach Bedarf (größter zuerst)"
@@ -3338,7 +3338,7 @@ let R = class extends Q {
   }
   async load() {
     try {
-      this.data = await this.hass.callWS({ type: `${te}/programs/get` }), this.error = "";
+      this.data = await this.hass.callWS({ type: `${ne}/programs/get` }), this.error = "";
     } catch (e) {
       this.error = this.message(e);
     }
@@ -3351,7 +3351,7 @@ let R = class extends Q {
     this.busy = !0;
     try {
       this.data = await this.hass.callWS({
-        type: `${te}/programs/save`,
+        type: `${ne}/programs/save`,
         program_id: e.id,
         name: e.name,
         zone_ids: e.zone_ids,
@@ -3378,7 +3378,7 @@ let R = class extends Q {
   async toggle(e) {
     try {
       this.data = await this.hass.callWS({
-        type: `${te}/programs/save`,
+        type: `${ne}/programs/save`,
         program_id: e.id,
         enabled: !e.enabled
       });
@@ -3388,7 +3388,7 @@ let R = class extends Q {
   }
   async service(e, t, n) {
     try {
-      await this.hass.callService(te, e, { program_id: t.id }), this.toast(n), await this.load();
+      await this.hass.callService(ne, e, { program_id: t.id }), this.toast(n), await this.load();
     } catch (s) {
       this.toast(this.message(s), !0);
     }
@@ -3397,14 +3397,14 @@ let R = class extends Q {
     const e = this.newName.trim();
     if (e)
       try {
-        await this.hass.callWS({ type: `${te}/programs/create`, name: e }), this.newName = "", this.toast(`„${e}“ angelegt, wird geladen …`), setTimeout(() => void this.load(), 4e3);
+        await this.hass.callWS({ type: `${ne}/programs/create`, name: e }), this.newName = "", this.toast(`„${e}“ angelegt, wird geladen …`), setTimeout(() => void this.load(), 4e3);
       } catch (t) {
         this.toast(this.message(t), !0);
       }
   }
   async deleteProgram(e) {
     try {
-      await this.hass.callWS({ type: `${te}/programs/delete`, program_id: e.id }), this.editing = null, this.toast(`„${e.name}“ gelöscht, wird geladen …`), setTimeout(() => void this.load(), 4e3);
+      await this.hass.callWS({ type: `${ne}/programs/delete`, program_id: e.id }), this.editing = null, this.toast(`„${e.name}“ gelöscht, wird geladen …`), setTimeout(() => void this.load(), 4e3);
     } catch (t) {
       this.toast(this.message(t), !0);
     }
@@ -3449,9 +3449,9 @@ let R = class extends Q {
           ${n.map((i, a) => {
       const r = i.toISOString().slice(0, 10), l = a === 0 ? "Heute" : i.toLocaleDateString("de-DE", { timeZone: "UTC", weekday: "short", day: "numeric" }), o = e.programs.flatMap(
         (h, m) => h.upcoming.map((u) => ht(u, this.tz)).filter((u) => u.day === r).map((u) => {
-          const b = u.minutes / 1440 * 100, k = Math.max(0.6, h.total_s / 86400 * 100);
+          const b = u.minutes / 1440 * 100, w = Math.max(0.6, h.total_s / 86400 * 100);
           return c`<div class="block ${h.enabled ? "" : "off"}" title=${`${h.name}: ${u.time} Uhr, ${ze(h.total_s)}`}
-                    style="left:${b}%; width:${k}%; --c:${xe[m % xe.length]}">
+                    style="left:${b}%; width:${w}%; --c:${xe[m % xe.length]}">
                     <span>${u.time} ${h.name}</span>
                   </div>`;
         })
@@ -3761,23 +3761,30 @@ function On(e, t) {
   return !n || !n.capacity_mm ? null : Math.max(0, 1 - n.need_mm / n.capacity_mm);
 }
 function Ln(e, t, n, s, i, a, r = 6e3) {
-  const l = i.filter((S) => S.kind === "boundary" && S.points.length >= 3);
+  const l = i.filter((k) => k.kind === "boundary" && k.points.length >= 3);
   let [o, h, m, u] = a;
   if (l.length) {
-    const S = l.flatMap((A) => A.points);
-    o = Math.min(...S.map((A) => A[0])), h = Math.min(...S.map((A) => A[1])), m = Math.max(...S.map((A) => A[0])), u = Math.max(...S.map((A) => A[1]));
+    const k = l.flatMap((A) => A.points);
+    o = Math.min(...k.map((A) => A[0])), h = Math.min(...k.map((A) => A[1])), m = Math.max(...k.map((A) => A[0])), u = Math.max(...k.map((A) => A[1]));
   }
-  const b = Dn(m - o, u - h, r), k = Math.floor(o / b) * b, d = Math.floor(h / b) * b, g = i.filter((S) => S.kind === "tree" && (S.trunk_m ?? 0) > 0), v = t.filter((S) => S.enabled && ge(S) !== null).map((S) => ({ zone: S, mm: zt(S, n, s), fill: On(S, s), cap: s?.zones[S.id]?.capacity_mm ?? null })), _ = [];
+  const b = Dn(m - o, u - h, r), w = Math.floor(o / b) * b, d = Math.floor(h / b) * b, g = i.filter((k) => k.kind === "tree" && (k.trunk_m ?? 0) > 0), v = t.filter((k) => k.enabled && ge(k) !== null).map((k) => ({
+    zone: k,
+    mm: zt(k, n, s),
+    fill: On(k, s),
+    cap: s?.zones[k.id]?.capacity_mm ?? null,
+    // Anteil, der im Boden ankommt (Sprinkler verlieren mehr durch Verdunstung)
+    eff: s?.zones[k.id]?.efficiency ?? (k.type === "sprinkler" ? 0.75 : 0.9)
+  })), S = [];
   let M = 0;
-  for (let S = d; S < u; S += b)
-    for (let A = k; A < m; A += b) {
-      const z = [A + b / 2, S + b / 2];
+  for (let k = d; k < u; k += b)
+    for (let A = w; A < m; A += b) {
+      const z = [A + b / 2, k + b / 2];
       if (l.length && !l.some((D) => He(z, D.points))) continue;
       const O = v.filter(
         ({ zone: D }) => En(D, z) && !(D.type === "sprinkler" && D.center && zn(z, D.center, g))
       );
       if (!O.length) {
-        l.length && _.push({ x: A, y: S, kind: "none", v: 0 });
+        l.length && S.push({ x: A, y: k, kind: "none", v: 0 });
         continue;
       }
       let H = null;
@@ -3786,12 +3793,12 @@ function Ln(e, t, n, s, i, a, r = 6e3) {
       else if (O.some((D) => D.fill === null || e === "after" && D.mm === null))
         H = null;
       else {
-        const D = O.reduce((re, oe) => re + (oe.fill ?? 0), 0) / O.length, $e = O.reduce((re, oe) => re + (oe.cap ?? 0), 0) / O.length, Ot = e === "after" ? O.reduce((re, oe) => re + (oe.mm ?? 0), 0) : 0;
+        const D = O.reduce((oe, te) => oe + (te.fill ?? 0), 0) / O.length, $e = O.reduce((oe, te) => oe + (te.cap ?? 0), 0) / O.length, Ot = e === "after" ? O.reduce((oe, te) => oe + (te.mm ?? 0) * te.eff, 0) : 0;
         H = D + ($e > 0 ? Ot / $e : 0);
       }
-      H === null ? _.push({ x: A, y: S, kind: "unknown", v: 0 }) : (_.push({ x: A, y: S, kind: "value", v: H }), M = Math.max(M, H));
+      H === null ? S.push({ x: A, y: k, kind: "unknown", v: 0 }) : (S.push({ x: A, y: k, kind: "value", v: H }), M = Math.max(M, H));
     }
-  return { step: b, cells: _, max: M };
+  return { step: b, cells: S, max: M };
 }
 const Tt = [
   [0, [166, 97, 26]],
@@ -3854,7 +3861,7 @@ const Zn = {}, jn = Nn(class extends Cn {
     return this.ot = Array.isArray(t) ? Array.from(t) : t, this.render(t, n);
   }
 });
-var In = Object.defineProperty, Fn = Object.getOwnPropertyDescriptor, w = (e, t, n, s) => {
+var In = Object.defineProperty, Fn = Object.getOwnPropertyDescriptor, _ = (e, t, n, s) => {
   for (var i = s > 1 ? void 0 : s ? Fn(t, n) : t, a = e.length - 1, r; a >= 0; a--)
     (r = e[a]) && (i = (s ? r(t, n, i) : r(i)) || i);
   return s && i && In(t, n, i), i;
@@ -4387,7 +4394,7 @@ let x = class extends Q {
     if (e.type === t) return;
     this.remember();
     const n = e.polygon;
-    e.type = t, t === "sprinkler" ? (e.polygon = [], e.radius_m = null) : (e.center = null, t === "hose" ? e.radius_m = 0.5 : (e.radius_m = null, n.length < 3 && (e.polygon = []))), this.changed(), ne(e) === null ? (this.startTool(t === "sprinkler" ? "sprinkler" : t === "hose" ? "hose" : "bed", e.id), this.showToast(`${e.name}: jetzt im Plan zeichnen, dann „Speichern“`)) : this.showToast(`${e.name}: Art geändert. „Speichern“ nicht vergessen.`);
+    e.type = t, t === "sprinkler" ? (e.polygon = [], e.radius_m = null) : (e.center = null, t === "hose" ? e.radius_m = 0.5 : (e.radius_m = null, n.length < 3 && (e.polygon = []))), this.changed(), se(e) === null ? (this.startTool(t === "sprinkler" ? "sprinkler" : t === "hose" ? "hose" : "bed", e.id), this.showToast(`${e.name}: jetzt im Plan zeichnen, dann „Speichern“`)) : this.showToast(`${e.name}: Art geändert. „Speichern“ nicht vergessen.`);
   }
   clearGeometry(e) {
     const t = this.zone(e);
@@ -4880,18 +4887,18 @@ let x = class extends Q {
               Verdunstung (ET0) berechnet, mal Pflanzenfaktor. Das zieht Wasser vom Konto ab; wirksamer Regen und Gießen füllen es auf.
               „Voll“ ist die nutzbare Feldkapazität im Wurzelraum (je nach Boden und Wurzeltiefe), „trocken“ heißt aufgebraucht.
               Ein Bodenfeuchtesensor ersetzt die Schätzung. Ohne Wetterquelle bleibt der Boden rechnerisch voll.
-              ${e === "after" ? "„Nach dem Gießen“ rechnet die geplante Gießmenge dazu." : ""}</small>`}
+              ${e === "after" ? "„Nach dem Gießen“ rechnet die geplante Gießmenge dazu, davon kommt beim Sprinkler etwa 75 %, beim Tropfschlauch 90 % im Boden an." : ""}</small>`}
       </details>
     </div>`;
   }
   // Übersicht ------------------------------------------------------------------
   renderOverview() {
     const e = this.plan, t = e.zones, n = (d) => e.valves.find((g) => g.id === d.valve_id), s = t.map((d) => {
-      const g = ge(d), v = g ?? d.area_m2, _ = n(d)?.learned_flow_l_min ?? null, M = We(d, this.status), S = _ && M ? M / 60 * _ : null;
-      return { z: d, drawn: g, area: v, flow: _, seconds: M, liters: S, mm: zt(d, e.valves, this.status) };
+      const g = ge(d), v = g ?? d.area_m2, S = n(d)?.learned_flow_l_min ?? null, M = We(d, this.status), k = S && M ? M / 60 * S : null;
+      return { z: d, drawn: g, area: v, flow: S, seconds: M, liters: k, mm: zt(d, e.valves, this.status) };
     }), i = s.filter((d) => d.z.enabled), a = i.reduce((d, g) => d + (g.area ?? 0), 0), r = i.reduce((d, g) => d + (g.liters ?? 0), 0), l = t.reduce((d, g) => d + g.overlap_m2, 0) / 2, o = gn(e.garden.features), h = ["sprinkler", "drip", "hose"].map((d) => {
       const g = i.filter((v) => v.z.type === d);
-      return { type: d, count: g.length, area: g.reduce((v, _) => v + (_.area ?? 0), 0) };
+      return { type: d, count: g.length, area: g.reduce((v, S) => v + (S.area ?? 0), 0) };
     }), m = {
       sprinkler: ["Sprinkler", "mdi:sprinkler-variant"],
       drip: ["Tropfschlauch", "mdi:water-outline"],
@@ -4900,9 +4907,9 @@ let x = class extends Q {
     for (const d of s)
       d.z.enabled && (d.drawn === null && !d.z.area_m2 ? u.push(`${d.z.name}: weder gezeichnet noch Fläche von Hand`) : d.drawn === null && u.push(`${d.z.name}: noch nicht gezeichnet (Fläche von Hand)`), d.z.valve_id ? d.flow || u.push(`${d.z.name}: Durchfluss noch nicht gelernt (nach dem ersten Lauf)`) : u.push(`${d.z.name}: kein Ventil zugeordnet`));
     const b = e.valves.map((d) => {
-      const g = i.filter((M) => M.z.valve_id === d.id), v = g.reduce((M, S) => M + (S.area ?? 0), 0), _ = d.learned_flow_l_min && v ? d.learned_flow_l_min * 60 / v : null;
-      return { v: d, mine: g, area: v, rate: _ };
-    }).filter((d) => d.mine.length), k = (d, g = 0) => d == null ? "–" : d.toLocaleString("de-DE", { maximumFractionDigits: g });
+      const g = i.filter((M) => M.z.valve_id === d.id), v = g.reduce((M, k) => M + (k.area ?? 0), 0), S = d.learned_flow_l_min && v ? d.learned_flow_l_min * 60 / v : null;
+      return { v: d, mine: g, area: v, rate: S };
+    }).filter((d) => d.mine.length), w = (d, g = 0) => d == null ? "–" : d.toLocaleString("de-DE", { maximumFractionDigits: g });
     return c`
       <div class="overview">
         <section class="tiles">
@@ -4912,7 +4919,7 @@ let x = class extends Q {
                 <small>davon ${Math.round(a / o * 100)} % bewässert</small></div>` : p}
           <div class="tile"><span>Gezeichnet</span><strong>${s.filter((d) => d.drawn !== null).length} von ${t.length}</strong>
             <small>Zonen im Plan</small></div>
-          <div class="tile"><span>Wasser pro Durchgang</span><strong>${k(r)} L</strong>
+          <div class="tile"><span>Wasser pro Durchgang</span><strong>${w(r)} L</strong>
             <small>alle aktiven Zonen einmal</small></div>
           <div class="tile ${l > 0.5 ? "warn" : ""}"><span>Überschneidungen</span><strong>${T(l)}</strong>
             <small>werden doppelt gegossen</small></div>
@@ -4942,9 +4949,9 @@ let x = class extends Q {
                     <td>${n(d.z)?.name ?? "–"}</td>
                     <td class="n">${d.area ? T(d.area) : "–"}${d.drawn === null && d.area ? c`<sup title="von Hand">*</sup>` : p}</td>
                     <td class="n">${d.seconds ? Oe(d.seconds) : "–"}</td>
-                    <td class="n">${k(d.liters)}</td>
-                    <td class="n">${k(d.mm, 1)}</td>
-                    <td class="n">${this.status?.zones[d.z.id] ? `${k(this.status.zones[d.z.id].need_mm, 1)} mm` : "–"}</td>
+                    <td class="n">${w(d.liters)}</td>
+                    <td class="n">${w(d.mm, 1)}</td>
+                    <td class="n">${this.status?.zones[d.z.id] ? `${w(this.status.zones[d.z.id].need_mm, 1)} mm` : "–"}</td>
                   </tr>`
     )}
               </tbody>
@@ -4963,8 +4970,8 @@ let x = class extends Q {
                     <td>${d.v.name}</td>
                     <td>${d.mine.map((g) => g.z.name).join(", ")}</td>
                     <td class="n">${T(d.area)}</td>
-                    <td class="n">${d.v.learned_flow_l_min ? `${k(d.v.learned_flow_l_min, 1)} L/min` : "–"}</td>
-                    <td class="n">${d.rate ? `${k(d.rate, 1)} mm/h` : "–"}</td>
+                    <td class="n">${d.v.learned_flow_l_min ? `${w(d.v.learned_flow_l_min, 1)} L/min` : "–"}</td>
+                    <td class="n">${d.rate ? `${w(d.rate, 1)} mm/h` : "–"}</td>
                   </tr>`
     )}
               </tbody>
@@ -5176,7 +5183,7 @@ let x = class extends Q {
           Math.min(o, Math.round(st(t.latitude, this.view.scale * (window.devicePixelRatio > 1 ? 1.4 : 1))))
         ), m = at(r, [t.latitude, t.longitude], n, h);
         s.push(f`<rect x=${n.x0} y=${n.y0} width=${n.x1 - n.x0} height=${n.y1 - n.y0} class="map-fill"></rect>`);
-        const u = e * 0.5, b = (k) => k.map(
+        const u = e * 0.5, b = (w) => w.map(
           (d) => f`<image href=${d.url} x=${d.x - u} y=${d.y - u} width=${d.size + 2 * u} height=${d.size + 2 * u} preserveAspectRatio="none" crossorigin="anonymous"></image>`
         );
         s.push(...b(m)), l?.overlay && t.map_provider !== "custom" && s.push(...b(at(l.overlay, [t.latitude, t.longitude], n, h)));
@@ -5213,7 +5220,7 @@ let x = class extends Q {
     const s = this.zoneColor(t), i = this.status?.zones[e.id]?.state ?? "idle", a = this.selected?.kind === "zone" && this.selected.id === e.id, r = this.wetOn && e.enabled ? pt(e, this.plan.valves, this.status) : null, l = `zone ${i} ${a ? "selected" : ""} ${e.enabled ? "" : "disabled"} ${r ? "nowet" : ""}`;
     let o, h = null;
     if (e.type === "sprinkler" && e.center && e.radius_m ? (o = f`<path d=${nt(e.center, e.radius_m, e.start_angle_deg, e.arc_deg)}></path>`, h = e.arc_deg >= 360 ? e.center : N(e.center, e.radius_m * 0.55, e.start_angle_deg + e.arc_deg / 2)) : e.type === "hose" && e.polygon.length >= 2 && e.radius_m ? (o = this.hoseShape(e.id, e.polygon, e.radius_m, n), h = this.zoneAnchor(e)) : e.type === "drip" && e.polygon.length >= 3 && (o = f`<polygon points=${e.polygon.map((b) => b.join(",")).join(" ")}></polygon>`, h = ve(e.polygon)), !o) return p;
-    const m = ne(e), u = this.soilOn ? Ee[e.soil_type ?? "loam"] : "";
+    const m = se(e), u = this.soilOn ? Ee[e.soil_type ?? "loam"] : "";
     return f`
       <g class=${l} style="--zone:${u || s}"
         @pointerdown=${(b) => {
@@ -5420,15 +5427,15 @@ let x = class extends Q {
       const r = this.selected?.kind === "zone" && this.selected.id === t.id || this.selected?.kind === "valve" && this.selected.id === s.id, l = r && this.tool === "select", o = t.valve_route ?? [], h = [s.position, ...o, i], m = this.status?.zones[t.id]?.state === "running", u = f`<path class="valve-link ${r ? "selected" : ""} ${m ? "flowing" : ""}" style="--zone:${this.zoneColor(n)};--period:${10 * e}px"
         d=${ot(h, Math.max(0.4, 16 * e))} stroke-dasharray=${`${6 * e} ${4 * e}`}></path>`;
       if (!l) return u;
-      const b = 7 * e, k = ot(h, Math.max(0.4, 16 * e));
+      const b = 7 * e, w = ot(h, Math.max(0.4, 16 * e));
       return f`${u}
-        <path class="link-hit" d=${k} stroke-width=${14 * e}
+        <path class="link-hit" d=${w} stroke-width=${14 * e}
           @pointerdown=${(d) => this.grabLink(d, t, h)}>
           <title>Linie ziehen: Knick einfügen</title></path>
         ${h.slice(0, -1).map((d, g) => {
-        const v = h[g + 1], _ = [(d[0] + v[0]) / 2, (d[1] + v[1]) / 2];
-        return f`<circle class="handle mid link" cx=${_[0]} cy=${_[1]} r=${b * 0.7}
-            @pointerdown=${(M) => this.insertRoutePoint(M, t, g, _)}>
+        const v = h[g + 1], S = [(d[0] + v[0]) / 2, (d[1] + v[1]) / 2];
+        return f`<circle class="handle mid link" cx=${S[0]} cy=${S[1]} r=${b * 0.7}
+            @pointerdown=${(M) => this.insertRoutePoint(M, t, g, S)}>
             <title>Ziehen: Knick in der Leitung einfügen</title></circle>`;
       })}
         ${o.map(
@@ -5562,7 +5569,7 @@ let x = class extends Q {
     `;
   }
   hasAnyDrawing() {
-    return this.features.length > 0 || this.plan.zones.some((e) => ne(e) !== null);
+    return this.features.length > 0 || this.plan.zones.some((e) => se(e) !== null);
   }
   toolBanner() {
     if (this.tool === "select") return p;
@@ -5589,7 +5596,7 @@ let x = class extends Q {
         </button>`);
     }
     if (this.tool === "measure") {
-      const s = ie(this.measurePts);
+      const s = ae(this.measurePts);
       e = this.measurePts.length < 2 ? "Messen: Punkte anklicken. Alt-Taste: ohne Einrasten." : `Gemessen: ${J(s)}${this.measurePts.length > 2 ? " (Summe)" : ""}`, this.measurePts.length && (t = c`<button class="text" @click=${() => this.measurePts = []}>Neu</button>`);
     }
     return this.tool === "scale" && (e = this.scaleDraft.length < 2 ? "Maßstab: Zwei Punkte im Bild anklicken, deren Abstand du kennst (z. B. die Ecken der Terrasse)." : "Abstand eingeben:", this.scaleDraft.length === 2 && (t = c`<input
@@ -5639,7 +5646,7 @@ let x = class extends Q {
     `;
   }
   renderZoneItem(e, t, n) {
-    const s = this.status?.zones[e.id], i = ne(e), a = i !== null, r = e.type === "sprinkler";
+    const s = this.status?.zones[e.id], i = se(e), a = i !== null, r = e.type === "sprinkler";
     return c`
       <li class="item ${n ? "open" : ""}" style="--zone:${this.zoneColor(t)}">
         <div class="row" @click=${() => {
@@ -5656,11 +5663,11 @@ let x = class extends Q {
     `;
   }
   renderInspector(e, t) {
-    const n = e.type === "sprinkler", s = ne(e), i = s !== null, a = n ? "sprinkler" : e.type === "hose" ? "hose" : "bed", r = (o, h, m, u, b = 0.1) => c`<label class="field">
+    const n = e.type === "sprinkler", s = se(e), i = s !== null, a = n ? "sprinkler" : e.type === "hose" ? "hose" : "bed", r = (o, h, m, u, b = 0.1) => c`<label class="field">
         <span>${o}</span>
         <input type="number" step=${b} .value=${h == null ? "" : String(h)}
-          @change=${(k) => {
-      const d = parseFloat(k.target.value);
+          @change=${(w) => {
+      const d = parseFloat(w.target.value);
       Number.isFinite(d) && (this.remember(), u(d), this.changed());
     }} />
         <span class="unit">${m}</span>
@@ -5730,8 +5737,8 @@ let x = class extends Q {
         ${e.type === "hose" && i ? c`<div class="fields">
                 ${r("Reichweite (Radius)", e.radius_m, "m", (o) => e.radius_m = Math.min(20, Math.max(0.05, o)), 0.05)}
               </div>
-              <p class="hint small">Schlauch ${J(ie(e.polygon))} lang. Bewässert wird alles bis
-                ${J(e.radius_m ?? 0)} um die Linie: ${T(ne(e))}.
+              <p class="hint small">Schlauch ${J(ae(e.polygon))} lang. Bewässert wird alles bis
+                ${J(e.radius_m ?? 0)} um die Linie: ${T(se(e))}.
                 Reichweite auch am runden Anfasser im Plan ziehen.</p>
               ${this.renderEdges(e.polygon, !1, (o) => e.polygon = o)}` : p}
         ${e.type === "drip" && i ? this.renderEdges(e.polygon, !0, (o) => e.polygon = o) : p}
@@ -5865,7 +5872,7 @@ let x = class extends Q {
     `;
   }
   renderFeatureItem(e, t) {
-    const n = U[e.kind], s = n?.family ?? "area", i = s === "area" ? T(Y(e.points)) : s === "line" ? e.kind === "boundary" && e.points.length >= 3 ? `${T(Y(e.points))} · ${J(ie(e.points, !0))} Umfang` : J(ie(e.points)) : e.kind === "tree" ? `Ø ${J(2 * (e.radius_m ?? 0))}` : "", a = Object.entries(U).filter(([, r]) => r.family === s);
+    const n = U[e.kind], s = n?.family ?? "area", i = s === "area" ? T(Y(e.points)) : s === "line" ? e.kind === "boundary" && e.points.length >= 3 ? `${T(Y(e.points))} · ${J(ae(e.points, !0))} Umfang` : J(ae(e.points)) : e.kind === "tree" ? `Ø ${J(2 * (e.radius_m ?? 0))}` : "", a = Object.entries(U).filter(([, r]) => r.family === s);
     return c`
       <li class="item ${t ? "open" : ""}">
         <div class="row" @click=${() => this.selected = t ? null : { kind: "feature", id: e.id }}>
@@ -6045,124 +6052,124 @@ let x = class extends Q {
   }
 };
 x.styles = Fe;
-w([
+_([
   be({ type: Boolean, reflect: !0 })
 ], x.prototype, "narrow", 2);
-w([
+_([
   $()
 ], x.prototype, "plan", 2);
-w([
+_([
   $()
 ], x.prototype, "status", 2);
-w([
+_([
   $()
 ], x.prototype, "error", 2);
-w([
+_([
   $()
 ], x.prototype, "toast", 2);
-w([
+_([
   $()
 ], x.prototype, "tab", 2);
-w([
+_([
   $()
 ], x.prototype, "featureKind", 2);
-w([
+_([
   $()
 ], x.prototype, "measurePts", 2);
-w([
+_([
   $()
 ], x.prototype, "snapOn", 2);
-w([
+_([
   $()
 ], x.prototype, "snapHint", 2);
-w([
+_([
   $()
 ], x.prototype, "tool", 2);
-w([
+_([
   $()
 ], x.prototype, "toolTarget", 2);
-w([
+_([
   $()
 ], x.prototype, "selected", 2);
-w([
+_([
   $()
 ], x.prototype, "draft", 2);
-w([
+_([
   $()
 ], x.prototype, "scaleDraft", 2);
-w([
+_([
   $()
 ], x.prototype, "scaleInput", 2);
-w([
+_([
   $()
 ], x.prototype, "view", 2);
-w([
+_([
   $()
 ], x.prototype, "size", 2);
-w([
+_([
   $()
 ], x.prototype, "imageUrl", 2);
-w([
+_([
   $()
 ], x.prototype, "imageSize", 2);
-w([
+_([
   $()
 ], x.prototype, "saving", 2);
-w([
+_([
   $()
 ], x.prototype, "dirty", 2);
-w([
+_([
   $()
 ], x.prototype, "searchOpen", 2);
-w([
+_([
   $()
 ], x.prototype, "searchQuery", 2);
-w([
+_([
   $()
 ], x.prototype, "searchResults", 2);
-w([
+_([
   $()
 ], x.prototype, "searching", 2);
-w([
+_([
   $()
 ], x.prototype, "searchError", 2);
-w([
+_([
   $()
 ], x.prototype, "searchPin", 2);
-w([
+_([
   $()
 ], x.prototype, "locating", 2);
-w([
+_([
   $()
 ], x.prototype, "hoseRadius", 2);
-w([
+_([
   $()
 ], x.prototype, "toastUndo", 2);
-w([
+_([
   $()
 ], x.prototype, "layersOpen", 2);
-w([
+_([
   $()
 ], x.prototype, "page", 2);
-w([
+_([
   $()
 ], x.prototype, "raster", 2);
-w([
+_([
   $()
 ], x.prototype, "rasterMenu", 2);
-w([
+_([
   $()
 ], x.prototype, "soilOn", 2);
-w([
+_([
   $()
 ], x.prototype, "menuOpen", 2);
-w([
+_([
   $()
 ], x.prototype, "pendingImport", 2);
-w([
+_([
   $()
 ], x.prototype, "hover", 2);
-x = w([
+x = _([
   Ie("irrigation-planner-panel")
 ], x);
 function y(e) {
@@ -6171,7 +6178,7 @@ function y(e) {
 function gt(e) {
   return Math.round(e / 5) * 5 % 360;
 }
-function ne(e) {
+function se(e) {
   return e.type === "sprinkler" ? e.center && e.radius_m ? wt(e.radius_m, e.arc_deg) : null : e.type === "hose" ? e.polygon.length >= 2 && e.radius_m ? _t(e.polygon, e.radius_m) : null : e.polygon.length >= 3 ? Y(e.polygon) : null;
 }
 function J(e) {
