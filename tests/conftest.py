@@ -71,7 +71,7 @@ def setup(
             sim.add(
                 valve["id"], "on" if valve["id"] in (open_at_start or set()) else "off"
             )
-        sim.install()
+        await sim.async_install()
         hass_storage[STORAGE_KEY] = {
             "version": STORAGE_VERSION,
             "minor_version": 1,

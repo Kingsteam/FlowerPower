@@ -62,5 +62,102 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "problem": {
+        "name": "Problem"
+      }
+    },
+    "button": {
+      "stop_all": {
+        "name": "Stop all"
+      },
+      "skip": {
+        "name": "Skip zone"
+      },
+      "water_now": {
+        "name": "Water now"
+      },
+      "program_start": {
+        "name": "Start program"
+      }
+    },
+    "number": {
+      "duration": {
+        "name": "Watering duration"
+      }
+    },
+    "select": {
+      "program_mode": {
+        "name": "Mode",
+        "state": {
+          "sequence": "Sequence",
+          "cycle_soak": "Cycle and soak",
+          "priority": "By priority"
+        }
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "ready": "Ready",
+          "running": "Running",
+          "paused": "Automatic off",
+          "winter": "Winter pause",
+          "error": "Error"
+        }
+      },
+      "active_zone": {
+        "name": "Active zone"
+      },
+      "run_end": {
+        "name": "Run ends"
+      },
+      "queue": {
+        "name": "Queue",
+        "unit_of_measurement": "runs"
+      },
+      "zone_state": {
+        "name": "State",
+        "state": {
+          "idle": "Idle",
+          "queued": "Queued",
+          "running": "Running",
+          "locked": "Locked",
+          "disabled": "Disabled",
+          "error": "Fault"
+        },
+        "state_attributes": {
+          "reason": {
+            "name": "Reason"
+          }
+        }
+      },
+      "last_run": {
+        "name": "Last run"
+      },
+      "next_run": {
+        "name": "Next run"
+      },
+      "program_duration": {
+        "name": "Estimated duration"
+      }
+    },
+    "switch": {
+      "automatic": {
+        "name": "Automatic"
+      },
+      "winter_mode": {
+        "name": "Winter pause"
+      },
+      "zone_enabled": {
+        "name": "Zone enabled"
+      },
+      "program_enabled": {
+        "name": "Program enabled"
+      }
+    }
   }
 }

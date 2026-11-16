@@ -4,17 +4,53 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.core import Event, HomeAssistant, ServiceCall
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.setup import async_setup_component
+from pytest_homeassistant_custom_component.common import setup_test_component_platform
+
+
+class SimSwitch(SwitchEntity):
+    """Ein simuliertes Ventil als echte Schalter-Entität."""
+
+    _attr_should_poll = False
+
+    def __init__(self, valves: SimValves, valve_id: str, state: str) -> None:
+        self._valves = valves
+        self.valve_id = valve_id
+        self._attr_unique_id = valve_id
+        self._attr_name = valve_id
+        self._attr_is_on = state == "on"
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        if self.valve_id in self._valves.broken_open:
+            raise HomeAssistantError("Funk gestört")
+        self._valves.log.append(("on", self.valve_id))
+        self._attr_is_on = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        self._valves.log.append(("off", self.valve_id))
+        if self.valve_id not in self._valves.stuck:
+            self._attr_is_on = False
+            self.async_write_ha_state()
 
 
 class SimValves:
-    """Simulierte Schalter-Ventile mit Wächter."""
+    """Simulierte Schalter-Ventile mit Wächter.
+
+    Die Ventile sind echte ``switch``-Entitäten der Test-Plattform „test“.
+    ``stuck`` schließt nicht, ``broken_open`` lässt das Öffnen scheitern.
+    Der Wächter zählt bei jeder Zustandsänderung die offenen Ventile.
+    """
 
     def __init__(self, hass: HomeAssistant, registry: er.EntityRegistry) -> None:
         self.hass = hass
         self.registry = registry
+        self.entities: dict[str, SimSwitch] = {}
         self.entity_ids: dict[str, str] = {}
         self.stuck: set[str] = set()  # schließen nicht
         self.broken_open: set[str] = set()  # Öffnen schlägt fehl
@@ -22,11 +58,24 @@ class SimValves:
         self.log: list[tuple[str, str]] = []
 
     def add(self, valve_id: str, state: str = "off") -> None:
-        entry = self.registry.async_get_or_create(
-            "switch", "sim", valve_id, suggested_object_id=valve_id
+        self.entities[valve_id] = SimSwitch(self, valve_id, state)
+
+    async def async_install(self) -> None:
+        """Richtet die Test-Plattform mit allen Ventilen ein."""
+        setup_test_component_platform(self.hass, "switch", self.entities.values())
+        assert await async_setup_component(
+            self.hass, "switch", {"switch": {"platform": "test"}}
         )
-        self.entity_ids[valve_id] = entry.entity_id
-        self.hass.states.async_set(entry.entity_id, state)
+        await self.hass.async_block_till_done()
+        for valve_id in self.entities:
+            entity_id = self.registry.async_get_entity_id("switch", "test", valve_id)
+            assert entity_id is not None
+            self.entity_ids[valve_id] = entity_id
+
+        def watch(_event: Event) -> None:
+            self.max_open_seen = max(self.max_open_seen, len(self.open_ids()))
+
+        async_track_state_change_event(self.hass, list(self.entity_ids.values()), watch)
 
     def open_ids(self) -> set[str]:
         return {
@@ -39,41 +88,14 @@ class SimValves:
         return valve_id in self.open_ids()
 
     def set(self, valve_id: str, state: str) -> None:
-        self.hass.states.async_set(self.entity_ids[valve_id], state)
-
-    def install(self) -> None:
-        by_entity = {e: v for v, e in self.entity_ids.items()}
-
-        async def turn_on(call: ServiceCall) -> None:
-            for entity_id in (
-                call.data["entity_id"]
-                if isinstance(call.data["entity_id"], list)
-                else [call.data["entity_id"]]
-            ):
-                valve_id = by_entity[entity_id]
-                if valve_id in self.broken_open:
-                    raise RuntimeError("Funk gestört")
-                self.log.append(("on", valve_id))
-                self.hass.states.async_set(entity_id, "on")
-
-        async def turn_off(call: ServiceCall) -> None:
-            for entity_id in (
-                call.data["entity_id"]
-                if isinstance(call.data["entity_id"], list)
-                else [call.data["entity_id"]]
-            ):
-                valve_id = by_entity[entity_id]
-                self.log.append(("off", valve_id))
-                if valve_id not in self.stuck:
-                    self.hass.states.async_set(entity_id, "off")
-
-        self.hass.services.async_register("switch", "turn_on", turn_on)
-        self.hass.services.async_register("switch", "turn_off", turn_off)
-
-        def watch(_event: Event) -> None:
-            self.max_open_seen = max(self.max_open_seen, len(self.open_ids()))
-
-        async_track_state_change_event(self.hass, list(self.entity_ids.values()), watch)
+        """Ändert ein Ventil „von außen“ (von Hand oder Ausfall)."""
+        entity = self.entities[valve_id]
+        if state == "unavailable":
+            entity._attr_available = False
+        else:
+            entity._attr_available = True
+            entity._attr_is_on = state == "on"
+        entity.async_write_ha_state()
 
 
 def make_model(
@@ -103,7 +125,7 @@ def make_model(
                 "device_id": f"dev_{v}",
                 "driver": "ha_switch",
                 "entities": {
-                    "valve": {"domain": "switch", "platform": "sim", "unique_id": v}
+                    "valve": {"domain": "switch", "platform": "test", "unique_id": v}
                 },
             }
             for v in ids

@@ -130,6 +130,8 @@ class IrrigationScheduler:
         self._stopping = False
         # Zonen, die nach einem Alarm gesperrt sind (Zone → Grund).
         self.locked_zones: dict[str, str] = {}
+        # Letzter beendeter Lauf je Zone.
+        self.last_runs: dict[str, Run] = {}
 
         for supply in model.water_supplies:
             members = set(supply.valve_ids) | {
@@ -369,9 +371,32 @@ class IrrigationScheduler:
         return [self.supplies[supply_id]] if supply_id in self.supplies else []
 
     @callback
-    def _notify(self) -> None:
+    def async_notify(self) -> None:
+        """Informiert alle Angemeldeten (z. B. nach einer Modelländerung)."""
         for update in list(self._listeners):
             update()
+
+    _notify = async_notify
+
+    def active_run(self, zone_id: str) -> Run | None:
+        """Laufender Lauf einer Zone (oder ``None``)."""
+        for supply in self.supplies.values():
+            for run in supply.active.values():
+                if run.zone_id == zone_id:
+                    return run
+        return None
+
+    def zone_stuck(self, zone_id: str) -> bool:
+        """Gibt an, ob das Ventil der Zone klemmt."""
+        zone = next((z for z in self.model.zones if z.id == zone_id), None)
+        if zone is None or zone.valve_id is None:
+            return False
+        return any(zone.valve_id in s.stuck for s in self.supplies.values())
+
+    @property
+    def errors(self) -> list[str]:
+        """Aktuelle Fehler aller Wasserversorgungen."""
+        return [f"{s.name}: {s.error}" for s in self.supplies.values() if s.error]
 
     def _spawn(self, coro: Coroutine[Any, Any, Any], name: str) -> None:
         task = self.hass.async_create_background_task(
@@ -448,6 +473,8 @@ class IrrigationScheduler:
                     run.state = RunState.DONE
         finally:
             supply.active.pop(run.valve_id, None)
+            run.ends_at = dt_util.utcnow() if run.started_at else run.ends_at
+            self.last_runs[run.zone_id] = run
             if not confirmed_closed and not self._stopping:
                 self._mark_stuck(supply, run.valve_id)
             self._notify()

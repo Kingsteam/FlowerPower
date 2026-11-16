@@ -62,5 +62,102 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "problem": {
+        "name": "Problem"
+      }
+    },
+    "button": {
+      "stop_all": {
+        "name": "Alles stoppen"
+      },
+      "skip": {
+        "name": "Zone überspringen"
+      },
+      "water_now": {
+        "name": "Jetzt gießen"
+      },
+      "program_start": {
+        "name": "Programm starten"
+      }
+    },
+    "number": {
+      "duration": {
+        "name": "Gießdauer"
+      }
+    },
+    "select": {
+      "program_mode": {
+        "name": "Ablauf",
+        "state": {
+          "sequence": "Nacheinander",
+          "cycle_soak": "Abwechselnd",
+          "priority": "Nach Priorität"
+        }
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "ready": "Bereit",
+          "running": "Läuft",
+          "paused": "Automatik aus",
+          "winter": "Winterpause",
+          "error": "Fehler"
+        }
+      },
+      "active_zone": {
+        "name": "Aktive Zone"
+      },
+      "run_end": {
+        "name": "Ende des Laufs"
+      },
+      "queue": {
+        "name": "Warteschlange",
+        "unit_of_measurement": "Läufe"
+      },
+      "zone_state": {
+        "name": "Zustand",
+        "state": {
+          "idle": "Bereit",
+          "queued": "Wartet",
+          "running": "Läuft",
+          "locked": "Gesperrt",
+          "disabled": "Deaktiviert",
+          "error": "Störung"
+        },
+        "state_attributes": {
+          "reason": {
+            "name": "Grund"
+          }
+        }
+      },
+      "last_run": {
+        "name": "Letzter Lauf"
+      },
+      "next_run": {
+        "name": "Nächster Lauf"
+      },
+      "program_duration": {
+        "name": "Geschätzte Dauer"
+      }
+    },
+    "switch": {
+      "automatic": {
+        "name": "Automatik"
+      },
+      "winter_mode": {
+        "name": "Winterpause"
+      },
+      "zone_enabled": {
+        "name": "Zone aktiv"
+      },
+      "program_enabled": {
+        "name": "Programm aktiv"
+      }
+    }
   }
 }

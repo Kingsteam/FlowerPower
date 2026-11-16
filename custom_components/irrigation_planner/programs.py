@@ -284,9 +284,12 @@ class ProgramManager:
         return lambda: self._listeners.remove(update)
 
     @callback
-    def _notify(self) -> None:
+    def async_notify(self) -> None:
+        """Informiert alle Angemeldeten."""
         for update in list(self._listeners):
             update()
+
+    _notify = async_notify
 
     @callback
     def async_run(self, program_id: str, *, source: str = "manual") -> int:

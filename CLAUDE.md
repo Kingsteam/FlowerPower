@@ -10,7 +10,7 @@ Eigene Home-Assistant-Integration (HACS) für die Gartenbewässerung. Der Besitz
 
 Gartenplan, berechnete Gießdauer je Zone, ausfallsichere Ventilsteuerung, Überwachung des Durchflusses und Winterpause, unabhängig von der Hardware. Ziel und Architektur: `docs/KONZEPT.md`. Geplante Bedienung: `docs/HANDBUCH.md`.
 
-Stand: Phase 1, Schritte 1–4 fertig (Speichern, Treiber und Profile, Warteschlange, Programme mit Zeitplan). **Die Integration steuert jetzt Ventile**, über die Dienste `run_zone`, `run_program`, `skip_next`, `stop_all` und den Zeitplan. Ventile und Zonen lassen sich noch nicht in der Oberfläche anlegen (Schritt 7); Plattformen/Entitäten fehlen noch (Schritt 5).
+Stand: Phase 1, Schritte 1–5 fertig (Speichern, Treiber und Profile, Warteschlange, Programme mit Zeitplan, Entitäten). **Die Integration steuert Ventile** über Dienste, Knöpfe und den Zeitplan. Ventile und Zonen lassen sich noch nicht in der Oberfläche anlegen (Schritt 7); Durchflussüberwachung fehlt noch (Schritt 6).
 
 ## Sicherheitsregeln (nicht verhandelbar)
 
@@ -40,6 +40,7 @@ Das Wissen über die konkrete Anlage des Besitzers liegt im separaten privaten R
 | `drivers/ha_switch.py`, `ha_valve.py`, `zigbee2mqtt.py`, `service_call.py` | die vier Treiber; `drivers/registry.py` baut sie (`create_driver`), nicht in `drivers/__init__.py` importieren (Kreisimport) |
 | `profiles/` | Geräteprofile als YAML + Lader; `device_timer` ohne `{duration}` im Befehl wird abgelehnt |
 | `diagnostics.py` | Diagnosedaten (Koordinaten geschwärzt) |
+| `entity.py`, `sensor.py`, `binary_sensor.py`, `switch.py`, `button.py`, `number.py`, `select.py` | Entitäten; Geräte: Hauptgerät + je Zone + je Programm; Änderungen über `IrrigationPlannerData.async_model_changed()` (speichert und benachrichtigt). Keine Entität öffnet ein Ventil direkt: „Jetzt gießen“ reiht ein |
 | `scheduler.py` | Warteschlange je Wasserversorgung (`IrrigationScheduler`): Platz erst frei, wenn das Ventil **nachweislich zu** ist; klemmt es, bleibt die Versorgung gesperrt und OFF wird jede Minute wiederholt; von außen offene Ventile zählen mit; Startprüfung schließt offene Ventile; Höchstdauer je Zone |
 | `programs.py` | Ablaufplan (`build_plan`: Nacheinander, Abwechselnd mit Einziehzeit, Priorität), Zeitplan (`next_start`: Startzeit oder „fertig bis“, Wochentage oder alle N Tage; ohne Zeiten = Ende des Zeitfensters), Wetter-Überspringen, `ProgramManager` (prüft jede Minute, nur bei Automatik an und ohne Winterpause) |
 | `services.py`, `services.yaml` | Dienste `run_zone` (reiht nur ein), `run_program`, `skip_next`, `stop_all` |
@@ -49,7 +50,7 @@ Das Wissen über die konkrete Anlage des Besitzers liegt im separaten privaten R
 | `docs/` | `KONZEPT.md`, `HANDBUCH.md`, `bilder/`, `entwuerfe.html` |
 | `devtools/testinstanz/` | simulierte Test-Home-Assistant-Instanz: `start.py`, Simulator `irrigation_sim` (10 Ventile, Bodenfeuchte, Wasserzähler, Störungen); nicht Teil der Auslieferung |
 
-Noch nicht angelegt (siehe Konzept Abschnitt 3): `discovery.py`, Plattformen (`sensor`, `switch`, `binary_sensor`, `button`, `select`), `frontend/`, `frontend-src/`. Sobald es Plattformen gibt: `PLATFORMS` definieren und `async_forward_entry_setups`/`async_unload_platforms` verwenden.
+Noch nicht angelegt (siehe Konzept Abschnitt 3): `discovery.py`, `frontend/`, `frontend-src/`. Neue Zonen/Programme brauchen ein Neuladen des Eintrags, damit ihre Entitäten entstehen.
 
 ## Tests und Prüfungen
 

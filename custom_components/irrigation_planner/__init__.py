@@ -11,7 +11,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -27,6 +28,15 @@ from .store import IrrigationPlannerStore
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+
 
 @dataclass(slots=True)
 class IrrigationPlannerData:
@@ -37,6 +47,35 @@ class IrrigationPlannerData:
     drivers: dict[str, HassValveDriver]
     scheduler: IrrigationScheduler
     programs: ProgramManager
+
+    @property
+    def problems(self) -> list[str]:
+        """Alle aktuellen Probleme im Klartext."""
+        problems = list(self.scheduler.errors)
+        names = {z.id: z.name for z in self.store.model.zones}
+        problems += [
+            f"Zone {names.get(zone_id, zone_id)} gesperrt: {reason}"
+            for zone_id, reason in self.scheduler.locked_zones.items()
+        ]
+        return problems
+
+    @callback
+    def async_model_changed(self) -> None:
+        """Nach einer Änderung am Modell: speichern und alle informieren."""
+        self.store.async_schedule_save()
+        self.scheduler.async_notify()
+        self.programs.async_notify()
+
+    async def async_set_winter_mode(self, on: bool) -> None:
+        """Winterpause ein- oder ausschalten.
+
+        Beim Einschalten werden alle Läufe beendet und alle Ventile
+        geschlossen; Zeitpläne starten dann nicht mehr.
+        """
+        self.store.model.settings.winter_mode = on
+        if on:
+            await self.scheduler.async_stop_all()
+        self.async_model_changed()
 
 
 type IrrigationPlannerConfigEntry = ConfigEntry[IrrigationPlannerData]
@@ -87,6 +126,7 @@ async def async_setup_entry(
     )
     await scheduler.async_start()
     programs.async_start()
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     LOGGER.debug(
         "Bewässerungsplaner eingerichtet: %s Zonen, %s steuerbare Ventile",
         len(store.model.zones),
@@ -99,6 +139,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: IrrigationPlannerConfigEntry
 ) -> bool:
     """Entlädt den Config-Entry und schließt dabei offene Ventile."""
+    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     entry.runtime_data.programs.async_stop()
     await entry.runtime_data.scheduler.async_shutdown()
-    return True
+    return unloaded
