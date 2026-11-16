@@ -25,9 +25,10 @@ fi
 
 echo "==> Lade den aktuellen Stand von GitHub …"
 curl -fsSL "$QUELLE" -o code.zip
-rm -rf FlowerPower-main
-unzip -q code.zip
-rm code.zip
+rm -rf code entpackt
+unzip -q code.zip -d entpackt
+mv entpackt/* code
+rm -rf code.zip entpackt
 
 if [ ! -d venv ]; then
   echo "==> Lege Python 3.14 an …"
@@ -35,9 +36,9 @@ if [ ! -d venv ]; then
 fi
 echo "==> Installiere Home Assistant (beim ersten Mal 5–10 Minuten) …"
 VIRTUAL_ENV="$ZIEL/venv" uv pip install --quiet \
-  -r FlowerPower-main/requirements_test.txt \
-  -r FlowerPower-main/devtools/testinstanz/requirements.txt
+  -r code/requirements_test.txt \
+  -r code/devtools/testinstanz/requirements.txt
 
 echo "==> Starte die Testinstanz (der erste Start dauert 1–2 Minuten) …"
-exec "$ZIEL/venv/bin/python" FlowerPower-main/devtools/testinstanz/start.py \
+exec "$ZIEL/venv/bin/python" code/devtools/testinstanz/start.py \
   --daten "$ZIEL/daten" --oeffnen
