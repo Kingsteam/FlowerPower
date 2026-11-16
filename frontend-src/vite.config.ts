@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 
-// Baut eine einzige Datei für Home Assistant (kein Code-Splitting).
+// Baut das Panel und die Dashboard-Karte für Home Assistant.
 export default defineConfig({
   build: {
     outDir: "../custom_components/irrigation_planner/frontend",
@@ -8,9 +8,14 @@ export default defineConfig({
     target: "es2022",
     minify: true,
     lib: {
-      entry: "src/panel.ts",
+      // Panel „Bewässerung“ und Dashboard-Karte; gemeinsamer Code landet in
+      // einer eigenen Datei (Lit), die beide laden.
+      entry: {
+        "irrigation-planner-panel": "src/panel.ts",
+        "irrigation-planner-card": "src/card.ts",
+      },
       formats: ["es"],
-      fileName: () => "irrigation-planner-panel.js",
+      fileName: (_format, name) => `${name}.js`,
     },
   },
 });

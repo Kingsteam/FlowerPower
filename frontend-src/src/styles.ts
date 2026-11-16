@@ -1094,6 +1094,13 @@ export const styles = css`
   .track .block.off {
     opacity: 0.35;
   }
+  /* Späte Starts: Beschriftung links neben dem Balken, sonst ragt sie hinaus */
+  .track .block.late span {
+    left: auto;
+    right: 100%;
+    margin-left: 0;
+    margin-right: 6px;
+  }
   .track .block span {
     position: absolute;
     left: 100%;

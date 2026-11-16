@@ -318,7 +318,7 @@ export class ScheduleView extends LitElement {
                 .map((t) => {
                   const left = (t.minutes / 1440) * 100;
                   const width = Math.max(0.6, (p.total_s / 86400) * 100);
-                  return html`<div class="block ${p.enabled ? "" : "off"}" title=${`${p.name}: ${t.time} Uhr, ${fmtDuration(p.total_s)}`}
+                  return html`<div class="block ${p.enabled ? "" : "off"} ${left + width > 70 ? "late" : ""}" title=${`${p.name}: ${t.time} Uhr, ${fmtDuration(p.total_s)}`}
                     style="left:${left}%; width:${width}%; --c:${COLORS[pi % COLORS.length]}">
                     <span>${t.time} ${p.name}</span>
                   </div>`;

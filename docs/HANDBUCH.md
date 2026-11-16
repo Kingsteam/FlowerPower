@@ -1,264 +1,277 @@
+<p align="center"><img src="bilder/logo.png" alt="FlowerPower" width="160"></p>
+
 # Bewässerungsplaner – Benutzerhandbuch
 
-> **Entwurf.** Die Erweiterung ist noch nicht gebaut. Dieses Handbuch beschreibt die geplante Bedienung laut [Konzept](KONZEPT.md), und die Bilder sind **Entwürfe** der Oberfläche, keine echten Screenshots.
-> Grundlage sind die Daten deiner Anlage (Stand 12.11.2026). Die Durchflüsse von Vorgarten (4,5 L/min), Vorgarten Rosen (9,6 L/min) und Terrasse 2 (5,9 L/min) stammen aus echten Läufen. Die übrigen Werte, Flächen und der Gartenplan sind Beispiele.
-> Sobald die Oberfläche existiert, werden die Bilder durch echte Screenshots ersetzt. Die Entwürfe liegen in [`entwuerfe.html`](entwuerfe.html).
+> ⚠️ **Stand 0.4.0: noch nicht mit echter Hardware getestet.** Alle Funktionen sind mit simulierten Ventilen und Sensoren erprobt (automatische Tests und eine simulierte Test-Instanz). Mit echten Ventilen, z. B. SONOFF über Zigbee2MQTT, ist die Erweiterung noch nicht gelaufen. Richte am Anfang **nur ein Ventil** ein, mach einen kurzen Testlauf und bleib dabei, bis du siehst, dass das Ventil wirklich selbst schließt.
 
-Die gelben Nummern in den Bildern gehören zu den nummerierten Erklärungen darunter.
+Die Bilder stammen aus der simulierten Test-Instanz (Beispielgarten, kein echter Ort).
 
 ---
 
 ## Inhalt
 
-1. [Das Dashboard](#1-das-dashboard)
-2. [Den Gartenplan anlegen](#2-den-gartenplan-anlegen)
-3. [Zonen zeichnen](#3-zonen-zeichnen)
-4. [Ventile hinzufügen](#4-ventile-hinzufügen)
-5. [Geräte im Überblick](#5-geräte-im-überblick)
-6. [Programme und Zeitplan](#6-programme-und-zeitplan)
-7. [Meldungen und Verlauf](#7-meldungen-und-verlauf)
-8. [Winterpause](#8-winterpause)
+1. [Installieren und einrichten](#1-installieren-und-einrichten)
+2. [Ventile hinzufügen](#2-ventile-hinzufügen)
+3. [Zonen und Programme anlegen](#3-zonen-und-programme-anlegen)
+4. [Der Plan](#4-der-plan)
+5. [Wasser-Ansichten](#5-wasser-ansichten)
+6. [Betrieb: was läuft, was kommt, wie war es](#6-betrieb-was-läuft-was-kommt-wie-war-es)
+7. [Flächen und Zeitplan](#7-flächen-und-zeitplan)
+8. [Die Dashboard-Karte](#8-die-dashboard-karte)
 9. [Wie die Gießdauer berechnet wird](#9-wie-die-gießdauer-berechnet-wird)
-10. [Sicherheit: Was passiert, wenn etwas ausfällt?](#10-sicherheit-was-passiert-wenn-etwas-ausfällt)
-11. [Häufige Fragen](#11-häufige-fragen)
+10. [Überwachung und Alarme](#10-überwachung-und-alarme)
+11. [Winterpause](#11-winterpause)
+12. [Sicherheit: Was passiert, wenn etwas ausfällt?](#12-sicherheit-was-passiert-wenn-etwas-ausfällt)
+13. [Automationen](#13-automationen)
+14. [Häufige Fragen](#14-häufige-fragen)
 
 ---
 
-## 1. Das Dashboard
+## 1. Installieren und einrichten
 
-Die Karte **„Bewässerungsplaner“** legst du in ein beliebiges Dashboard. Für den Alltag ist sie alles, was du brauchst.
+Voraussetzung: **Home Assistant 2026.11 oder neuer**.
 
-![Dashboard-Karte](bilder/01-dashboard.png)
+1. **Einstellungen → Marketplace**, dann ein eigenes Repository hinzufügen: als GitHub-Link `Kingsteam/FlowerPower` eintragen. (Beim ersten Mal fragt Home Assistant nach der Verbindung zu GitHub.)
+2. **Bewässerungsplaner** herunterladen und Home Assistant neu starten.
+3. **Einstellungen → Geräte & Dienste → Integration hinzufügen → Bewässerungsplaner.**
+4. Im Dialog wählst du:
+   - die **Wetterquelle** (eine Wetter-Entität, z. B. deine Wetterstation oder ein Wetterdienst). Ohne Wetterquelle rechnet die Erweiterung keine Verdunstung, dann bleibt nur die Dauer von Hand.
+   - das **Zeitfenster**, in dem gegossen werden darf (z. B. 4 bis 7 Uhr).
 
-1. **Gartenplan mit Live-Status.** Jede Zone hat die Farbe ihres Zustands:
-   - 🔵 **läuft** (gestrichelter, bewegter Rand)
-   - 🟢 **heute erledigt**
-   - 🟠 **wartet**
-   - 🔴 **Störung**
-   - ⚪ **deaktiviert**
-
-   Tippst du auf eine Zone, öffnen sich die Details, und du kannst sie von Hand starten.
-2. **Was gerade läuft:** aktive Zone, Restzeit und Fortschritt im Programm („Zone 2 von 8“).
-3. **Bedienung:**
-   - **Alles stoppen** schließt sofort alle Ventile.
-   - **Zone überspringen** beendet die laufende Zone und macht mit der nächsten weiter.
-   - **Programm starten** startet das Standardprogramm.
-   - **Automatik** schaltet die Zeitpläne ein oder aus.
-   - **Winterpause** siehe [Kapitel 8](#8-winterpause).
-4. **Nächster Lauf:** Startzeit, Anzahl der Zonen, geschätzte Liter und Dauer, dazu die Wetterlage, die in die Berechnung einfließt.
-5. **Zonenliste:** Status und geplante Dauer jeder Zone.
-
-> 💡 Auch ein manueller Start schickt dem Ventil **immer eine Dauer** mit. Ein Ventil, das „einfach offen“ ist, gibt es in diesem System nicht.
+Danach gibt es in der Seitenleiste den Eintrag **Bewässerung** und in Home Assistant ein Gerät „Bewässerungsplaner“ mit Schaltern (Automatik, Winterpause), dem Regler **Wassersparen** und je Zone und Programm eigenen Geräten.
 
 ---
 
-## 2. Den Gartenplan anlegen
+## 2. Ventile hinzufügen
 
-Die Verwaltung findest du in der Seitenleiste unter **💧 Bewässerung**, Reiter **Plan**. Dort klickst du auf **🖼 Plan importieren**.
+**Einstellungen → Geräte & Dienste → Bewässerungsplaner → Konfigurieren → Ventile → Ventil hinzufügen.** Ein Assistent führt durch:
 
-![Plan importieren](bilder/03-import.png)
+1. **Gerät wählen.** Der Assistent erkennt Ventil, Durchfluss, Status und Batterie selbst und schlägt ein **Geräteprofil** vor. Für das **SONOFF SWV über Zigbee2MQTT** ist alles vorausgefüllt; prüfe nur den Gerätenamen (den „Friendly Name“ aus Zigbee2MQTT).
+2. **Treiber:**
+   - **Zigbee2MQTT:** schickt `{"state":"ON","on_time":<Sekunden>}`. Die Dauer geht also mit, und das Ventil schließt selbst.
+   - **Schalter** oder **Ventil** aus Home Assistant
+   - **Dienstaufruf** für alles andere (z. B. ESPHome), mit `{duration}` im Befehl
+3. **Testlauf** (10 bis 60 Sekunden, nur wenn du ihn startest): Das Ventil öffnet **wirklich**. Geprüft wird, ob es öffnet, wie viel fließt und ob es **von selbst schließt**.
+4. **Ergebnis, die Sicherheitsstufe:**
+   - 🟢 **Gerät schließt selbst:** Auch wenn Home Assistant oder das Funknetz ausfällt, geht das Ventil nach der Zeit zu.
+   - 🟡 **Nur Home Assistant überwacht die Zeit:** Das funktioniert, aber bei einem Ausfall kann das Ventil offen bleiben.
+5. **Zuordnen** zu Zone und Wasserversorgung.
 
-1. **Bild hochladen:** SVG, PNG oder JPG. Das kann sein:
-   - eine Skizze oder ein Bauplan
-   - ein **Luftbild**, z. B. ein Screenshot aus einem Kartendienst. Beachte dabei die Nutzungsbedingungen des Dienstes.
-2. **Maßstab festlegen:** Klicke im Bild auf zwei Punkte, deren Abstand du kennst, z. B. Anfang und Ende einer Hauswand. Gib dann den echten Abstand ein. Im Beispiel sind es 11,0 m, daraus ergibt sich **1 m = 20 px**.
-   Der Maßstab ist entscheidend: Alle Flächen und damit alle Literangaben hängen davon ab. Miss lieber eine lange Strecke als eine kurze.
-3. **Nordrichtung** (optional). Sie wird für die Sonneneinstrahlung je Zone verwendet.
-
-Hast du kein Bild, kannst du auch auf einem leeren Raster zeichnen.
-
----
-
-## 3. Zonen zeichnen
-
-![Plan-Editor](bilder/02-editor.png)
-
-1. **Werkzeugleiste** (von oben nach unten):
-
-   | Symbol | Werkzeug | Bedienung |
-   |---|---|---|
-   | ↖ | Auswählen | Objekte anklicken, verschieben, löschen |
-   | 💦 | **Sprinkler** | Mittelpunkt setzen, dann Radius aufziehen, dann den Winkel ziehen |
-   | ⬠ | **Tropfbereich** | Eckpunkte des Beets anklicken, Doppelklick schließt das Polygon |
-   | 🌧 | Regensensor | an der Position des Sensors absetzen |
-   | 🌱 | Bodenfeuchtesensor | absetzen und einer Zone zuordnen |
-   | ⛛ | Ventil / Verteiler | Position der Ventile, als Orientierungshilfe |
-   | 📏 | Maßstab | neu kalibrieren |
-   | 🖼 | Plan importieren | Hintergrundbild tauschen |
-
-2. **Sprinkler bearbeiten:** Der Mittelpunkt verschiebt den Sprinkler. Die runden Anfasser am Rand ändern **Radius** und **Öffnungswinkel**. So bildest du Kreis-, Halbkreis- und Viertelkreisregner ab.
-3. **Sensoren** werden als Symbol auf dem Plan angezeigt. Ein Bodenfeuchtesensor korrigiert den Wasserbedarf der Zonen, denen er zugeordnet ist.
-4. **Tropfbereiche** sind Polygone. Die eckigen Anfasser sind die Eckpunkte. Klickst du auf eine Kante, entsteht ein neuer Punkt.
-5. **Eigenschaften** des gewählten Objekts:
-   - **Name**, **Radius / Start- / Öffnungswinkel** (bei Sprinklern)
-   - **Pflanzen:** Rasen, Beet, Hochbeet, Rosen, Töpfe … Daraus ergibt sich der Pflanzenfaktor *Kc*, also wie durstig die Pflanzen sind.
-   - **Ventil**, das diese Zone versorgt. Die Sicherheitsstufe 🟢/🟡 steht dabei.
-   - **Fläche**, berechnet aus der Zeichnung, **Überlappung** mit anderen Sprinklern, **gelernter Durchfluss** und **Niederschlag** in mm/h
-
-> 💡 Überlappende Sprinkler sind normal. Die doppelt bewässerte Fläche wird in der Berechnung berücksichtigt.
+> ⚠️ Für den Testlauf muss Wasser anliegen, und niemand soll im Sprühbereich stehen.
 
 ---
 
-## 4. Ventile hinzufügen
+## 3. Zonen und Programme anlegen
 
-Reiter **Geräte**, dann **+ Ventil hinzufügen**. Ein Assistent führt dich in vier Schritten durch.
+Ebenfalls unter **Konfigurieren**:
 
-![Assistent Ventil hinzufügen](bilder/04-wizard.png)
+- **Zonen:** Name, Ventil, Höchstdauer und die **Dauer-Art**:
+  - **von Hand:** feste Dauer
+  - **berechnet:** aus dem Wasserhaushalt (Kapitel 9)
+  - **aus einer Entität**, z. B. Smart Irrigation
+- **Wasserversorgungen:** welche Ventile an einer Leitung hängen und wie viele gleichzeitig offen sein dürfen (für die Hausleitung: **1**).
+- **Programme:** welche Zonen in welcher Reihenfolge. Den Zeitplan stellst du am bequemsten im Panel ein (Kapitel 7).
+- **Sensoren:** Bodenfeuchte (einer Zone zugeordnet) und Regensensor.
 
-1. **Die vier Schritte:**
-   - Gerät wählen
-   - Entitäten und Profil prüfen
-   - Testlauf
-   - Zone zuordnen
-2. **Gerät und Profil:** Du wählst ein Gerät aus Home Assistant. Der Assistent **erkennt automatisch**, welche Entität das Ventil ist, welche den Durchfluss misst und welche Status und Batterie meldet. Außerdem schlägt er ein **Geräteprofil** vor, im Beispiel „SONOFF SWV (Zigbee2MQTT)“. Du kannst alles von Hand ändern.
-   Das funktioniert mit **jeder Hardware**, die in Home Assistant ein Ventil oder einen Schalter liefert. Für unbekannte Geräte legst du ein eigenes Profil an.
-3. **Testlauf:** Das Ventil öffnet **10 Sekunden**. Dabei wird geprüft:
-   - Öffnet das Ventil?
-   - Wie hoch ist der Durchfluss?
-   - **Schließt das Gerät von selbst**, ohne Schließbefehl von Home Assistant?
-   - Fließt danach wirklich nichts mehr?
-4. **Ergebnis: die Sicherheitsstufe.**
-   - 🟢 **Gerät schließt selbst:** Auch wenn Home Assistant abstürzt oder das Funknetz ausfällt, geht das Ventil nach der geplanten Zeit zu.
-   - 🟡 **Nur Home Assistant überwacht die Zeit:** Das funktioniert, aber bei einem Ausfall kann das Ventil offen bleiben. Für dauerhaften Betrieb ist ein Gerät mit eigenem Timer empfohlen.
-
-Im letzten Schritt ordnest du das Ventil einer **Zone** und der **Wasserversorgung** zu und setzt es auf Wunsch auf den Plan.
-
-> ⚠️ Für den Testlauf muss Wasser anliegen. Stell sicher, dass niemand gerade im Sprühbereich steht.
+Neue Zonen und Programme erscheinen nach dem Speichern sofort; die Integration lädt dazu neu.
 
 ---
 
-## 5. Geräte im Überblick
+## 4. Der Plan
 
-![Geräteübersicht](bilder/05-devices.png)
+Seitenleiste → **Bewässerung** → **Plan**. Beim Öffnen passt der Plan dein Grundstück (die gezeichnete Grundstücksgrenze) mit etwas Rand ein.
 
-Der Reiter **Geräte** zeigt alle zugeordneten Ventile, Sensoren, Wetterquellen und die Wasserversorgung.
+![Plan](bilder/10-plan.png)
 
-1. **Zone und Status** jedes Ventils:
-   - **bereit**
-   - **nicht erreichbar:** Das Gerät meldet sich nicht.
-   - **Batterie schwach:** Die Warnschwelle ist einstellbar.
+**Hintergrund** (Reiter rechts):
+- **Luftbild** (basemap.at in mehreren Ansichten, OpenStreetMap, Esri) mit **Adresssuche** (Lupe) und **Orten** (Fadenkreuz; holt einmal deinen Standort aus dem Browser, geht nur über https)
+- eigenes **Bild** mit Maßstab aus zwei Punkten, oder nur ein **Raster**
+- Regler für die Sichtbarkeit des Luftbilds
 
-   Ventile mit Störung werden in Programmen **automatisch übersprungen**, und du bekommst eine Meldung.
-2. **Sicherheitsstufe und gelernter Durchfluss.** Der Durchfluss wird mit jedem Lauf genauer. Steht „(Startwert)“ dabei, gab es noch keinen echten Lauf.
-3. **Gerät tauschen:** Wenn du ein Ventil neu anlernst oder durch ein anderes ersetzt, wählst du hier einfach das neue Gerät aus. **Zone, Verlauf und gelernte Werte bleiben erhalten.**
-   Im Beispiel ist „Wiese 1“ nicht erreichbar, so wie im Winter, wenn die Batterien herausgenommen sind. Während der Winterpause werden solche Ventile nicht als Störung gemeldet.
+**Grundriss** (Reiter Grundriss): Haus, Wege, Zaun, Hecke, **Grundstücksgrenze** (zeigt Fläche und Umfang), Bäume (mit Stammdicke), Wasserhahn, Bodenflächen und **Zuleitungen**. Mit dem **Schloss** sperrst du Formen, dann lassen sie sich im Plan nicht mehr versehentlich verschieben („Alle sperren“).
 
-Über die Leiste oben wechselst du zu **Sensoren**, **Wetter** und **Wasserversorgung**. Bei der Wasserversorgung stellst du ein, **wie viele Ventile gleichzeitig offen sein dürfen**. Für deine Hauswasserleitung ist das **1**.
+![Grundriss](bilder/12-grundriss.png)
 
----
+**Zuleitungen** vom Wasserhahn zu den Ventilen: am Hahn beginnen, Punkte setzen, am Ventil enden. Eine Zuleitung, die auf einer anderen beginnt, wird ein **Abzweig** (blauer Punkt). Verschiebst du Hahn, Ventil oder Abzweig, ziehen die Leitungen mit.
 
-## 6. Programme und Zeitplan
+**Zonen zeichnen** (Reiter Zonen, Zone anklicken):
 
-Ein **Programm** legt fest, welche Zonen in welcher Reihenfolge wann laufen. Du kannst mehrere anlegen, z. B. „Morgenprogramm“, „Rasen intensiv“ oder „Nur Töpfe (Hitze)“.
+![Zone bearbeiten](bilder/11-zone.png)
 
-![Programme](bilder/06-program.png)
+- **Art:**
+  - **Sprinkler:** Mittelpunkt drücken und bis zum Rand ziehen; Anfasser für Reichweite und Bogen
+  - **Beet / Tropfschlauch:** Ecken anklicken
+  - **Gießschlauch:** eine Linie, dazu die Reichweite (Radius) links und rechts
+- **Ventil** der Zone und dessen **Durchfluss** (L/min). Ohne Durchflusssensor trägst du ihn hier von Hand ein (z. B. Eimer auslitern), sonst fehlen Liter und Wasser-Ansichten.
+- **Leitung zum Ventil:** die Linie im Plan anfassen und ziehen, dann entsteht ein Knick mit runder Ecke. Ein Doppelklick auf einen Knick löscht ihn.
+- **Pflanzen und Boden:** was wächst (bestimmt den Pflanzenfaktor), Wasserbedarf in fünf Stufen, Bodenart
+- **Jetzt gießen** bzw. **Gießen abbrechen**, solange die Zone läuft
 
-1. **Ablauf:**
-   - **Nacheinander:** Zone für Zone, jede komplett.
-   - **Abwechselnd:** Alle Zonen bekommen reihum kurze Gießphasen (z. B. 5 min), bis jede ihre Menge hat. Auf Rasen und schwerem Boden zieht das Wasser so besser ein und läuft weniger ab.
-   - **Nach Bedarf:** Die durstigsten Zonen kommen zuerst. Reicht das Zeitfenster nicht, fallen Zonen mit niedriger Priorität weg.
+**Speichern** übernimmt die Zeichnung. **Rückgängig** geht auch nach dem Speichern. Über das Menü ⋮ lässt sich der Plan als Datei **sichern** und wieder einspielen.
 
-   Außerdem stellst du ein, **wie viele Ventile gleichzeitig offen sein dürfen** (Standard 1) und wie lange die **Pause zwischen zwei Ventilen** ist, damit sich der Leitungsdruck erholt.
-2. **Reihenfolge:** Die Zonen ziehst du am Griff ⠿ in die gewünschte Reihenfolge. Für jede Zone siehst du den berechneten Bedarf in mm, die Liter und die Dauer. Gestörte Zonen sind durchgestrichen und werden übersprungen.
-3. **Zeitplan:**
-   - **Start um** einer festen Uhrzeit, oder **Fertig bis**. Dann rechnet das System die Startzeit selbst aus.
-   - **Tage**
-   - **Überspringen** bei Regen, Frost oder Wind; die Grenzwerte stellst du selbst ein.
-   - Programme lassen sich **zusätzlich** über Automationen, einen Knopf oder einen Zeitplan-Helfer von Home Assistant starten.
-4. **Vorschau** des nächsten Laufs als Zeitleiste: welche Zone wann läuft, die Pausen dazwischen, Start, Ende und Gesamtliter. Wird ein Lauf übersprungen, steht hier der Grund, z. B. „8 mm Regen erwartet“.
+**Beim Gießen** sieht man im Plan, wie das Wasser vom Hahn durch die Zuleitung zum offenen Ventil (blau, Griff längs) und weiter zur Zone fließt. Sprinkler zeigen Wellen.
+
+![Gießen im Plan](bilder/15-giessen.png)
 
 ---
 
-## 7. Meldungen und Verlauf
+## 5. Wasser-Ansichten
 
-![Meldungen und Verlauf](bilder/08-alerts.png)
+Der **Tropfen-Knopf** links im Plan legt ein Kachelraster über das ganze Grundstück:
 
-1. **Alarme** stehen oben im Reiter **Verlauf**, mit Ursache, Messwerten und dem, was das System bereits getan hat. Im Beispiel:
-   - Der Durchfluss war fast doppelt so hoch wie gelernt, ein Schlauch ist vermutlich lose.
-   - **Das Ventil wurde sofort geschlossen.**
-   - Die Zone bleibt gesperrt, bis du sie nach der Kontrolle mit **„Zone geprüft – freigeben“** wieder freigibst.
-2. **Verlauf** aller Läufe, Überspringungen, Warnungen und Alarme, mit den verbrauchten Litern.
-3. **Push-Nachricht** auf dein Handy über die Home-Assistant-App, mit Schnellaktionen.
+| Ansicht | zeigt |
+|---|---|
+| **Geplante Gießmenge** | wie viele Millimeter der nächste geplante Durchgang bringt (Überschneidungen zählen doppelt; hinter dicken Baumstämmen bleibt es beim Sprinkler trocken) |
+| **Bodenfeuchte jetzt** | wie voll das Wasserkonto ist: trocken (braun) – halb – voll (blau) |
+| **Bodenfeuchte nach dem Gießen** | dasselbe nach dem nächsten Gießen; violett heißt zu nass |
 
-**Diese Situationen erkennt das System:**
+Graue Kacheln werden nicht bewässert. **Schraffierte** Kacheln haben keinen Wert; der Grund steht in der Legende (z. B. „Durchfluss unbekannt“).
 
-| Situation | wahrscheinliche Ursache | Reaktion |
-|---|---|---|
-| Durchfluss **viel höher** als gelernt | Schlauch gelöst oder geplatzt | Ventil zu, Alarm, Zone gesperrt |
-| Durchfluss **viel niedriger** als gelernt | Knick, Verstopfung, wenig Druck | Warnung, bei Unterschreiten des Grenzwerts Ventil zu |
-| **kein Durchfluss** / Wassermangel | Hahn zu, kein Wasser | Ventil zu, Alarm |
-| Durchfluss bei **geschlossenem** Ventil | Ventil dichtet nicht ab | OFF-Befehl wiederholen, Warnung |
-| Gerät meldet **Leck** | Gerätemeldung | Ventil zu, Alarm |
-| zwei Ventile gleichzeitig offen | manuell geöffnet oder Fehler | das spätere schließen, Warnung |
-
-> ⚠️ **Grenze der Überwachung:** Die Durchflussmesser sitzen in den Ventilen. Ein Leck **vor** den Ventilen, z. B. zwischen Wasserhahn und Verteiler, können sie nicht erkennen. Dafür bräuchtest du einen Wasserzähler in der Zuleitung. Er lässt sich unter Geräte → Wasserversorgung ergänzen.
+![Bodenfeuchte jetzt](bilder/13-bodenfeuchte.png)
 
 ---
 
-## 8. Winterpause
+## 6. Betrieb: was läuft, was kommt, wie war es
 
-Den Schalter **Winterpause** findest du im Dashboard oder im Reiter Übersicht.
+Reiter **Betrieb**:
 
-![Winterpause](bilder/07-winter.png)
+![Betrieb](bilder/16-betrieb.png)
 
-1. **Was beim Einwintern passiert**, Schritt für Schritt mit Häkchen:
-   1. Alle Ventile werden geschlossen und geprüft.
-   2. Alle Programme werden pausiert, und die Bedarfsberechnung hält an. So sammelt sich über den Winter kein Wasserdefizit an.
-   3. Die **zugeordneten Geräte werden in Home Assistant deaktiviert**. Sie verschwinden aus Dashboards und Meldungen, aber Verlauf und Einstellungen bleiben erhalten.
-   4. Du bekommst eine Benachrichtigung.
-2. **Automatisch beenden** an einem Datum, z. B. 1. April. Beim Beenden werden die Geräte wieder aktiviert. Das System wartet, bis sich alle Ventile melden, und macht auf Wunsch einen **kurzen Testlauf je Zone** mit Prüfung des Durchflusses.
+- **Jetzt:** was gießt (mit Restzeit) und was wartet.
+  - **Überspringen:** schließt die laufende Zone, dann geht es mit der nächsten weiter.
+  - **Herausnehmen:** streicht eine wartende Zone.
+  - Dazu **Programm abbrechen** und **Alles stoppen**.
+- **Zonen:** zuletzt gegossen (Dauer, Liter, mm), Bedarf jetzt, nächster Start mit geplanter Dauer und Litern.
+- **Wassersparen** (0 bis 50 %): kürzt die geplante Gießdauer aller Zonen, z. B. bei Hitze oder Wasserknappheit.
+- **Konto voll** je Zone bzw. **Alle Konten voll:** setzt den berechneten Bedarf auf 0, z. B. nachdem du von Hand gegossen hast.
+- **Wetter und Wasserhaushalt:** Verdunstung und Regen der letzten 14 Tage, gegossene Liter je Tag, auch als Tabelle.
+- **Verlauf:** jeder Lauf mit Litern (gemessen oder geschätzt) und mm, abgebrochene Läufe, übersprungene Programme und Alarme. Lässt sich nach Zone filtern.
 
-> 💡 Die Ventile vor dem Frost abbauen bzw. entleeren musst du weiterhin selbst. Die Winterpause sorgt nur dafür, dass Home Assistant während dieser Zeit nichts tut und keine Fehlalarme meldet.
+![Wetter und Verlauf](bilder/17-betrieb-verlauf.png)
+
+„Automatik an/aus“ oben in der Kopfzeile lässt sich anklicken und schaltet die Zeitpläne ein oder aus.
+
+---
+
+## 7. Flächen und Zeitplan
+
+**Flächen:** bewässerte Fläche gesamt und je Art, Grundstück und bewässerter Anteil, Wasser pro Durchgang, Überschneidungen, Tabellen je Zone und Ventil.
+
+![Flächen](bilder/18-flaechen.png)
+
+**Zeitplan:** die nächsten 7 Tage als Wochenansicht, je Programm eine Karte.
+
+![Zeitplan](bilder/19-zeitplan.png)
+
+- **Start um** einer Uhrzeit oder **Fertig bis**, jeweils auch relativ zu **Sonnenaufgang/-untergang** (z. B. fertig 1 Stunde vor Sonnenaufgang)
+- **Tage:** Wochentage oder alle N Tage
+- **Ablauf:**
+  - **Nacheinander**
+  - **Abwechselnd** mit Einziehzeit (gut für Rasen)
+  - **Nach Bedarf** (durstigste Zone zuerst)
+- **Überspringen** bei Regen, Frost oder Wind; **Nächsten überspringen**; **Jetzt starten** (reiht nur ein)
+
+---
+
+## 8. Die Dashboard-Karte
+
+Die Karte **„Bewässerung“** kannst du in jedes Dashboard legen (Dashboard bearbeiten → Karte hinzufügen → „Bewässerung“). Sie wird automatisch mitgeladen; du musst keine Ressource eintragen.
+
+![Dashboard-Karte](bilder/20-karte.png)
+
+Sie zeigt Automatik und Wassersparen, was gerade gießt (mit **Überspringen** und **Alles stoppen**) und je Zone den nächsten Start, dazu **Gießen** oder **Abbrechen**. Der kleine Kreis vor jeder Zone zeigt, wie voll das Wasserkonto ist.
+
+Einstellungen der Karte (alle freiwillig):
+
+```yaml
+type: custom:irrigation-planner-card
+title: Bewässerung
+zones: [zone_1, Rosen]   # nur diese Zonen (ID oder Name)
+show_zones: true
+```
 
 ---
 
 ## 9. Wie die Gießdauer berechnet wird
 
-Du musst nichts davon selbst rechnen. Es hilft aber zu verstehen, woher die Zahlen kommen.
+Gilt für Zonen mit der Dauer-Art „berechnet“. Gerechnet wird mit einem **Wasserkonto** je Zone (FAO-56, das Standardverfahren der Welternährungsorganisation):
 
-1. **Fläche:** aus der Zeichnung. Bei Sprinklern ist das ein Kreissegment, z. B. ein Halbkreis mit 5,5 m Radius = 47,5 m². Bei Beeten ist es das Polygon.
-2. **Wasserbedarf in mm:**
-   - Aus Temperatur, Luftfeuchte, Wind und Sonne rechnet das System die **Verdunstung** (ET₀). Die Daten kommen von deiner Wetter-Entität in Home Assistant.
-   - Diese wird mit dem **Pflanzenfaktor** multipliziert, z. B. Rasen 0,8.
-   - Abgezogen wird der **Regen**, der gefallen ist bzw. vorhergesagt wird.
-   - Ein **Bodenfeuchtesensor**, wenn vorhanden, korrigiert das Ergebnis.
-3. **Liter:** 1 mm auf 1 m² sind 1 Liter. Weil nicht jeder Tropfen ankommt, wird durch die Effizienz geteilt: Tropfschlauch etwa 90 %, Sprinkler etwa 75 %.
-4. **Dauer:** Liter geteilt durch den **gelernten Durchfluss** des Ventils.
+1. **Verdunstung:** Jeden Tag wird aus Temperatur, Luftfeuchte und Wind deiner Wetterquelle die Verdunstung (ET₀) berechnet. Fehlen Luftfeuchte oder Wind, gibt es eine einfachere Formel, die nur die Temperatur braucht.
+2. **Pflanzenfaktor:** ET₀ × Pflanzenfaktor (z. B. Rasen 0,8) ist der Verbrauch der Zone. Er wird vom Konto abgezogen.
+3. **Auffüllen:** Wirksamer Regen und Gießen füllen das Konto wieder auf.
+4. **Kontogröße:** das Wasser, das der Boden im Wurzelraum halten kann. Es hängt von Bodenart und Wurzeltiefe ab.
+5. **Bedarf:** Was im Konto fehlt, ist der Bedarf in mm. Ein **Bodenfeuchtesensor** ersetzt die Schätzung.
+6. **Liter:** Bedarf × Fläche ÷ Wirkungsgrad (Tropfschlauch 90 %, Sprinkler 75 %), dann **Dauer** = Liter ÷ Durchfluss. Wassersparen kürzt am Ende um den eingestellten Anteil.
 
-**Beispiel „Vorgarten“:** 12,6 m² Tropfbereich, Bedarf 3,8 mm
-→ 3,8 × 12,6 / 0,9 ≈ **53 L**
-→ bei 4,5 L/min ≈ **11 min 47 s**
+**Beispiel:** 12,6 m² Beet, Bedarf 3,8 mm → 3,8 × 12,6 ÷ 0,9 ≈ **53 L** → bei 4,5 L/min ≈ **12 min**.
 
 ---
 
-## 10. Sicherheit: Was passiert, wenn etwas ausfällt?
+## 10. Überwachung und Alarme
 
-| Ausfall | Ventil mit 🟢 | Ventil mit 🟡 |
+| Situation | wahrscheinliche Ursache | Reaktion |
 |---|---|---|
-| Home Assistant stürzt ab oder startet neu | schließt nach der geplanten Zeit von selbst | kann offen bleiben, bis Home Assistant wieder läuft; beim Start werden alle Ventile geschlossen |
-| Zigbee2MQTT oder Funk fällt aus | schließt von selbst | kann offen bleiben |
-| Schließbefehl geht verloren | nicht nötig, das Gerät schließt selbst; der OFF-Befehl wird trotzdem wiederholt | OFF wird wiederholt, bis das Ventil als geschlossen gemeldet wird |
-| Zu langer Lauf durch Rechenfehler | begrenzt durch die **Höchstdauer je Zone** | ebenso |
+| Durchfluss **viel höher** als gelernt | Schlauch gelöst oder geplatzt | Ventil zu, Alarm, Zone gesperrt |
+| Durchfluss **viel niedriger** als gelernt | Knick, Verstopfung, wenig Druck | Warnung, unter der Grenze Ventil zu |
+| **kein Durchfluss** / Wassermangel | Hahn zu, kein Wasser | Ventil zu, Alarm |
+| Durchfluss bei **geschlossenem** Ventil | Ventil dichtet nicht | OFF wiederholen, Warnung |
+| Gerät meldet **Leck** | Gerätemeldung | Ventil zu, Alarm, Zone gesperrt |
+| zu viele Ventile gleichzeitig offen | von Hand geöffnet oder Fehler | schließen, Warnung |
 
-Zusätzlich gilt:
-- Vor jedem Start wird geprüft, ob die Funkverbindung steht und die Batterie reicht.
-- Die Funktion des Ventils „automatisch schließen bei Wassermangel“ bleibt eingeschaltet.
+Alarme kommen als Benachrichtigung und stehen im Verlauf. Eine gesperrte Zone gibst du nach der Kontrolle mit dem Dienst `release_zone` frei.
+
+> ⚠️ Die Durchflussmesser sitzen in den Ventilen. Ein Leck **vor** den Ventilen, z. B. zwischen Wasserhahn und Verteiler, erkennen sie nicht.
 
 ---
 
-## 11. Häufige Fragen
+## 11. Winterpause
+
+Schalter **Winterpause** (beim Gerät „Bewässerungsplaner“), auch automatisch nach Datum:
+
+1. Alle Ventile werden geschlossen und geprüft.
+2. Programme und Wasserhaushalt ruhen.
+3. Die zugeordneten Geräte werden in Home Assistant deaktiviert (nur, wenn alles zu ist). Beim Ende werden genau diese wieder aktiviert.
+
+Abbauen bzw. Entleeren vor dem Frost musst du weiterhin selbst.
+
+---
+
+## 12. Sicherheit: Was passiert, wenn etwas ausfällt?
+
+| Ausfall | Ventil 🟢 (schließt selbst) | Ventil 🟡 (nur Home Assistant) |
+|---|---|---|
+| Home Assistant stürzt ab oder startet neu | schließt nach der Zeit von selbst | kann offen bleiben; beim Start werden alle Ventile geschlossen |
+| Zigbee2MQTT oder Funk fällt aus | schließt von selbst | kann offen bleiben |
+| Schließbefehl geht verloren | Gerät schließt selbst; OFF wird trotzdem wiederholt | OFF wird jede Minute wiederholt, bis das Ventil zu ist |
+| zu langer Lauf durch Rechenfehler | begrenzt durch die Höchstdauer je Zone | ebenso |
+
+Immer gilt: **Kein Ventil öffnet ohne Dauer**, und je Wasserversorgung ist nur **ein Ventil** gleichzeitig offen. Starts von Hand werden eingereiht, nie parallel.
+
+---
+
+## 13. Automationen
+
+Dienste: `run_zone` (reiht ein), `run_program`, `skip_next`, `stop_all`, `cancel_zone`, `cancel_program`, `release_zone`, `recalculate`, `reset_balance`.
+
+Ereignisse: `irrigation_planner_run_started`, `irrigation_planner_run_finished`, `irrigation_planner_program_started`, `irrigation_planner_program_skipped`, `irrigation_planner_alarm`. Die Seite Zeitplan zeigt sie mit den Entitäten je Programm.
+
+Beispiel: Bei Hitzewarnung 30 % Wasser sparen, indem eine Automation den Regler **Wassersparen** auf 30 setzt.
+
+---
+
+## 14. Häufige Fragen
 
 **Kann ich eine Zone einfach mal so gießen?**
-Ja. Tippe im Dashboard auf die Zone und wähle „Jetzt gießen“ mit einer Dauer. Läuft gerade etwas, wird die Zone hinten angereiht.
+Ja: im Plan, auf der Seite Betrieb oder in der Karte „Jetzt gießen“. Läuft gerade etwas, wird die Zone hinten angereiht.
 
-**Ich habe neue Ventile von einem anderen Hersteller. Geht das?**
-Ja. Füge sie mit dem Assistenten hinzu. Gibt es kein passendes Profil, nimmt der Assistent die allgemeine Steuerung (🟡) oder du legst ein Profil an. Der Testlauf zeigt dir, welche Sicherheitsstufe das Gerät erreicht.
+**Warum zeigt die Wasser-Ansicht nichts?**
+Meist fehlt der Durchfluss des Ventils. Trag ihn bei der Zone unter „Ventil“ ein oder lass das Ventil einmal mindestens 1 Minute mit Durchflusssensor laufen.
 
 **Warum wird eine Zone übersprungen?**
-Im Verlauf steht der Grund: Regen erwartet, Frost, Ventil nicht erreichbar, Zone nach einem Alarm gesperrt oder Zeitfenster zu kurz (im Modus „Nach Bedarf“).
+Der Grund steht im Verlauf: Regen erwartet, Frost, Wind, Zone gesperrt, kein Bedarf oder von Hand übersprungen.
+
+**Ich habe Ventile eines anderen Herstellers. Geht das?**
+Ja, über die allgemeinen Treiber. Ohne passendes Profil bleibt die Sicherheitsstufe 🟡, bis der Testlauf zeigt, dass das Gerät selbst schließt. Neue Profile kommen dazu, wenn jemand sie braucht.
 
 **Brauche ich Smart Irrigation noch?**
-Für den Umstieg kann der Bewässerungsplaner die Werte von Smart Irrigation übernehmen. Später rechnet er selbst, und Smart Irrigation kann deinstalliert werden.
-
-**Was passiert mit meinen alten Bewässerungsskripten?**
-Sichere sie vorher. Nach der Umstellung werden sie deaktiviert und später gelöscht.
+Nein, der Bewässerungsplaner rechnet selbst. Für den Umstieg kann er aber die Dauer aus Smart Irrigation übernehmen (Dauer-Art „aus einer Entität“).

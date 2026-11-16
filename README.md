@@ -4,36 +4,40 @@
 
 Eine Erweiterung (Integration) für Home Assistant, die den Garten automatisch und sicher bewässern soll: mit Gartenplan, berechneter Gießdauer pro Zone, Überwachung des Durchflusses und Winterpause. Sie soll mit beliebiger Bewässerungs-Hardware funktionieren.
 
-Domain: `irrigation_planner` · Version: 0.3.0
+Domain: `irrigation_planner` · Version: 0.4.0
 
-## Stand
+> ⚠️ **Noch nicht mit echter Hardware getestet.** Alles ist mit simulierten Ventilen und Sensoren erprobt (automatische Tests und eine simulierte Test-Instanz), aber noch nicht mit echten Ventilen. Wer es ausprobiert: zuerst **ein** Ventil einrichten, einen kurzen Testlauf machen und dabei bleiben, bis klar ist, dass das Ventil selbst schließt.
 
-> **Phase 1 und 2 fertig: Die Erweiterung steuert Ventile und berechnet die Gießdauer.** Sie ist noch nicht an echter Hardware erprobt. Vor dem ersten echten Einsatz: Testlauf je Ventil (10 s) im Assistenten.
+## Was es gibt
 
-Was es gibt:
-- **Einrichtung über die Oberfläche:** Ventile (Assistent mit Geräteerkennung und Testlauf), Zonen, Programme, Wasserversorgungen
-- **Treiber** für Schalter, Ventil-Entitäten, Zigbee2MQTT (Dauer geht immer mit ans Gerät) und Dienstaufrufe; Profil für SONOFF SWV
-- **Warteschlange:** je Wasserversorgung immer nur ein Ventil offen (einstellbar), das nächste erst, wenn das vorige nachweislich zu ist
-- **Programme** (nacheinander, abwechselnd, nach Priorität) mit Zeitplan und Überspringen bei Regen, Frost oder Wind
+- **Einrichtung über die Oberfläche:** Ventile (Assistent mit Geräteerkennung und Testlauf), Zonen, Programme, Wasserversorgungen, Sensoren
+- **Treiber** für Schalter, Ventil-Entitäten, Zigbee2MQTT (die Dauer geht immer mit ans Gerät) und Dienstaufrufe; Geräteprofil für SONOFF SWV
+- **Sicherheit:** kein Ventil ohne Dauer; je Wasserversorgung nur ein Ventil gleichzeitig offen; das nächste erst, wenn das vorige nachweislich zu ist
+- **Programme** (nacheinander, abwechselnd mit Einziehzeit, nach Bedarf) mit Zeitplan, auch relativ zu Sonnenaufgang/-untergang, und Überspringen bei Regen, Frost oder Wind
+- **Berechnete Gießdauer** je Zone: Wasserhaushalt nach FAO-56 aus dem Wetter, mit Regen und Bodenfeuchte; alternativ von Hand oder aus Smart Irrigation; **Wassersparen** um 0–50 %
 - **Überwachung des Durchflusses:** Leck, Schlauch gelöst, kein Wasser, Ventil dichtet nicht, mit Alarm und Sperre der Zone
 - **Winterpause**, von Hand oder nach Datum
-- **Berechnete Gießdauer** je Zone: Verdunstung (FAO-56) aus dem Wetter, Wasserhaushalt mit Regen und Bodenfeuchte, Bedarf → Liter → Dauer; Regenvorhersage verschiebt Läufe; alternativ die Dauer aus Smart Irrigation
-- Anzeigen, Schalter und Knöpfe in Home Assistant; Dienste `run_zone`, `run_program`, `skip_next`, `stop_all`, `release_zone`, `recalculate`, `reset_balance`
+- **Panel „Bewässerung“** in der Seitenleiste:
+  - **Plan:** Luftbild mit Adresssuche, Grundriss (sperrbar), Zonen (Sprinkler, Beet, Gießschlauch), Ventile, Zuleitungen mit Abzweigen, Wasser-Ansichten als Raster, Animation beim Gießen
+  - **Betrieb:** was läuft, abbrechen, Verlauf mit Litern, Wetter der letzten 14 Tage
+  - **Flächen**
+  - **Zeitplan**
+- **Dashboard-Karte „Bewässerung“** (wird automatisch geladen)
+- Dienste und Ereignisse für eigene Automationen
 
-Noch nicht: Gartenplan-Editor (Phase 3; bis dahin trägst du die Fläche je Zone von Hand ein), Dashboard-Karte (Phase 4). Details im [Konzept](docs/KONZEPT.md) und im [Handbuch (Entwurf)](docs/HANDBUCH.md).
+Wie man es bedient, steht im [Handbuch](docs/HANDBUCH.md), die Hintergründe im [Konzept](docs/KONZEPT.md), alle Änderungen im [CHANGELOG](CHANGELOG.md).
 
-## Installation (später, über HACS)
+<p align="center"><img src="docs/bilder/10-plan.png" alt="Plan-Editor" width="720"></p>
 
-Sobald es eine erste nutzbare Version gibt:
-
-1. In HACS oben rechts auf die drei Punkte, dann **Benutzerdefinierte Repositories**.
-2. Die Adresse `https://github.com/Kingsteam/FlowerPower` eintragen, Typ **Integration**.
-3. „Bewässerungsplaner“ herunterladen und Home Assistant neu starten.
-4. **Einstellungen → Geräte & Dienste → Integration hinzufügen → Bewässerungsplaner.**
-
-Weil das Repo privat ist, braucht HACS dafür Zugriff auf das Repo.
+## Installation
 
 Voraussetzung: Home Assistant 2026.11 oder neuer.
+
+1. **Einstellungen → Marketplace**, ein eigenes Repository hinzufügen, GitHub-Link `Kingsteam/FlowerPower`. (Home Assistant fragt dabei nach der Verbindung zu GitHub.)
+2. **Bewässerungsplaner** herunterladen und Home Assistant neu starten.
+3. **Einstellungen → Geräte & Dienste → Integration hinzufügen → Bewässerungsplaner.**
+
+Zum Ausprobieren ohne echte Anlage gibt es eine komplett simulierte Test-Instanz, auf dem Mac mit einer Zeile im Terminal: siehe [devtools/testinstanz](devtools/testinstanz/README.md).
 
 ## Für die Entwicklung
 
@@ -58,19 +62,22 @@ Auf GitHub laufen bei jedem Push die gleichen Prüfungen, dazu `hassfest` (prüf
 ## Aufbau
 
 ```
-custom_components/irrigation_planner/   die Integration
-  __init__.py       Einrichten und Entladen
-  config_flow.py    Einrichtungsdialog
-  const.py          Konstanten und Sicherheitsgrenzen
-  model.py          Datenmodell
-  store.py          Speicherung (.storage/irrigation_planner)
-  drivers/base.py   Basis für Ventiltreiber (nie öffnen ohne Dauer)
-  diagnostics.py    Diagnosedaten
-  geometry.py, water_balance.py, scheduler.py,
-  watchdog.py, season.py, websocket_api.py   Platzhalter für später
-tests/              automatische Tests
-docs/               Konzept und Handbuch
+custom_components/irrigation_planner/   die Integration (Python)
+  drivers/, profiles/    Ventiltreiber und Geräteprofile
+  scheduler.py           Warteschlange (Sicherheitsregeln)
+  programs.py            Programme und Zeitplan
+  balance.py, water_balance.py   Wasserhaushalt
+  watchdog.py            Durchflussüberwachung
+  *_api.py               Schnittstelle für Panel und Karte
+  frontend/              gebautes Panel und Dashboard-Karte
+  brand/                 Logo
+frontend-src/            Quelltext von Panel und Karte (TypeScript, Lit)
+tests/                   automatische Tests
+devtools/testinstanz/    simulierte Test-Instanz
+docs/                    Handbuch und Konzept
 ```
+
+Eine ausführliche Übersicht aller Dateien steht in [CLAUDE.md](CLAUDE.md).
 
 ## Lizenz
 

@@ -367,6 +367,11 @@ async def test_panel_registered(
 ) -> None:
     await setup(make_model(1))
     assert PANEL_URL in hass.data["frontend_panels"]
+    # Die Dashboard-Karte wird auf allen Seiten geladen.
+    urls = hass.data["frontend_extra_module_url"].urls
+    assert any(
+        u.startswith(f"/{DOMAIN}_static/irrigation-planner-card.js?v=") for u in urls
+    )
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert PANEL_URL not in hass.data["frontend_panels"]
 

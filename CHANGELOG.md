@@ -5,7 +5,15 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 
 ## [Unveröffentlicht]
 
+## [0.4.0] – 2026-11-16
+
+> **Noch nicht mit echter Hardware getestet.** Alles ist mit simulierten Ventilen und Sensoren erprobt. Vor dem ersten echten Einsatz ein Ventil einrichten und einen kurzen Testlauf machen.
+
+Phase 3 (Plan-Editor) und Phase 4 (Dashboard-Karte).
+
 ### Neu
+- Dashboard-Karte „Bewässerung“ (`custom:irrigation-planner-card`), angelehnt an die Seite „Betrieb“: Automatik, Wassersparen, was gerade gießt (Überspringen, Alles stoppen), je Zone nächster Start, Füllstand des Wasserkontos und Gießen/Abbrechen. Wird automatisch geladen (keine Ressource nötig); Einstellungen `title`, `zones`, `show_zones`.
+- Installation über den Marketplace von Home Assistant (Einstellungen → Marketplace) beschrieben; Handbuch mit echten Bildern aus der Test-Instanz.
 - Geometrie des Gartenplans (`geometry.py`): Flächen von Sprinklern und Beeten, Überlappungen, Maßstab von Kartenkacheln.
 - Modell: Hintergrund des Plans (leer, Bild mit Maßstab oder Luftbild eines Kartendienstes), Position von Ventilen; Prüfung von Radius, Öffnungswinkel und Beet-Punkten.
 - Die Berechnung nimmt die Fläche aus der Zeichnung, sonst die Fläche von Hand.
@@ -31,6 +39,7 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 - Seite „Zeitplan“ im Panel: Wochenansicht aller Programme (nächste 7 Tage, in der Zeitzone von Home Assistant), Programm-Karten mit Ablauf, nächstem Start und letztem Ergebnis; Programme bearbeiten (Zonen, Reihenfolge, Startzeit oder „fertig bis“ mit Sonnenzeit, Wochentage, Wetter-Überspringen), neu anlegen und löschen (nicht während gegossen wird); „Jetzt starten“ reiht nur ein.
 - Ereignisse für eigene Automationen: `irrigation_planner_run_started`, `irrigation_planner_run_finished` (mit Ergebnis und Sekunden), `irrigation_planner_program_started`, `irrigation_planner_program_skipped` (mit Grund). Die Zeitplan-Seite zeigt sie zusammen mit den Entitäten je Programm.
 - WebSocket-Befehle `irrigation_planner/programs/get`, `programs/save`, `programs/create`, `programs/delete` (Ändern nur für Admins).
+- Behoben: Auf der Seite „Zeitplan“ ragte die Beschriftung später Starts über den Rand.
 - Logo „FlowerPower“: klein in der Kopfzeile des Panels, oben in der README und als Symbol der Integration in Home Assistant (`brand/icon.png`, wird von Home Assistant für eigene Integrationen angezeigt).
 - Wassersparen: geplante Gießdauer aller Zonen um 0–50 % kürzen (Regler auf der Seite „Betrieb“ und Entität `number.…_wassersparen`, z. B. für eine Hitze-Automation). Gespeichert in `Settings.water_saving_pct`; WebSocket `settings/water_saving`.
 - Wasserkonto zurücksetzen („Konto voll“ je Zone oder „Alle Konten voll“ auf der Seite „Betrieb“); WebSocket `balance/reset`.

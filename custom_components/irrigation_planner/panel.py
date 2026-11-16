@@ -9,6 +9,7 @@ enthalten).
 
 from __future__ import annotations
 
+import hashlib
 from http import HTTPStatus
 from pathlib import Path
 import re
@@ -25,6 +26,9 @@ PANEL_URL = "bewaesserung"
 STATIC_URL = f"/{DOMAIN}_static"
 FRONTEND_DIR = Path(__file__).parent / "frontend"
 PANEL_FILE = "irrigation-planner-panel.js"
+# Dashboard-Karte: wird auf allen Seiten geladen, damit sie ohne
+# „Ressource hinzufügen“ in jedem Dashboard verfügbar ist.
+CARD_FILE = "irrigation-planner-card.js"
 IMAGE_DIR = DOMAIN
 MAX_IMAGE_BYTES = 15 * 1024 * 1024
 IMAGE_TYPES = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp"}
@@ -46,9 +50,11 @@ async def async_register_panel(hass: HomeAssistant) -> None:
         )
         hass.http.register_view(ImageUploadView())
         hass.http.register_view(ImageView())
+        card_version = await hass.async_add_executor_job(_file_version, CARD_FILE)
+        frontend.add_extra_js_url(hass, f"{STATIC_URL}/{CARD_FILE}?v={card_version}")
     if PANEL_URL in hass.data.get(frontend.DATA_PANELS, {}):
         return
-    version = await hass.async_add_executor_job(_file_version)
+    version = await hass.async_add_executor_job(_file_version, PANEL_FILE)
     await panel_custom.async_register_panel(
         hass,
         frontend_url_path=PANEL_URL,
@@ -61,11 +67,12 @@ async def async_register_panel(hass: HomeAssistant) -> None:
     )
 
 
-def _file_version() -> str:
+def _file_version(name: str) -> str:
+    """Kurzer Prüfwert des Inhalts: neue Version = neue Adresse, kein alter Cache."""
     try:
-        return str(int((FRONTEND_DIR / PANEL_FILE).stat().st_mtime))
+        return hashlib.sha256((FRONTEND_DIR / name).read_bytes()).hexdigest()[:12]
     except OSError:
-        LOGGER.warning("Panel-Datei fehlt: %s", FRONTEND_DIR / PANEL_FILE)
+        LOGGER.warning("Datei des Panels fehlt: %s", FRONTEND_DIR / name)
         return "0"
 
 

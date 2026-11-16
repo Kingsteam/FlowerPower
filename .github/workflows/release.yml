@@ -1,0 +1,42 @@
+name: Release
+
+# Ein Tag wie v0.4.0 legt ein GitHub-Release an. Der Text kommt aus dem
+# passenden Abschnitt im CHANGELOG. Der Marketplace von Home Assistant
+# (früher HACS) bietet dann diese Version zum Herunterladen an.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version prüfen
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          manifest=$(python3 -c "import json;print(json.load(open('custom_components/irrigation_planner/manifest.json'))['version'])")
+          if [ "$tag" != "$manifest" ]; then
+            echo "Tag $GITHUB_REF_NAME passt nicht zur Version $manifest in manifest.json" >&2
+            exit 1
+          fi
+
+      - name: Text aus dem CHANGELOG
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          awk -v v="$tag" '
+            $0 ~ "^## \\[" v "\\]" { on = 1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md > notes.md
+          test -s notes.md
+
+      - name: Release anlegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md

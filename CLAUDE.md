@@ -10,7 +10,7 @@ Eigene Home-Assistant-Integration (HACS) für die Gartenbewässerung. Der Besitz
 
 Gartenplan, berechnete Gießdauer je Zone, ausfallsichere Ventilsteuerung, Überwachung des Durchflusses und Winterpause, unabhängig von der Hardware. Ziel und Architektur: `docs/KONZEPT.md`. Geplante Bedienung: `docs/HANDBUCH.md`.
 
-Stand 0.3.0: **Phase 1 (MVP Backend) und Phase 2 (Berechnung) fertig.** Die Integration steuert Ventile über Dienste, Knöpfe und den Zeitplan; alles wird in der Oberfläche eingerichtet (Options-Flow mit Ventil-Assistent und Testlauf); Winterpause und Durchflussüberwachung sind eingebaut; die Gießdauer kann je Zone von Hand, berechnet (Wasserhaushalt nach FAO-56) oder aus einer Entität (z. B. Smart Irrigation) kommen. Phase 3 (Plan-Editor) läuft: Panel „Bewässerung“ in der Seitenleiste mit Luftbild (basemap.at in mehreren Ansichten, OpenStreetMap, Esri, eigene Adresse; Adresssuche; Deckkraft), eigenem Bild mit Maßstab oder Raster; Grundriss zum Abpausen (`Garden.features`, nur Orientierung, einzeln sperrbar über `Feature.locked`); Sprinkler und Beete zeichnen, Ventile und Sensoren platzieren; die gezeichnete Fläche ersetzt die Fläche von Hand. Noch nicht: Dashboard-Karte (Phase 4).
+Stand 0.4.0: **Phasen 1 bis 4 fertig, aber noch nicht mit echter Hardware getestet** (nur Simulation und Tests). Steuerung über Dienste, Knöpfe, Zeitplan, Panel und Dashboard-Karte; Einrichtung über die Oberfläche (Options-Flow mit Ventil-Assistent und Testlauf); Winterpause, Durchflussüberwachung, Verlauf; Gießdauer von Hand, berechnet (FAO-56) oder aus einer Entität, mit Wassersparen. Panel „Bewässerung“: Plan (Luftbild, Adresssuche, Orten, Grundriss sperrbar über `Feature.locked`, Zonen als Sprinkler/Beet/Gießschlauch, Ventile mit Leitung, Zuleitungen mit Abzweigen, Wasser-Ansichten als Raster, Animation), Betrieb, Flächen, Zeitplan. Dashboard-Karte `custom:irrigation-planner-card` (`frontend-src/src/card.ts`, per `frontend.add_extra_js_url` geladen). Installation über den Marketplace von Home Assistant (früher HACS; `hacs.json` bleibt nötig). Nächster Schritt: Test mit echter Hardware beim Besitzer.
 
 ## Sicherheitsregeln (nicht verhandelbar)
 
@@ -60,11 +60,11 @@ Das Wissen über die konkrete Anlage des Besitzers liegt im separaten privaten R
 | `backup.py` | Sichern/Wiederherstellen: WebSocket `export` und `import` (nur Admin; Art `drawing` = nur Zeichnung über IDs, `all` = alles ersetzen und Eintrag neu laden); Datei-Format `irrigation_planner`, `format_version` 1 |
 | `panel.py` | Panel anmelden (`/bewaesserung`, statische Dateien unter `/irrigation_planner_static`), Bilder hochladen/ausliefern (`/api/irrigation_planner/image`, nur PNG/JPEG/WebP, Ordner `<config>/irrigation_planner/`) |
 | `brand/` | Logo der Integration (`icon.png` 256 px, `icon@2x.png` 512 px); Home Assistant zeigt es für eigene Integrationen an. Quelle des Logos ist der Besitzer |
-| `frontend/` | **gebautes** Panel (`irrigation-planner-panel.js`), nie von Hand ändern; CI prüft, dass es zum Quelltext passt |
-| `frontend-src/` | Quelltext des Panels: TypeScript + Lit, Build mit Vite (`public/logo.png` wird mitkopiert); `geometry.ts` (wie `geometry.py`, dazu Fangen, Messen, Kantenlängen; Tests mit vitest), `features.ts` (Grundriss-Arten wie `model.FEATURE_*`), `wetmap.ts` (Wasser-Ansichten als Kachelraster: geplante Gießmenge, Bodenfeuchte jetzt/nach dem Gießen; Stamm-Schatten), `operation.ts` (Seite „Betrieb“), `schedule.ts` (Seite „Zeitplan“, Zeiten in der Zeitzone von Home Assistant), `locate.ts` (Orten: einmalige Abfrage im Browser, nur https, nichts gespeichert), `geocode.ts`, `panel.ts`, `styles.ts`, `types.ts` |
+| `frontend/` | **gebautes** Panel (`irrigation-planner-panel.js`), Karte (`irrigation-planner-card.js`) und gemeinsamer Teil, nie von Hand ändern; CI prüft, dass es zum Quelltext passt |
+| `frontend-src/` | Quelltext des Panels: TypeScript + Lit, Build mit Vite (`public/logo.png` wird mitkopiert); `geometry.ts` (wie `geometry.py`, dazu Fangen, Messen, Kantenlängen; Tests mit vitest), `features.ts` (Grundriss-Arten wie `model.FEATURE_*`), `wetmap.ts` (Wasser-Ansichten als Kachelraster: geplante Gießmenge, Bodenfeuchte jetzt/nach dem Gießen; Stamm-Schatten), `operation.ts` (Seite „Betrieb“), `operation-data.ts` (Daten und Helfer, auch für die Karte), `card.ts` (Dashboard-Karte), `schedule.ts` (Seite „Zeitplan“, Zeiten in der Zeitzone von Home Assistant), `locate.ts` (Orten: einmalige Abfrage im Browser, nur https, nichts gespeichert), `geocode.ts`, `panel.ts`, `styles.ts`, `types.ts` |
 | `strings.json`, `translations/` | Texte (en = `strings.json`, de) |
 | `tests/` | pytest mit `pytest-homeassistant-custom-component`; `helpers.py` (simulierte Ventile `SimValves`, `make_model`), Fixtures `sim`, `setup`, `advance` in `conftest.py`; simulierte Ventile sind echte `switch`-Entitäten der Plattform `test`, mit Durchfluss- und Statussensor (`make_model(sensors=True)`) |
-| `docs/` | `KONZEPT.md`, `HANDBUCH.md`, `bilder/`, `entwuerfe.html` |
+| `docs/` | `KONZEPT.md`, `HANDBUCH.md` (Stand 0.4.0, Bilder aus der Test-Instanz `bilder/10-…20-`), `entwuerfe.html` und `bilder/01-…08-` (alte Entwürfe) |
 | `devtools/testinstanz/` | simulierte Test-Home-Assistant-Instanz: `start.py`, Simulator `irrigation_sim` (10 Ventile, Bodenfeuchte, Wasserzähler, Störungen); nicht Teil der Auslieferung |
 
 Neue Zonen/Programme brauchen ein Neuladen des Eintrags, damit ihre Entitäten entstehen.
@@ -96,7 +96,7 @@ Nach jeder Änderung in `frontend-src/` neu bauen und das Ergebnis mit committen
 
 - Neue Funktionen immer mit Tests; jeder Treiber und jedes Profil bekommt Tests mit simulierten Entitäten.
 - Moderne HA-Muster verwenden (`ConfigEntry.runtime_data`, Selektoren, keine YAML-Konfiguration).
-- Version in `manifest.json` und `pyproject.toml` gemeinsam anheben und `CHANGELOG.md` pflegen.
+- Version in `manifest.json` und `pyproject.toml` gemeinsam anheben und `CHANGELOG.md` pflegen. Veröffentlichen: Tag `vX.Y.Z` pushen, `.github/workflows/release.yml` legt das Release mit dem Abschnitt aus dem CHANGELOG an.
 - In `manifest.json` stehen `domain` und `name` zuerst, danach alle Schlüssel alphabetisch.
 
 ## Stolperfallen (aus der Entwicklung)
