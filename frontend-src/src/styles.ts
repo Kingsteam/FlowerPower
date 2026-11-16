@@ -928,6 +928,11 @@ export const styles = css`
     border: 1px solid var(--line);
     color: var(--primary-text-color);
   }
+  .levels button ha-icon {
+    --mdc-icon-size: 16px;
+    margin-right: 4px;
+    vertical-align: -3px;
+  }
   .levels button.active {
     background: var(--accent);
     border-color: var(--accent);

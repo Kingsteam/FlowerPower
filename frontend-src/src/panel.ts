@@ -282,6 +282,7 @@ export class IrrigationPlannerPanel extends LitElement {
         garden,
         zones: plan.zones.map((z) => ({
           id: z.id,
+          type: z.type,
           center: z.center,
           radius_m: z.radius_m,
           start_angle_deg: z.start_angle_deg,
@@ -624,6 +625,36 @@ export class IrrigationPlannerPanel extends LitElement {
     this.selected = { kind: "zone", id: zone.id };
     this.changed();
     this.cancelTool();
+  }
+
+  /**
+   * Art der Zone ändern. Die Zeichnung passt meist nicht mehr: Beet und
+   * Schlauch behalten ihre Punkte (wenn es genug sind), sonst wird neu gezeichnet.
+   */
+  private setZoneType(zone: PlanZone, type: PlanZone["type"]): void {
+    if (zone.type === type) return;
+    this.remember();
+    const points = zone.polygon;
+    zone.type = type;
+    if (type === "sprinkler") {
+      zone.polygon = [];
+      zone.radius_m = null;
+    } else {
+      zone.center = null;
+      if (type === "hose") {
+        zone.radius_m = 0.5;
+      } else {
+        zone.radius_m = null;
+        if (points.length < 3) zone.polygon = [];
+      }
+    }
+    this.changed();
+    if (liveArea(zone) === null) {
+      this.startTool(type === "sprinkler" ? "sprinkler" : type === "hose" ? "hose" : "bed", zone.id);
+      this.showToast(`${zone.name}: jetzt im Plan zeichnen, dann „Speichern“`);
+    } else {
+      this.showToast(`${zone.name}: Art geändert. „Speichern“ nicht vergessen.`);
+    }
   }
 
   private clearGeometry(id: string): void {
@@ -2490,8 +2521,28 @@ export class IrrigationPlannerPanel extends LitElement {
           }} />
         <span class="unit">${unit}</span>
       </label>`;
+    const TYPES: [PlanZone["type"], string, string][] = [
+      ["sprinkler", "Sprinkler", "mdi:sprinkler-variant"],
+      ["drip", "Beet / Tropfschlauch", "mdi:water-outline"],
+      ["hose", "Gießschlauch", "mdi:pipe"],
+    ];
     return html`
       <div class="inspector">
+        <div class="field wide">
+          <span>Art</span>
+          <div class="levels" role="radiogroup">
+            ${TYPES.map(
+              ([type, label, icon]) => html`<button role="radio" aria-checked=${zone.type === type ? "true" : "false"}
+                class=${zone.type === type ? "active" : ""} @click=${() => this.setZoneType(zone, type)}>
+                <ha-icon icon=${icon}></ha-icon>${label}</button>`,
+            )}
+          </div>
+          <small class="hint">${zone.type === "hose"
+            ? "Eine Linie, darum die Reichweite (Radius)."
+            : zone.type === "sprinkler"
+              ? "Kreis oder Kreisausschnitt um den Sprinkler."
+              : "Eine Fläche aus Ecken."}</small>
+        </div>
         <label class="field wide">
           <span>Ventil</span>
           <select

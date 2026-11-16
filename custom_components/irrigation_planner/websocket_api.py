@@ -34,7 +34,7 @@ from .const import DOMAIN, MAP_PROVIDER_CUSTOM, MAP_PROVIDERS
 from .drivers.ha import resolve_entity_id
 from .geocode import GeocodeError, async_search
 from .geometry import geometry_area, overlaps, zone_area
-from .model import GardenModel, Point
+from .model import GardenModel, Point, ZoneType
 from .operation_api import ALL_COMMANDS as OPERATION_COMMANDS
 from .schedule_api import ALL_COMMANDS as SCHEDULE_COMMANDS
 from .scheduler import RunState
@@ -57,6 +57,8 @@ OPT_POINT = vol.Any(None, POINT)
 ZONE_GEOMETRY = vol.Schema(
     {
         vol.Required("id"): str,
+        # Art der Zone (Sprinkler, Tropf/Beet, Gießschlauch)
+        vol.Optional("type"): vol.In([t.value for t in ZoneType]),
         vol.Optional("center"): OPT_POINT,
         vol.Optional("radius_m"): vol.Any(None, _number),
         vol.Optional("start_angle_deg"): _number,
@@ -292,6 +294,8 @@ async def ws_plan_save(
             zone = zones.get(raw["id"])
             if zone is None:
                 raise ValueError(f"Zone {raw['id']} gibt es nicht")
+            if "type" in raw:
+                zone.type = ZoneType(raw["type"])
             for key in ("center", "radius_m", "start_angle_deg", "arc_deg"):
                 if key in raw:
                     setattr(zone, key, raw[key])
@@ -319,6 +323,7 @@ async def ws_plan_save(
     data.store.model.garden = model.garden
     for zone in data.store.model.zones:
         new = zones[zone.id]
+        zone.type = new.type
         zone.center, zone.radius_m = new.center, new.radius_m
         zone.start_angle_deg, zone.arc_deg = new.start_angle_deg, new.arc_deg
         zone.polygon = new.polygon

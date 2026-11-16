@@ -78,6 +78,49 @@ async def test_save_geometry(
     assert msg["result"]["zones"][0]["effective_area_m2"] == pytest.approx(6)
 
 
+async def test_change_zone_type_to_hose(
+    hass: HomeAssistant,
+    setup: Any,
+    sim: SimValves,
+    hass_ws_client: Any,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Im Plan-Editor wird aus einem Beet ein Gießschlauch (Linie + Radius)."""
+    await setup(make_model(2))
+    client = await _ws(hass_ws_client, hass)
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/plan/save",
+            "zones": [
+                {
+                    "id": "z1",
+                    "type": "hose",
+                    "polygon": [[0, 0], [10, 0]],
+                    "radius_m": 0.5,
+                }
+            ],
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"], msg
+    zone = mock_config_entry.runtime_data.store.model.zones[0]
+    assert zone.type.value == "hose"
+    assert msg["result"]["zones"][0]["type"] == "hose"
+    # Linie 10 m, 0,5 m je Seite: 10 + runde Enden
+    assert msg["result"]["zones"][0]["drawn_area_m2"] == pytest.approx(10.785, abs=0.01)
+
+    # Schlauch ohne Radius wird abgelehnt, nichts ändert sich
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/plan/save",
+            "zones": [{"id": "z2", "type": "hose", "polygon": [[0, 0], [1, 0]]}],
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert mock_config_entry.runtime_data.store.model.zones[1].type.value == "drip"
+
+
 async def test_assign_valve(
     hass: HomeAssistant,
     setup: Any,
