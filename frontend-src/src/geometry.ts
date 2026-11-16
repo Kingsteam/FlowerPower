@@ -308,3 +308,70 @@ export function junctions(lines: Point[][], tolerance = 0.05): Point[] {
   });
   return found;
 }
+
+/**
+ * Weg durch das Leitungsnetz von einer Quelle (Wasserhahn) zu `target`
+ * (Ventil): Liste der Teilstücke. Abzweige mitten auf einer Leitung werden
+ * dabei als Knoten eingefügt. Leer, wenn es keine Verbindung gibt.
+ */
+export function pipeRoute(lines: Point[][], sources: Point[], target: Point, tolerance = 0.3): [Point, Point][] {
+  const key = (p: Point) => `${p[0].toFixed(2)},${p[1].toFixed(2)}`;
+  // Abzweige: Endpunkte, die mitten auf einer anderen Leitung liegen, dort einfügen.
+  const ends = lines.flatMap((l) => [l[0], l[l.length - 1]]);
+  const split = lines.map((line) => {
+    const out: Point[] = [line[0]];
+    for (let i = 1; i < line.length; i++) {
+      const [a, b] = [line[i - 1], line[i]];
+      const inner = ends
+        .filter((e) => distance(projectOnSegment(e, a, b), e) < 0.05 && distance(e, a) > 0.05 && distance(e, b) > 0.05)
+        .sort((p, q) => distance(a, p) - distance(a, q));
+      out.push(...inner, b);
+    }
+    return out;
+  });
+  const nodes = new Map<string, Point>();
+  const edges = new Map<string, Set<string>>();
+  const add = (a: Point, b: Point) => {
+    const [ka, kb] = [key(a), key(b)];
+    nodes.set(ka, a);
+    nodes.set(kb, b);
+    if (!edges.has(ka)) edges.set(ka, new Set());
+    if (!edges.has(kb)) edges.set(kb, new Set());
+    edges.get(ka)!.add(kb);
+    edges.get(kb)!.add(ka);
+  };
+  for (const line of split) for (let i = 1; i < line.length; i++) add(line[i - 1], line[i]);
+  const near = (p: Point) => [...nodes.entries()].filter(([, n]) => distance(n, p) <= tolerance).map(([k]) => k);
+  const goal = new Set(near(target));
+  if (!goal.size) return [];
+  const start = sources.flatMap(near);
+  // Breitensuche vom Hahn zum Ventil
+  const prev = new Map<string, string | null>();
+  const queue: string[] = [];
+  for (const s of start) {
+    if (!prev.has(s)) {
+      prev.set(s, null);
+      queue.push(s);
+    }
+  }
+  while (queue.length) {
+    const k = queue.shift()!;
+    if (goal.has(k)) {
+      const route: [Point, Point][] = [];
+      let cur: string | null = k;
+      while (cur && prev.get(cur)) {
+        const before: string = prev.get(cur)!;
+        route.unshift([nodes.get(before)!, nodes.get(cur)!]);
+        cur = before;
+      }
+      return route;
+    }
+    for (const n of edges.get(k) ?? []) {
+      if (!prev.has(n)) {
+        prev.set(n, k);
+        queue.push(n);
+      }
+    }
+  }
+  return [];
+}

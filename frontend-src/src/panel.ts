@@ -10,6 +10,7 @@
 import { LitElement, html, nothing, svg, type PropertyValues, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import {
+  pipeRoute,
   junctions,
   snapToLines,
   roundedPath,
@@ -2058,7 +2059,7 @@ export class IrrigationPlannerPanel extends LitElement {
           ${this.plan!.zones.map((z, i) => this.renderZone(z, i, px))}
           ${this.renderSelectedHandles(px)} ${this.renderFeatureHandles(px)}
           ${this.renderDraft(px)} ${this.renderScaleDraft(px)} ${this.renderMeasure(px)}
-          ${this.renderValveLinks(px)}
+          ${this.renderValveLinks(px)} ${this.renderFlow(px)}
           ${this.plan!.valves.map((v) => this.renderMarker("valve", v, px))}
           ${this.plan!.sensors.map((s) => this.renderMarker("sensor", s, px))}
           ${this.wetOn ? this.renderSensorValues(px) : nothing}
@@ -2415,6 +2416,36 @@ export class IrrigationPlannerPanel extends LitElement {
 
   /** Gestrichelte Linie von jeder Zone zu ihrem Ventil (wenn beide im Plan sind). */
   /**
+   * Animation beim Gießen: Wasser fließt vom Hahn durch die Zuleitungen zum
+   * offenen Ventil; Sprinkler zeigen Wellen. Nur Anzeige, aus dem Zustand.
+   */
+  private renderFlow(px: number) {
+    const running = this.plan!.zones.filter((z) => this.status?.zones[z.id]?.state === "running");
+    if (!running.length) return nothing;
+    const taps = this.features.filter((f) => f.kind === "tap").map((f) => f.points[0]);
+    const lines = this.pipeLines();
+    return svg`<g class="flow">
+      ${running.map((zone) => {
+        const valve = this.plan!.valves.find((v) => v.id === zone.valve_id);
+        const route = valve?.position && taps.length ? pipeRoute(lines, taps, valve.position) : [];
+        const spray =
+          zone.type === "sprinkler" && zone.center && zone.radius_m
+            ? [0, 1].map(
+                (i) => svg`<path class="spray" style=${`transform-origin:${zone.center![0]}px ${zone.center![1]}px;animation-delay:${i * 0.8}s`}
+                  d=${sectorPath(zone.center!, zone.radius_m!, zone.start_angle_deg, zone.arc_deg)}></path>`,
+              )
+            : nothing;
+        return svg`
+          ${route.map(([a, b]) => svg`<line class="pipe-active" x1=${a[0]} y1=${a[1]} x2=${b[0]} y2=${b[1]}></line>`)}
+          ${route.map(([a, b]) => svg`<line class="water" x1=${a[0]} y1=${a[1]} x2=${b[0]} y2=${b[1]}
+            stroke-dasharray=${`${3 * px} ${7 * px}`} style=${`--period:${10 * px}px`}></line>`)}
+          ${valve?.position ? svg`<circle class="valve-open" cx=${valve.position[0]} cy=${valve.position[1]} r=${11 * px}></circle>` : nothing}
+          ${spray}`;
+      })}
+    </g>`;
+  }
+
+  /**
    * Leitung vom Ventil zur Zone: durch die Zwischenpunkte, Ecken abgerundet.
    * Ist die Zone ausgewählt, lassen sich Punkte einfügen (Ziehen an der
    * Mitte eines Stücks), verschieben und löschen (Doppelklick).
@@ -2429,7 +2460,8 @@ export class IrrigationPlannerPanel extends LitElement {
       const editable = selected && this.tool === "select";
       const route = zone.valve_route ?? [];
       const pts: Point[] = [valve.position, ...route, to];
-      const path = svg`<path class="valve-link ${selected ? "selected" : ""}" style="--zone:${this.zoneColor(index)}"
+      const flowing = this.status?.zones[zone.id]?.state === "running";
+      const path = svg`<path class="valve-link ${selected ? "selected" : ""} ${flowing ? "flowing" : ""}" style="--zone:${this.zoneColor(index)};--period:${10 * px}px"
         d=${roundedPath(pts, Math.max(0.4, 16 * px))} stroke-dasharray=${`${6 * px} ${4 * px}`}></path>`;
       if (!editable) return path;
       const r = 7 * px;

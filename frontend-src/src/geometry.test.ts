@@ -146,3 +146,19 @@ describe("Leitungsnetz", () => {
     expect(junctions([main, [[20, 0], [20, 5]]])).toEqual([]);
   });
 });
+
+describe("Weg durchs Leitungsnetz", () => {
+  it("findet den Weg vom Hahn über den Abzweig zum Ventil", async () => {
+    const { pipeRoute } = await import("./geometry");
+    const main: [number, number][] = [[0, 0], [10, 0]];
+    const branch: [number, number][] = [[4, 0], [4, 6]];
+    const route = pipeRoute([main, branch], [[0, 0]], [4, 6]);
+    expect(route).toEqual([
+      [[0, 0], [4, 0]],
+      [[4, 0], [4, 6]],
+    ]);
+    // zum Ende der Hauptleitung, am Abzweig vorbei
+    expect(pipeRoute([main, branch], [[0, 0]], [10, 0]).length).toBe(2);
+    expect(pipeRoute([main], [[0, 0]], [50, 50])).toEqual([]);
+  });
+});

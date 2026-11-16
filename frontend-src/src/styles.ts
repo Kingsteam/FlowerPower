@@ -1410,6 +1410,79 @@ export const styles = css`
     stroke: var(--bad);
     stroke-width: 3;
   }
+  /* Gießen: Wasser fließt (Zuleitung, Leitung zur Zone), Ventil pulsiert, Sprinkler sprüht */
+  .flow {
+    pointer-events: none;
+  }
+  .flow .pipe-active {
+    stroke: #0288d1;
+    stroke-width: 6;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .flow .water {
+    stroke: #fff;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+    animation: water 0.6s linear infinite;
+  }
+  .valve-link.flowing {
+    opacity: 1;
+    stroke-width: 3;
+    animation: water 0.6s linear infinite;
+  }
+  .flow .valve-open {
+    fill: none;
+    stroke: #29b6f6;
+    stroke-width: 3;
+    vector-effect: non-scaling-stroke;
+    animation: ring 1.2s ease-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .flow .spray {
+    fill: color-mix(in srgb, #29b6f6 35%, transparent);
+    stroke: #29b6f6;
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+    animation: spray 1.6s ease-out infinite;
+  }
+  @keyframes water {
+    to {
+      stroke-dashoffset: calc(var(--period, 10px) * -1);
+    }
+  }
+  @keyframes ring {
+    from {
+      transform: scale(0.8);
+      opacity: 1;
+    }
+    to {
+      transform: scale(1.8);
+      opacity: 0;
+    }
+  }
+  @keyframes spray {
+    from {
+      transform: scale(0.15);
+      opacity: 0.9;
+    }
+    to {
+      transform: scale(1);
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .flow .water,
+    .flow .valve-open,
+    .flow .spray,
+    .valve-link.flowing,
+    .zone.running path,
+    .zone.running polygon {
+      animation: none;
+    }
+  }
   @keyframes flow {
     to {
       stroke-dashoffset: -16;
