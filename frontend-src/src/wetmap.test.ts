@@ -67,7 +67,8 @@ describe("Nässekarte", () => {
   });
 
   it("Farbskala", () => {
-    expect(wetColor(0)).toEqual([224, 242, 254]);
-    expect(wetColor(100)).toEqual([120, 30, 150]);
+    expect(wetColor(0)).toEqual([120, 200, 250]);
+    expect(wetColor(100)).toEqual([175, 20, 105]);
+    expect(wetColor(7.5)).toEqual([30, 75, 195]); // zwischen 5 und 10 mm
   });
 });

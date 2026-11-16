@@ -214,3 +214,29 @@ export function pointAlong(points: Point[], fraction: number): Point {
   }
   return points[points.length - 1];
 }
+
+/** Kürzester Abstand eines Punkts zu einer Linie aus mehreren Stücken. */
+export function distanceToPolyline(p: Point, points: Point[]): number {
+  let best = Number.POSITIVE_INFINITY;
+  for (let i = 1; i < points.length; i++) {
+    const [a, b] = [points[i - 1], points[i]];
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    const len2 = dx * dx + dy * dy;
+    const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / len2));
+    best = Math.min(best, Math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy)));
+  }
+  return best;
+}
+
+/** Anfasser für die Reichweite eines Schlauchs: Mitte des längsten Stücks, quer im Abstand `radius`. */
+export function hoseRadiusHandle(points: Point[], radius: number): Point {
+  let best = 1;
+  for (let i = 2; i < points.length; i++) {
+    if (distance(points[i - 1], points[i]) > distance(points[best - 1], points[best])) best = i;
+  }
+  const [a, b] = [points[best - 1], points[best]];
+  const len = distance(a, b) || 1;
+  // Quer zur Linie (nach links gedreht)
+  return [(a[0] + b[0]) / 2 + ((b[1] - a[1]) / len) * radius, (a[1] + b[1]) / 2 - ((b[0] - a[0]) / len) * radius];
+}

@@ -136,13 +136,15 @@ export function computeWetGrid(
   return { x0: bx0, y0: by0, step, cols, rows, values, max };
 }
 
-// Farben: hellblau (wenig) über blau zu violett (sehr viel). Skala in mm.
+// Farben: kräftiges Hellblau (wenig) über Blau zu Violett (sehr viel). Skala in mm.
+// Bewusst satt und fast deckend, damit die Karte auch über dem Luftbild gut lesbar ist.
 export const WET_STOPS: [number, [number, number, number]][] = [
-  [0, [224, 242, 254]],
-  [3, [125, 196, 240]],
-  [8, [33, 120, 210]],
-  [15, [40, 50, 160]],
-  [25, [120, 30, 150]],
+  [0, [120, 200, 250]],
+  [2, [50, 160, 240]],
+  [5, [25, 105, 220]],
+  [10, [35, 45, 170]],
+  [20, [115, 25, 150]],
+  [30, [175, 20, 105]],
 ];
 
 export function wetColor(mm: number): [number, number, number] {
@@ -170,7 +172,7 @@ export function gridImage(grid: WetGrid): string {
     const v = grid.values[i];
     if (Number.isNaN(v)) continue;
     const [r, g, b] = wetColor(v);
-    img.data.set([r, g, b, 200], i * 4);
+    img.data.set([r, g, b, 230], i * 4);
   }
   ctx.putImageData(img, 0, 0);
   return canvas.toDataURL();

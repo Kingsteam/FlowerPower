@@ -10,6 +10,8 @@
 import { LitElement, html, nothing, svg, type PropertyValues, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import {
+  distanceToPolyline,
+  hoseRadiusHandle,
   type Point,
   centroid,
   compass,
@@ -78,7 +80,7 @@ type Drag =
   | { type: "pan"; sx: number; sy: number; cx: number; cy: number; moved: boolean }
   | { type: "new-sprinkler"; id: string }
   | { type: "move-zone"; id: string; start: Point; orig: PlanZone }
-  | { type: "center" | "radius" | "start" | "end"; id: string }
+  | { type: "center" | "radius" | "start" | "end" | "hose-radius"; id: string }
   | { type: "vertex"; id: string; index: number }
   | { type: "marker"; kind: "valve" | "sensor"; id: string }
   | { type: "f-vertex"; id: string; index: number }
@@ -129,10 +131,10 @@ export class IrrigationPlannerPanel extends LitElement {
   @state() private searching = false;
   @state() private searchError = "";
   @state() private searchPin: { point: Point; name: string } | null = null;
-  // Eigener Standort (nur im Browser, wird nicht gespeichert)
-  @state() private myPos: MyPosition | null = null;
+  // Orten läuft gerade (einmalige Abfrage, nichts wird gespeichert)
   @state() private locating = false;
-  private watchId?: number;
+  // Reichweite beim Zeichnen eines Schlauchs (Meter je Seite)
+  @state() private hoseRadius = 0.5;
 
   private _hass?: Hass;
   private savedJson = "";
@@ -176,7 +178,6 @@ export class IrrigationPlannerPanel extends LitElement {
     this.unsub?.();
     this.unsub = undefined;
     this.resizer?.disconnect();
-    this.stopLocate();
   }
 
   protected firstUpdated(_changed: PropertyValues): void {
@@ -491,6 +492,7 @@ export class IrrigationPlannerPanel extends LitElement {
     this.hover = null;
     this.snapHint = null;
     if (tool === "feature") this.featureKind = target;
+    if (tool === "hose" && target) this.hoseRadius = this.zone(target).radius_m ?? 0.5;
     if (target && (tool === "sprinkler" || tool === "bed" || tool === "hose")) {
       this.selected = { kind: "zone", id: target };
     }
@@ -617,7 +619,7 @@ export class IrrigationPlannerPanel extends LitElement {
     const zone = this.zone(this.toolTarget);
     zone.polygon = this.draft.map((p) => [round(p[0]), round(p[1])]);
     zone.center = null;
-    if (!zone.radius_m || zone.radius_m > 3) zone.radius_m = 0.3;
+    zone.radius_m = this.hoseRadius;
     this.selected = { kind: "zone", id: zone.id };
     this.changed();
     this.cancelTool();
@@ -771,6 +773,9 @@ export class IrrigationPlannerPanel extends LitElement {
       case "new-sprinkler":
       case "radius":
         zone.radius_m = round(Math.max(0.1, distance(zone.center!, p)));
+        break;
+      case "hose-radius":
+        zone.radius_m = round(Math.min(20, Math.max(0.05, distanceToPolyline(p, zone.polygon))));
         break;
       case "center":
         zone.center = [round(p[0]), round(p[1])];
@@ -954,57 +959,42 @@ export class IrrigationPlannerPanel extends LitElement {
 
   // Orten ---------------------------------------------------------------------------
 
-  private toggleLocate(): void {
-    if (this.locating) {
-      this.stopLocate();
-      return;
-    }
+  /** Standort einmal aus dem Browser holen (kein Dauer-Orten, nichts gespeichert). */
+  private locateOnce(): Promise<MyPosition | null> {
     const why = locateUnavailable(window.isSecureContext, "geolocation" in navigator);
     if (why) {
       this.showToast(why, true);
-      return;
+      return Promise.resolve(null);
     }
     this.locating = true;
-    let first = true;
-    this.watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        this.myPos = {
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-          accuracy: pos.coords.accuracy,
-        };
-        if (first) {
-          first = false;
-          this.showMyPosition();
-        }
-      },
-      (err) => {
-        this.showToast(locateErrorText(err.code), true);
-        this.stopLocate();
-      },
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 },
-    );
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          this.locating = false;
+          resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy });
+        },
+        (err) => {
+          this.locating = false;
+          this.showToast(locateErrorText(err.code), true);
+          resolve(null);
+        },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 },
+      );
+    });
   }
 
-  private stopLocate(): void {
-    if (this.watchId !== undefined) navigator.geolocation?.clearWatch(this.watchId);
-    this.watchId = undefined;
-    this.locating = false;
-    this.myPos = null;
-  }
-
-  /** Standort in Planmetern (null: noch keiner oder keine Kartenmitte). */
-  private myPoint(): Point | null {
+  private geoPoint(pos: MyPosition): Point | null {
     const g = this.plan?.garden;
-    if (!this.myPos || g?.background !== "map" || g.latitude == null || g.longitude == null) return null;
-    return latLonToPlan(this.myPos.latitude, this.myPos.longitude, [g.latitude, g.longitude]);
+    if (g?.background !== "map" || g.latitude == null || g.longitude == null) return null;
+    return latLonToPlan(pos.latitude, pos.longitude, [g.latitude, g.longitude]);
   }
 
-  /** Ansicht auf den eigenen Standort legen (ist noch nichts gezeichnet: Kartenmitte). */
-  private showMyPosition(): void {
-    const pos = this.myPos;
-    if (!pos) return;
-    const g = this.plan!.garden;
+  /** Orten-Knopf: Karte zum eigenen Standort (ist noch nichts gezeichnet: Kartenmitte). */
+  private async goToMe(): Promise<void> {
+    if (this.locating) return;
+    const pos = await this.locateOnce();
+    if (!pos || !this.plan) return;
+    const g = this.plan.garden;
     const scale = Math.max(this.view.scale, 1 / metersPerPixel(pos.latitude, 20));
     this.autoFit = false;
     const switched = g.background === "none";
@@ -1017,9 +1007,9 @@ export class IrrigationPlannerPanel extends LitElement {
     }
     const empty =
       !this.hasAnyDrawing() &&
-      ![...this.plan!.valves, ...this.plan!.sensors].some((m) => m.position);
+      ![...this.plan.valves, ...this.plan.sensors].some((m) => m.position);
     if (empty || g.latitude == null || g.longitude == null) {
-      this.remember();
+      if (!switched) this.remember();
       g.latitude = Math.round(pos.latitude * 1e7) / 1e7;
       g.longitude = Math.round(pos.longitude * 1e7) / 1e7;
       this.view = { cx: 0, cy: 0, scale };
@@ -1027,37 +1017,31 @@ export class IrrigationPlannerPanel extends LitElement {
       this.showToast(`Kartenmitte auf deinen Standort gesetzt (${fmtAccuracy(pos.accuracy)}).`);
       return;
     }
-    const p = this.myPoint()!;
+    const p = this.geoPoint(pos)!;
     this.view = { cx: p[0], cy: p[1], scale };
     if (switched) this.changed();
-    if (Math.hypot(p[0], p[1]) > 2000) {
-      this.showToast("Du bist weit weg vom Garten. Der Punkt zeigt, wo du gerade bist.");
-    } else {
-      this.showToast(`Standort gefunden (${fmtAccuracy(pos.accuracy)}).`);
-    }
+    this.showToast(
+      Math.hypot(p[0], p[1]) > 2000
+        ? "Du bist weit weg vom Garten. Die Karte zeigt, wo du gerade bist."
+        : `Karte auf deinen Standort gelegt (${fmtAccuracy(pos.accuracy)}).`,
+    );
   }
 
   /** Ventil oder Sensor, der gerade platziert wird, an den eigenen Standort setzen. */
-  private placeAtMe(): void {
-    const p = this.myPoint();
-    if (!p || this.tool !== "place") return;
-    const [kind, id] = this.toolTarget.split(":") as ["valve" | "sensor", string];
+  private async placeAtMe(): Promise<void> {
+    if (this.tool !== "place" || this.locating) return;
+    const target = this.toolTarget;
+    const pos = await this.locateOnce();
+    const p = pos && this.geoPoint(pos);
+    if (!p || this.tool !== "place" || this.toolTarget !== target) return;
+    const [kind, id] = target.split(":") as ["valve" | "sensor", string];
     this.remember();
     this.marker(kind, id).position = [round(p[0]), round(p[1])];
     this.selected = { kind, id };
     this.changed();
     this.cancelTool();
-    this.showToast("An deinen Standort gesetzt");
-  }
-
-  private renderMyPosition(px: number) {
-    const p = this.myPoint();
-    if (!p || !this.myPos) return nothing;
-    return svg`<g class="mypos">
-      <circle class="acc" cx=${p[0]} cy=${p[1]} r=${this.myPos.accuracy}></circle>
-      <circle class="dot" cx=${p[0]} cy=${p[1]} r=${7 * px} stroke-width=${3 * px}></circle>
-      <title>Du bist hier (${fmtAccuracy(this.myPos.accuracy)})</title>
-    </g>`;
+    this.view = { ...this.view, cx: p[0], cy: p[1] };
+    this.showToast(`An deinen Standort gesetzt (${fmtAccuracy(pos.accuracy)})`);
   }
 
   // Adresssuche ------------------------------------------------------------------
@@ -1484,7 +1468,8 @@ export class IrrigationPlannerPanel extends LitElement {
       (z) => z.enabled && drawnArea(z) !== null && mmPerRun(z, this.plan!.valves, this.status) === null,
     );
     const top = WET_STOPS[WET_STOPS.length - 1][0];
-    const gradient = WET_STOPS.map(([mm, [r, g, b]]) => `rgb(${r},${g},${b}) ${(mm / top) * 100}%`).join(", ");
+    // Stufen gleichmäßig verteilt, passend zu den Zahlen darunter.
+    const gradient = WET_STOPS.map(([, [r, g, b]], i) => `rgb(${r},${g},${b}) ${(i / (WET_STOPS.length - 1)) * 100}%`).join(", ");
     return html`<div class="wet-legend">
       <strong>Wasser pro Durchgang</strong>
       <div class="bar" style="background: linear-gradient(to right, ${gradient})"></div>
@@ -1843,7 +1828,7 @@ export class IrrigationPlannerPanel extends LitElement {
           ${this.plan!.valves.map((v) => this.renderMarker("valve", v, px))}
           ${this.plan!.sensors.map((s) => this.renderMarker("sensor", s, px))}
           ${this.wetOn ? this.renderSensorValues(px) : nothing}
-          ${this.renderSnapHint(px)} ${this.renderMyPosition(px)}
+          ${this.renderSnapHint(px)}
           ${this.searchPin && this.plan!.garden.background === "map"
             ? svg`<g class="pin" transform="translate(${this.searchPin.point[0]} ${this.searchPin.point[1]}) scale(${px})">
                 <path d="M0 0 C-3 -9 -11 -13 -11 -22 A11 11 0 1 1 11 -22 C11 -13 3 -9 0 0 Z"></path>
@@ -1942,10 +1927,7 @@ export class IrrigationPlannerPanel extends LitElement {
       shape = svg`<path d=${sectorPath(zone.center, zone.radius_m, zone.start_angle_deg, zone.arc_deg)}></path>`;
       label = zone.arc_deg >= 360 ? zone.center : polar(zone.center, zone.radius_m * 0.55, zone.start_angle_deg + zone.arc_deg / 2);
     } else if (zone.type === "hose" && zone.polygon.length >= 2 && zone.radius_m) {
-      // Breiter Streifen (2 × Radius) mit runden Enden, darin die Schlauchlinie.
-      const pts = zone.polygon.map((p) => p.join(",")).join(" ");
-      shape = svg`<polyline class="hose-band" points=${pts} stroke-width=${2 * zone.radius_m}></polyline>
-        <polyline class="hose-line" points=${pts}></polyline>`;
+      shape = this.hoseShape(zone.id, zone.polygon, zone.radius_m, px);
       label = this.zoneAnchor(zone);
     } else if (zone.type === "drip" && zone.polygon.length >= 3) {
       shape = svg`<polygon points=${zone.polygon.map((p) => p.join(",")).join(" ")}></polygon>`;
@@ -1970,6 +1952,27 @@ export class IrrigationPlannerPanel extends LitElement {
             </text>`
           : nothing}
       </g>`;
+  }
+
+  /**
+   * Schlauch: kräftige Linie, darum die Reichweite als Umriss (gleicher
+   * Abstand zur Linie, runde Enden) mit leichter Füllung.
+   */
+  private hoseShape(id: string, points: Point[], radius: number, px: number, cls = "") {
+    const pts = points.map((p) => p.join(",")).join(" ");
+    const border = 2 * px;
+    const mask = `hose-mask-${id}`;
+    return svg`<g class="hose ${cls}">
+      <mask id=${mask} maskUnits="userSpaceOnUse" x="-100000" y="-100000" width="200000" height="200000">
+        <rect x="-100000" y="-100000" width="200000" height="200000" fill="white"></rect>
+        <polyline points=${pts} fill="none" stroke="black" stroke-width=${2 * radius}
+          stroke-linecap="round" stroke-linejoin="round"></polyline>
+      </mask>
+      <polyline class="hose-band" points=${pts} stroke-width=${2 * radius}></polyline>
+      <polyline class="hose-reach" points=${pts} stroke-width=${2 * radius + 2 * border} mask="url(#${mask})"></polyline>
+      <polyline class="hose-line" points=${pts}></polyline>
+      ${points.map((p, i) => (i === 0 || i === points.length - 1 ? svg`<circle class="hose-end" cx=${p[0]} cy=${p[1]} r=${3.5 * px}></circle>` : nothing))}
+    </g>`;
   }
 
   private renderSelectedHandles(px: number) {
@@ -2006,7 +2009,19 @@ export class IrrigationPlannerPanel extends LitElement {
     if (zone.type !== "sprinkler" && zone.polygon.length >= minPts) {
       const pts = zone.polygon;
       const segments = zone.type === "hose" ? pts.slice(0, -1) : pts;
+      const reach =
+        zone.type === "hose" && zone.radius_m
+          ? (() => {
+              const h = hoseRadiusHandle(pts, zone.radius_m);
+              const foot = hoseRadiusHandle(pts, 0);
+              return [
+                svg`<line class="guide" x1=${foot[0]} y1=${foot[1]} x2=${h[0]} y2=${h[1]}></line>`,
+                handle(h, { type: "hose-radius", id: zone.id }, "radius", "Reichweite ändern"),
+              ];
+            })()
+          : [];
       return [
+        ...reach,
         ...segments.map((p, i) => {
           const q = pts[(i + 1) % pts.length];
           const m: Point = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
@@ -2189,6 +2204,7 @@ export class IrrigationPlannerPanel extends LitElement {
     if (this.tool === "hose" && this.draft.length) {
       const pts = this.hover ? [...this.draft, this.hover] : this.draft;
       return svg`<g class="draft">
+        ${pts.length >= 2 ? svg`<g class="zone" style="--zone:#1e88e5">${this.hoseShape("draft", pts, this.hoseRadius, px)}</g>` : nothing}
         <polyline points=${pts.map((p) => p.join(",")).join(" ")} style="fill:none"></polyline>
         ${this.draft.map((p) => svg`<circle cx=${p[0]} cy=${p[1]} r=${5 * px}></circle>`)}
       </g>`;
@@ -2272,10 +2288,9 @@ export class IrrigationPlannerPanel extends LitElement {
             </button>`
           : nothing}
         ${g.background !== "image"
-          ? html`<button class="icon ${this.locating ? "on" : ""}"
-              title=${this.locating ? "Orten beenden" : "Orten: meinen Standort zeigen"}
-              @click=${this.toggleLocate}>
-              <ha-icon icon=${this.locating ? (this.myPos ? "mdi:crosshairs-gps" : "mdi:crosshairs-question") : "mdi:crosshairs"}></ha-icon>
+          ? html`<button class="icon ${this.locating ? "on" : ""}" title="Orten: Karte zu meinem Standort"
+              ?disabled=${this.locating} @click=${this.goToMe}>
+              <ha-icon icon=${this.locating ? "mdi:crosshairs-question" : "mdi:crosshairs-gps"}></ha-icon>
             </button>`
           : nothing}
       </div>
@@ -2313,17 +2328,24 @@ export class IrrigationPlannerPanel extends LitElement {
     const name = this.toolTarget ? this.zoneOrMarkerName(this.toolTarget) : "";
     if (this.tool === "sprinkler") text = `${name}: Am Sprinkler drücken und bis zum Rand ziehen.`;
     if (this.tool === "hose") {
-      text = `${name}: Den Verlauf des Schlauchs anklicken, Doppelklick beendet.`;
-      actions = html`<button class="text" ?disabled=${this.draft.length < 2} @click=${this.finishHose}>Fertig</button>`;
+      text = `${name}: Den Verlauf des Schlauchs als Linie anklicken, Doppelklick beendet.`;
+      actions = html`<label class="inline">Reichweite
+          <input type="number" min="0.05" max="20" step="0.05" .value=${String(this.hoseRadius)}
+            @input=${(e: Event) => {
+              const v = Number((e.target as HTMLInputElement).value);
+              if (v > 0) this.hoseRadius = Math.min(20, v);
+            }} /> m</label>
+        <button class="text" ?disabled=${this.draft.length < 2} @click=${this.finishHose}>Fertig</button>`;
     }
     if (this.tool === "bed") {
       text = `${name}: Ecken anklicken, zum Schließen den ersten Punkt.`;
       actions = html`<button class="text" ?disabled=${this.draft.length < 3} @click=${this.finishBed}>Fertig</button>`;
     }
     if (this.tool === "place") {
-      text = `${name}: Auf die Stelle im Plan klicken${this.myPoint() ? " oder an deinen Standort setzen" : ""}.`;
-      if (this.myPoint()) {
-        actions = html`<button class="text" @click=${this.placeAtMe}><ha-icon icon="mdi:crosshairs-gps"></ha-icon>Mein Standort</button>`;
+      const geo = this.plan!.garden.background === "map";
+      text = `${name}: Auf die Stelle im Plan klicken${geo ? " oder an deinen Standort setzen" : ""}.`;
+      if (geo) {
+        actions = html`<button class="text" ?disabled=${this.locating} @click=${this.placeAtMe}><ha-icon icon="mdi:crosshairs-gps"></ha-icon>Mein Standort</button>`;
       }
     }
     if (this.tool === "feature") {
@@ -2511,9 +2533,11 @@ export class IrrigationPlannerPanel extends LitElement {
           : nothing}
         ${zone.type === "hose" && drawn
           ? html`<div class="fields">
-                ${num("Bewässert je Seite", zone.radius_m, "m", (v) => (zone.radius_m = Math.max(0.05, v)), 0.05)}
+                ${num("Reichweite (Radius)", zone.radius_m, "m", (v) => (zone.radius_m = Math.min(20, Math.max(0.05, v))), 0.05)}
               </div>
-              <p class="hint small">Länge ${fmtLength(pathLength(zone.polygon))}, bewässert ${fmtLength(2 * (zone.radius_m ?? 0))} breit.</p>
+              <p class="hint small">Schlauch ${fmtLength(pathLength(zone.polygon))} lang. Bewässert wird alles bis
+                ${fmtLength(zone.radius_m ?? 0)} um die Linie: ${fmtArea(liveArea(zone))}.
+                Reichweite auch am runden Anfasser im Plan ziehen.</p>
               ${this.renderEdges(zone.polygon, false, (pts) => (zone.polygon = pts))}`
           : nothing}
         ${zone.type === "drip" && drawn

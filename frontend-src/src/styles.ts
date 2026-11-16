@@ -653,19 +653,44 @@ export const styles = css`
   }
   .zone polyline.hose-band {
     fill: none;
-    stroke: color-mix(in srgb, var(--zone) 35%, transparent);
+    stroke: color-mix(in srgb, var(--zone) 14%, transparent);
     stroke-linecap: round;
     stroke-linejoin: round;
     cursor: pointer;
   }
   .zone:hover polyline.hose-band,
   .zone.selected polyline.hose-band {
-    stroke: color-mix(in srgb, var(--zone) 50%, transparent);
+    stroke: color-mix(in srgb, var(--zone) 24%, transparent);
+  }
+  .zone polyline.hose-reach {
+    fill: none;
+    stroke: var(--zone);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.9;
+    pointer-events: none;
+  }
+  .zone .hose-end {
+    fill: var(--zone);
+    stroke: #fff;
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
+  .banner label.inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+  }
+  .banner label.inline input {
+    width: 64px;
+    padding: 2px 4px;
   }
   .zone polyline.hose-line {
     fill: none;
     stroke: var(--zone);
-    stroke-width: 2.5;
+    stroke-width: 4;
     stroke-linecap: round;
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
@@ -708,6 +733,9 @@ export const styles = css`
   }
   svg.plan.wet .zone polyline.hose-band {
     stroke: none;
+  }
+  svg.plan.wet .zone polyline.hose-reach {
+    opacity: 0.5;
   }
   .wet-layer {
     pointer-events: none;
@@ -1517,19 +1545,6 @@ export const styles = css`
   }
   .pin {
     pointer-events: none;
-  }
-  .mypos {
-    pointer-events: none;
-  }
-  .mypos .acc {
-    fill: rgba(26, 115, 232, 0.15);
-    stroke: rgba(26, 115, 232, 0.5);
-    stroke-width: 1;
-    vector-effect: non-scaling-stroke;
-  }
-  .mypos .dot {
-    fill: #1a73e8;
-    stroke: #fff;
   }
   .banner {
     position: absolute;

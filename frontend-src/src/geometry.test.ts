@@ -95,3 +95,21 @@ describe("Gießschlauch", () => {
     expect(pointAlong([[0, 0], [4, 0]], 0.25)).toEqual([1, 0]);
   });
 });
+
+describe("Schlauch-Reichweite", () => {
+  it("misst den Abstand zur Linie", async () => {
+    const { distanceToPolyline } = await import("./geometry");
+    const line: [number, number][] = [[0, 0], [10, 0], [10, 10]];
+    expect(distanceToPolyline([5, 2], line)).toBeCloseTo(2);
+    expect(distanceToPolyline([12, 5], line)).toBeCloseTo(2);
+    expect(distanceToPolyline([-3, 4], line)).toBeCloseTo(5);
+  });
+
+  it("setzt den Anfasser quer zur Linie", async () => {
+    const { distanceToPolyline, hoseRadiusHandle } = await import("./geometry");
+    const line: [number, number][] = [[0, 0], [2, 0], [2, 10]];
+    const h = hoseRadiusHandle(line, 1.5);
+    expect(distanceToPolyline(h, line)).toBeCloseTo(1.5);
+    expect(h[1]).toBeCloseTo(5); // Mitte des längsten Stücks
+  });
+});
