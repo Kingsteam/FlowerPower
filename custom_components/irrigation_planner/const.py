@@ -43,3 +43,18 @@ STORAGE_MINOR_VERSION: Final = 1
 # der Treiber nach Ablauf der Dauer selbst ein Schließen. Bei Geräten mit
 # eigenem Timer erst etwas später, damit das Gerät zuerst schließt.
 FAILSAFE_GRACE_S: Final = 10
+
+# Warteschlange: Schließen bestätigen. Ein Platz in der Wasserversorgung
+# wird erst frei, wenn das Ventil nachweislich zu ist.
+CLOSE_CONFIRM_TIMEOUT_S: Final = 15  # so lange auf "zu" warten
+CLOSE_ATTEMPTS: Final = 5  # so oft hintereinander OFF schicken
+CLOSE_RETRY_INTERVAL_S: Final = 60  # danach: Versorgung gesperrt, OFF jede Minute
+
+# Ventile ohne zugeordnete Wasserversorgung teilen sich diese (Grenze 1).
+UNASSIGNED_SUPPLY_ID: Final = "_ohne_versorgung"
+
+# Dienste
+SERVICE_RUN_ZONE: Final = "run_zone"
+SERVICE_STOP_ALL: Final = "stop_all"
+ATTR_ZONE_ID: Final = "zone_id"
+ATTR_DURATION: Final = "duration"

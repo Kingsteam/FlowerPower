@@ -115,6 +115,96 @@ def _einrichten(basis: str, daten: Path) -> None:
     zugang.chmod(0o600)
 
 
+def _sim_ref(domain: str, unique_id: str) -> dict[str, str]:
+    return {"domain": domain, "platform": "irrigation_sim", "unique_id": unique_id}
+
+
+def _beispielgarten() -> dict:
+    """Gartenmodell mit den 10 simulierten Zonen.
+
+    Zonen 1 bis 8: Treiber ``service_call`` mit Gerätetimer (wie ein Ventil, das
+    selbst schließt). Zone 9: ``ha_switch``, Zone 10: ``ha_valve`` (nur Home
+    Assistant überwacht die Zeit).
+    """
+    zonen, ventile = [], []
+    for n in range(1, 11):
+        rollen = {
+            "flow": _sim_ref("sensor", f"zone_{n}_flow"),
+            "volume": _sim_ref("sensor", f"zone_{n}_volume"),
+            "status": _sim_ref("sensor", f"zone_{n}_status"),
+            "battery": _sim_ref("sensor", f"zone_{n}_battery"),
+        }
+        if n <= 8:
+            treiber = "service_call"
+            optionen = {
+                "open_service": "irrigation_sim.open_for",
+                "open_data": {"zone": n, "duration": "{duration}"},
+                "device_timer": True,
+            }
+            rollen["valve"] = _sim_ref("switch", f"zone_{n}_switch")
+        elif n == 9:
+            treiber, optionen = "ha_switch", {}
+            rollen["valve"] = _sim_ref("switch", f"zone_{n}_switch")
+        else:
+            treiber, optionen = "ha_valve", {}
+            rollen["valve"] = _sim_ref("valve", f"zone_{n}_valve")
+        zonen.append(
+            {
+                "id": f"zone_{n}",
+                "name": f"Zone {n}",
+                "type": "drip",
+                "valve_id": f"ventil_{n}",
+                "max_duration_s": 1800,
+            }
+        )
+        ventile.append(
+            {
+                "id": f"ventil_{n}",
+                "name": f"Ventil {n}",
+                "device_id": "",
+                "driver": treiber,
+                "driver_options": optionen,
+                "entities": rollen,
+                "zone_ids": [f"zone_{n}"],
+                "water_supply_id": "hauswasser",
+            }
+        )
+    return {
+        "garden": {},
+        "zones": zonen,
+        "valves": ventile,
+        "water_supplies": [
+            {
+                "id": "hauswasser",
+                "name": "Hauswasser (Test)",
+                "valve_ids": [v["id"] for v in ventile],
+                "max_open_valves": 1,
+            }
+        ],
+        "programs": [],
+        "sensors": [],
+    }
+
+
+def _garten_anlegen(daten: Path) -> None:
+    """Legt den Beispielgarten an, falls es noch keinen gibt."""
+    datei = daten / ".storage" / "irrigation_planner"
+    if datei.exists():
+        return
+    datei.parent.mkdir(parents=True, exist_ok=True)
+    datei.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "minor_version": 1,
+                "key": "irrigation_planner",
+                "data": _beispielgarten(),
+            },
+            indent=2,
+        )
+    )
+
+
 def main() -> None:
     """Richtet den Datenordner ein und startet Home Assistant."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -138,6 +228,7 @@ def main() -> None:
         if link.is_symlink() or link.exists():
             link.unlink()
         link.symlink_to(ziel)
+    _garten_anlegen(daten)
 
     with (daten / "start.log").open("w") as log:
         prozess = subprocess.Popen(

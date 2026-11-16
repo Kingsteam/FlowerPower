@@ -51,12 +51,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimConfigEntry) -> bool:
     def valve(call: ServiceCall) -> SimValve:
         return sim.valves[call.data[ATTR_ZONE] - 1]
 
+    # Als async-Funktionen anmelden: Lambdas würde Home Assistant in einem
+    # Nebenthread ausführen, und Entitäten dürfen nur im Hauptthread schreiben.
+    async def open_for(call: ServiceCall) -> None:
+        valve(call).open(call.data[ATTR_DURATION])
+
+    async def set_fault(call: ServiceCall) -> None:
+        valve(call).set_fault(Fault(call.data[ATTR_FAULT]))
+
+    async def set_battery(call: ServiceCall) -> None:
+        valve(call).set_battery(call.data[ATTR_LEVEL])
+
     # „Zone X für N Sekunden“: Vorbild für den Treiber „Dienstaufruf“.
     # Bei Zonen mit Gerätetimer schließt das Ventil danach von selbst.
     hass.services.async_register(
         DOMAIN,
         "open_for",
-        lambda call: valve(call).open(call.data[ATTR_DURATION]),
+        open_for,
         schema=vol.Schema(
             {
                 vol.Required(ATTR_ZONE): ZONE_NUMBER,
@@ -67,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimConfigEntry) -> bool:
     hass.services.async_register(
         DOMAIN,
         "set_fault",
-        lambda call: valve(call).set_fault(Fault(call.data[ATTR_FAULT])),
+        set_fault,
         schema=vol.Schema(
             {
                 vol.Required(ATTR_ZONE): ZONE_NUMBER,
@@ -78,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimConfigEntry) -> bool:
     hass.services.async_register(
         DOMAIN,
         "set_battery",
-        lambda call: valve(call).set_battery(call.data[ATTR_LEVEL]),
+        set_battery,
         schema=vol.Schema(
             {
                 vol.Required(ATTR_ZONE): ZONE_NUMBER,

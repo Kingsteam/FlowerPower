@@ -207,6 +207,13 @@ def test_supply_rejects_zero_open_valves() -> None:
             ),
             "zwei Wasserversorgungen",
         ),
+        (
+            lambda m: (
+                m.water_supplies.append(WaterSupply(id="w2", name="W2")),
+                setattr(m.valves[0], "water_supply_id", "w2"),
+            ),
+            "verweist aber auf",
+        ),
     ],
 )
 def test_validate_finds_broken_references(change: Any, message: str) -> None:

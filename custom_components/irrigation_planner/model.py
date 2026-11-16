@@ -237,6 +237,17 @@ class GardenModel:
                         f"({owner[valve_id]} und {supply.id})"
                     )
                 owner[valve_id] = supply.id
+        for valve in self.valves:
+            listed_in = owner.get(valve.id)
+            if (
+                listed_in is not None
+                and valve.water_supply_id is not None
+                and valve.water_supply_id != listed_in
+            ):
+                raise ValueError(
+                    f"Ventil {valve.id} steht in Wasserversorgung {listed_in}, "
+                    f"verweist aber auf {valve.water_supply_id}"
+                )
         for program in self.programs:
             for zone_id in program.zone_ids:
                 _check_ref(f"Programm {program.id}", "Zone", zone_id, zone_ids)

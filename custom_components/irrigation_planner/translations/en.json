@@ -22,5 +22,25 @@
     "abort": {
       "single_instance_allowed": "Irrigation Planner is already configured."
     }
+  },
+  "services": {
+    "run_zone": {
+      "name": "Water zone",
+      "description": "Queues a zone for the given duration. Only one valve per water supply is open at a time; a start during a run waits in the queue.",
+      "fields": {
+        "zone_id": {
+          "name": "Zone ID",
+          "description": "ID of the zone."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Watering time in seconds. Limited to the zone's maximum duration."
+        }
+      }
+    },
+    "stop_all": {
+      "name": "Stop all",
+      "description": "Empties all queues and closes all valves."
+    }
   }
 }

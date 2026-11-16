@@ -22,5 +22,25 @@
     "abort": {
       "single_instance_allowed": "Der Bewässerungsplaner ist bereits eingerichtet."
     }
+  },
+  "services": {
+    "run_zone": {
+      "name": "Zone gießen",
+      "description": "Reiht eine Zone für die angegebene Dauer ein. Je Wasserversorgung ist immer nur ein Ventil offen; ein Start während eines Laufs wartet in der Warteschlange.",
+      "fields": {
+        "zone_id": {
+          "name": "Zonen-ID",
+          "description": "ID der Zone."
+        },
+        "duration": {
+          "name": "Dauer",
+          "description": "Gießdauer in Sekunden. Wird auf die Höchstdauer der Zone begrenzt."
+        }
+      }
+    },
+    "stop_all": {
+      "name": "Alles stoppen",
+      "description": "Leert alle Warteschlangen und schließt alle Ventile."
+    }
   }
 }

@@ -10,7 +10,7 @@ Eigene Home-Assistant-Integration (HACS) für die Gartenbewässerung. Der Besitz
 
 Gartenplan, berechnete Gießdauer je Zone, ausfallsichere Ventilsteuerung, Überwachung des Durchflusses und Winterpause, unabhängig von der Hardware. Ziel und Architektur: `docs/KONZEPT.md`. Geplante Bedienung: `docs/HANDBUCH.md`.
 
-Stand: Phase 1, Schritte 1–2 fertig (Speichern des Modells, Treiber, Profile). **Die Integration steuert noch nichts:** Die Treiber sind gebaut und getestet, werden aber erst mit der Warteschlange (Schritt 3) verwendet. Es gibt noch keine Plattformen und keine Dienste.
+Stand: Phase 1, Schritte 1–3 fertig (Speichern, Treiber und Profile, Warteschlange). **Die Integration steuert jetzt Ventile**, über die Dienste `run_zone` und `stop_all`. Ventile und Zonen lassen sich noch nicht in der Oberfläche anlegen (Schritt 7); Plattformen/Entitäten fehlen noch (Schritt 5).
 
 ## Sicherheitsregeln (nicht verhandelbar)
 
@@ -40,7 +40,9 @@ Das Wissen über die konkrete Anlage des Besitzers liegt im separaten privaten R
 | `drivers/ha_switch.py`, `ha_valve.py`, `zigbee2mqtt.py`, `service_call.py` | die vier Treiber; `drivers/registry.py` baut sie (`create_driver`), nicht in `drivers/__init__.py` importieren (Kreisimport) |
 | `profiles/` | Geräteprofile als YAML + Lader; `device_timer` ohne `{duration}` im Befehl wird abgelehnt |
 | `diagnostics.py` | Diagnosedaten (Koordinaten geschwärzt) |
-| `geometry.py`, `water_balance.py`, `scheduler.py`, `watchdog.py`, `season.py`, `websocket_api.py` | nur Platzhalter mit Docstring |
+| `scheduler.py` | Warteschlange je Wasserversorgung (`IrrigationScheduler`): Platz erst frei, wenn das Ventil **nachweislich zu** ist; klemmt es, bleibt die Versorgung gesperrt und OFF wird jede Minute wiederholt; von außen offene Ventile zählen mit; Startprüfung schließt offene Ventile; Höchstdauer je Zone |
+| `services.py`, `services.yaml` | Dienste `run_zone` (reiht nur ein) und `stop_all` |
+| `geometry.py`, `water_balance.py`, `watchdog.py`, `season.py`, `websocket_api.py` | nur Platzhalter mit Docstring |
 | `strings.json`, `translations/` | Texte (en = `strings.json`, de) |
 | `tests/` | pytest mit `pytest-homeassistant-custom-component` |
 | `docs/` | `KONZEPT.md`, `HANDBUCH.md`, `bilder/`, `entwuerfe.html` |
