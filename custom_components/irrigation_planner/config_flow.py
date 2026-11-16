@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     EntitySelector,
     EntitySelectorConfig,
@@ -40,6 +46,14 @@ class IrrigationPlannerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Einrichtung von Ventilen, Zonen, Programmen (siehe options_flow.py)."""
+        from .options_flow import IrrigationPlannerOptionsFlow
+
+        return IrrigationPlannerOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

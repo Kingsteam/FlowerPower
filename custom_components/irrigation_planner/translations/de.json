@@ -172,5 +172,327 @@
         "name": "Programm aktiv"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Bewässerungsplaner einrichten",
+        "description": "Speichern lädt den Bewässerungsplaner neu; eine laufende Bewässerung wird dabei beendet.",
+        "menu_options": {
+          "valves": "Ventile",
+          "zones": "Zonen",
+          "programs": "Programme",
+          "supplies": "Wasserversorgungen",
+          "settings": "Einstellungen"
+        }
+      },
+      "valves": {
+        "title": "Ventile",
+        "menu_options": {
+          "add_valve": "Ventil hinzufügen",
+          "edit_valve": "Ventil ändern oder testen",
+          "remove_valve": "Ventil löschen"
+        }
+      },
+      "zones": {
+        "title": "Zonen",
+        "menu_options": {
+          "add_zone": "Zone anlegen",
+          "edit_zone": "Zone ändern",
+          "remove_zone": "Zone löschen"
+        }
+      },
+      "programs": {
+        "title": "Programme",
+        "menu_options": {
+          "add_program": "Programm anlegen",
+          "edit_program": "Programm ändern",
+          "remove_program": "Programm löschen"
+        }
+      },
+      "supplies": {
+        "title": "Wasserversorgungen",
+        "menu_options": {
+          "add_supply": "Wasserversorgung anlegen",
+          "edit_supply": "Wasserversorgung ändern",
+          "remove_supply": "Wasserversorgung löschen"
+        }
+      },
+      "add_valve": {
+        "title": "Ventil hinzufügen (1/4): Gerät",
+        "description": "Wähle das Gerät aus Home Assistant. Geräte mit Schalter oder Ventil werden angezeigt.",
+        "data": {
+          "device": "Gerät"
+        }
+      },
+      "valve_entities": {
+        "title": "Ventil (2/4): Entitäten und Treiber",
+        "description": "Vorgeschlagenes Profil: {profile}. Prüfe die Zuordnung; alles lässt sich ändern.",
+        "data": {
+          "name": "Name",
+          "driver": "Treiber",
+          "profile": "Geräteprofil",
+          "valve": "Ventil (Schalter oder Ventil)",
+          "flow": "Durchfluss",
+          "volume": "Menge",
+          "status": "Gerätestatus",
+          "battery": "Batterie"
+        },
+        "data_description": {
+          "driver": "Zigbee2MQTT und Dienstaufruf schicken die Dauer ans Gerät (sicherer). Schalter/Ventil: nur Home Assistant überwacht die Zeit.",
+          "flow": "Für die Überwachung (Leck, Schlauch gelöst, kein Wasser)."
+        }
+      },
+      "valve_driver": {
+        "title": "Ventil (3/4): Treiber-Einstellungen",
+        "description": "Der Öffnungsbefehl muss die Dauer als {placeholder} enthalten. Sie wird beim Öffnen durch die Sekunden (oder Minuten) ersetzt.",
+        "data": {
+          "friendly_name": "Name in Zigbee2MQTT",
+          "base_topic": "MQTT-Basisthema",
+          "open_service": "Dienst zum Öffnen (domain.dienst)",
+          "open_data": "Daten zum Öffnen",
+          "duration_unit": "Einheit der Dauer",
+          "close_service": "Dienst zum Schließen (leer = Ventil-Entität)",
+          "close_data": "Daten zum Schließen",
+          "device_timer": "Gerät schließt selbst nach der Dauer"
+        }
+      },
+      "valve_assign": {
+        "title": "Ventil (4/4): Zuordnen und testen",
+        "description": "Testlauf: Das Ventil öffnet {seconds} Sekunden. Dabei wird geprüft, ob es von selbst schließt. Dafür muss Wasser anliegen; niemand sollte im Sprühbereich stehen.",
+        "data": {
+          "water_supply": "Wasserversorgung",
+          "create_zone": "Zone gleich anlegen",
+          "zone_name": "Name der Zone",
+          "zone_duration": "Gießdauer der Zone",
+          "run_test": "Testlauf jetzt durchführen"
+        }
+      },
+      "valve_test": {
+        "title": "Testlauf"
+      },
+      "valve_test_result": {
+        "title": "Ergebnis des Testlaufs",
+        "description": "{outcome}\n\nDurchfluss: {flow}\nVentil danach zu: {closed}\n\nMit „Senden“ wird das Ventil mit diesem Ergebnis gespeichert."
+      },
+      "edit_valve": {
+        "title": "Ventil wählen",
+        "data": {
+          "item": "Auswahl"
+        }
+      },
+      "remove_valve": {
+        "title": "Ventil löschen",
+        "data": {
+          "item": "Auswahl"
+        }
+      },
+      "edit_zone": {
+        "title": "Zone wählen",
+        "data": {
+          "item": "Auswahl"
+        }
+      },
+      "remove_zone": {
+        "title": "Zone löschen",
+        "data": {
+          "item": "Auswahl"
+        }
+      },
+      "edit_program": {
+        "title": "Programm wählen",
+        "data": {
+          "item": "Auswahl"
+        }
+      },
+      "remove_program": {
+        "title": "Programm löschen",
+        "data": {
+          "item": "Auswahl"
+        }
+      },
+      "edit_supply": {
+        "title": "Wasserversorgung wählen",
+        "data": {
+          "item": "Auswahl"
+        }
+      },
+      "remove_supply": {
+        "title": "Wasserversorgung löschen",
+        "data": {
+          "item": "Auswahl"
+        }
+      },
+      "add_zone": {
+        "title": "Zone anlegen",
+        "data": {
+          "name": "Name",
+          "valve": "Ventil",
+          "duration": "Gießdauer",
+          "max_duration": "Höchstdauer (0 = keine)",
+          "priority": "Priorität",
+          "enabled": "Zone aktiv"
+        },
+        "data_description": {
+          "duration": "Wie lange die Zone gießt (vorerst von Hand; ab Phase 2 berechnet). 0 = keine Dauer, wird in Programmen übersprungen.",
+          "max_duration": "Obergrenze für jeden Lauf dieser Zone. Fängt Fehler ab.",
+          "priority": "Für den Ablauf „Nach Priorität“: höhere Zahl zuerst."
+        }
+      },
+      "edit_zone_form": {
+        "title": "Zone ändern",
+        "data": {
+          "name": "Name",
+          "valve": "Ventil",
+          "duration": "Gießdauer",
+          "max_duration": "Höchstdauer (0 = keine)",
+          "priority": "Priorität",
+          "enabled": "Zone aktiv"
+        },
+        "data_description": {
+          "duration": "Wie lange die Zone gießt (vorerst von Hand; ab Phase 2 berechnet). 0 = keine Dauer, wird in Programmen übersprungen.",
+          "max_duration": "Obergrenze für jeden Lauf dieser Zone. Fängt Fehler ab.",
+          "priority": "Für den Ablauf „Nach Priorität“: höhere Zahl zuerst."
+        }
+      },
+      "add_program": {
+        "title": "Programm anlegen",
+        "data": {
+          "name": "Name",
+          "zones": "Zonen (in dieser Reihenfolge)",
+          "mode": "Ablauf",
+          "pause_between": "Pause zwischen zwei Ventilen",
+          "cycle": "Gießphase bei „Abwechselnd“",
+          "soak": "Einziehzeit bei „Abwechselnd“",
+          "schedule": "Zeitplan",
+          "time": "Uhrzeit",
+          "weekdays": "Wochentage (leer = jeden Tag)",
+          "interval_days": "Alle N Tage (0 = aus)",
+          "skip_on_rain": "Bei Regen überspringen",
+          "skip_on_frost": "Bei Frost überspringen",
+          "skip_on_wind": "Bei starkem Wind überspringen",
+          "enabled": "Programm aktiv"
+        },
+        "data_description": {
+          "pause_between": "Damit sich der Leitungsdruck erholt, z. B. 10 bis 30 s.",
+          "soak": "Mindestabstand zwischen zwei Gießphasen derselben Zone.",
+          "schedule": "„Fertig bis“ rechnet die Startzeit aus der Gesamtdauer zurück. „Zeitfenster“ = fertig bis Ende des Zeitfensters."
+        }
+      },
+      "edit_program_form": {
+        "title": "Programm ändern",
+        "data": {
+          "name": "Name",
+          "zones": "Zonen (in dieser Reihenfolge)",
+          "mode": "Ablauf",
+          "pause_between": "Pause zwischen zwei Ventilen",
+          "cycle": "Gießphase bei „Abwechselnd“",
+          "soak": "Einziehzeit bei „Abwechselnd“",
+          "schedule": "Zeitplan",
+          "time": "Uhrzeit",
+          "weekdays": "Wochentage (leer = jeden Tag)",
+          "interval_days": "Alle N Tage (0 = aus)",
+          "skip_on_rain": "Bei Regen überspringen",
+          "skip_on_frost": "Bei Frost überspringen",
+          "skip_on_wind": "Bei starkem Wind überspringen",
+          "enabled": "Programm aktiv"
+        },
+        "data_description": {
+          "pause_between": "Damit sich der Leitungsdruck erholt, z. B. 10 bis 30 s.",
+          "soak": "Mindestabstand zwischen zwei Gießphasen derselben Zone.",
+          "schedule": "„Fertig bis“ rechnet die Startzeit aus der Gesamtdauer zurück. „Zeitfenster“ = fertig bis Ende des Zeitfensters."
+        }
+      },
+      "add_supply": {
+        "title": "Wasserversorgung anlegen",
+        "data": {
+          "name": "Name",
+          "max_open_valves": "Ventile gleichzeitig offen"
+        },
+        "data_description": {
+          "max_open_valves": "Standard 1. An einer Hauswasserleitung nur ändern, wenn der Druck sicher für mehrere Ventile reicht."
+        }
+      },
+      "edit_supply_form": {
+        "title": "Wasserversorgung ändern",
+        "data": {
+          "name": "Name",
+          "max_open_valves": "Ventile gleichzeitig offen"
+        },
+        "data_description": {
+          "max_open_valves": "Standard 1. An einer Hauswasserleitung nur ändern, wenn der Druck sicher für mehrere Ventile reicht."
+        }
+      },
+      "settings": {
+        "title": "Einstellungen",
+        "data": {
+          "weather_entity": "Wetterquelle",
+          "window_start": "Zeitfenster Beginn",
+          "window_end": "Zeitfenster Ende",
+          "winter_start": "Winterpause ab (MM-TT)",
+          "winter_end": "Winterpause bis (MM-TT)"
+        },
+        "data_description": {
+          "winter_start": "Optional, z. B. 11-01. An diesem Tag beginnt die Winterpause automatisch.",
+          "winter_end": "Optional, z. B. 04-01. An diesem Tag endet sie automatisch."
+        }
+      }
+    },
+    "error": {
+      "invalid": "Ungültig: {error}",
+      "device_not_found": "Gerät nicht gefunden.",
+      "entity_no_unique_id": "Diese Entität hat keine eindeutige ID und kann nicht verwendet werden.",
+      "profile_driver_mismatch": "Das Profil passt nicht zum gewählten Treiber.",
+      "window_empty": "Beginn und Ende des Zeitfensters dürfen nicht gleich sein."
+    },
+    "abort": {
+      "not_loaded": "Der Bewässerungsplaner ist nicht geladen.",
+      "nothing_to_select": "Es gibt noch nichts zum Auswählen."
+    },
+    "progress": {
+      "hardware_test": "Testlauf läuft ({seconds} s). Bitte warten…"
+    }
+  },
+  "selector": {
+    "driver": {
+      "options": {
+        "ha_switch": "Schalter (nur Home Assistant überwacht)",
+        "ha_valve": "Ventil-Entität (nur Home Assistant überwacht)",
+        "zigbee2mqtt": "Zigbee2MQTT (Dauer ans Gerät)",
+        "service_call": "Dienstaufruf (Dauer ans Gerät)"
+      }
+    },
+    "duration_unit": {
+      "options": {
+        "s": "Sekunden",
+        "min": "Minuten (aufgerundet)"
+      }
+    },
+    "program_mode": {
+      "options": {
+        "sequence": "Nacheinander",
+        "cycle_soak": "Abwechselnd",
+        "priority": "Nach Priorität"
+      }
+    },
+    "schedule": {
+      "options": {
+        "window": "Fertig bis Ende des Zeitfensters",
+        "start_time": "Startzeit",
+        "finish_by": "Fertig bis",
+        "manual": "Nur von Hand"
+      }
+    },
+    "weekday": {
+      "options": {
+        "0": "Montag",
+        "1": "Dienstag",
+        "2": "Mittwoch",
+        "3": "Donnerstag",
+        "4": "Freitag",
+        "5": "Samstag",
+        "6": "Sonntag"
+      }
+    }
   }
 }

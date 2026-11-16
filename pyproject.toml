@@ -1,6 +1,6 @@
 [project]
 name = "irrigation_planner"
-version = "0.1.0"
+version = "0.2.0"
 description = "Bewässerungsplaner: Home-Assistant-Integration (HACS)"
 requires-python = ">=3.14"
 

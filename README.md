@@ -2,20 +2,22 @@
 
 Eine Erweiterung (Integration) für Home Assistant, die den Garten automatisch und sicher bewässern soll: mit Gartenplan, berechneter Gießdauer pro Zone, Überwachung des Durchflusses und Winterpause. Sie soll mit beliebiger Bewässerungs-Hardware funktionieren.
 
-Domain: `irrigation_planner` · Version: 0.1.0
+Domain: `irrigation_planner` · Version: 0.2.0
 
 ## Stand
 
-> **Grundgerüst, steuert noch nichts.**
-> Die Erweiterung lässt sich installieren und einrichten. Sie öffnet aber noch kein Ventil, plant nichts und legt keine Entitäten an.
+> **Phase 1 fertig: Die Erweiterung steuert Ventile.** Sie ist noch nicht an echter Hardware erprobt. Vor dem ersten echten Einsatz: Testlauf je Ventil (10 s) im Assistenten.
 
-Was es schon gibt:
-- Einrichtung in Home Assistant (Wetterquelle, Zeitfenster zum Gießen)
-- das Datenmodell (Garten, Zonen, Ventile, Wasserversorgung, Programme, Sensoren) als leeres Gerüst
-- die Grundlage für Ventiltreiber, die ein Ventil **nur mit Dauer** öffnen können
-- automatische Tests
+Was es gibt:
+- **Einrichtung über die Oberfläche:** Ventile (Assistent mit Geräteerkennung und Testlauf), Zonen, Programme, Wasserversorgungen
+- **Treiber** für Schalter, Ventil-Entitäten, Zigbee2MQTT (Dauer geht immer mit ans Gerät) und Dienstaufrufe; Profil für SONOFF SWV
+- **Warteschlange:** je Wasserversorgung immer nur ein Ventil offen (einstellbar), das nächste erst, wenn das vorige nachweislich zu ist
+- **Programme** (nacheinander, abwechselnd, nach Priorität) mit Zeitplan und Überspringen bei Regen, Frost oder Wind
+- **Überwachung des Durchflusses:** Leck, Schlauch gelöst, kein Wasser, Ventil dichtet nicht, mit Alarm und Sperre der Zone
+- **Winterpause**, von Hand oder nach Datum
+- Anzeigen, Schalter und Knöpfe in Home Assistant; Dienste `run_zone`, `run_program`, `skip_next`, `stop_all`, `release_zone`
 
-Was geplant ist, steht im [Konzept](docs/KONZEPT.md). Wie die fertige Erweiterung bedient werden soll, zeigt das [Handbuch (Entwurf)](docs/HANDBUCH.md).
+Noch nicht: Berechnung der Gießdauer aus Wetter und Fläche (Phase 2; bis dahin stellst du die Dauer je Zone ein), Gartenplan-Editor (Phase 3), Dashboard-Karte (Phase 4). Details im [Konzept](docs/KONZEPT.md) und im [Handbuch (Entwurf)](docs/HANDBUCH.md).
 
 ## Installation (später, über HACS)
 

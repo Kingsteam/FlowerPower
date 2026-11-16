@@ -66,8 +66,15 @@ class WinterSwitch(PlannerEntity, SwitchEntity):
         return self.data.store.model.settings.winter_mode
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Winterpause beginnen."""
-        await self.data.async_set_winter_mode(True)
+        """Winterpause beginnen.
+
+        Läuft im Hintergrund weiter: Bis alle Ventile bestätigt zu sind und
+        die Geräte deaktiviert werden, kann es dauern. Der Schalter zeigt
+        sofort „an“, Zeitpläne starten ab jetzt nicht mehr.
+        """
+        self.hass.async_create_background_task(
+            self.data.async_set_winter_mode(True), "irrigation_planner Winterpause"
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Winterpause beenden."""

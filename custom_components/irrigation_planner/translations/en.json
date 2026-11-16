@@ -172,5 +172,327 @@
         "name": "Program enabled"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure irrigation planner",
+        "description": "Saving reloads the planner; a running irrigation is stopped.",
+        "menu_options": {
+          "valves": "Valves",
+          "zones": "Zones",
+          "programs": "Programs",
+          "supplies": "Water supplies",
+          "settings": "Settings"
+        }
+      },
+      "valves": {
+        "title": "Valves",
+        "menu_options": {
+          "add_valve": "Add valve",
+          "edit_valve": "Edit or test valve",
+          "remove_valve": "Remove valve"
+        }
+      },
+      "zones": {
+        "title": "Zones",
+        "menu_options": {
+          "add_zone": "Add zone",
+          "edit_zone": "Edit zone",
+          "remove_zone": "Remove zone"
+        }
+      },
+      "programs": {
+        "title": "Programs",
+        "menu_options": {
+          "add_program": "Add program",
+          "edit_program": "Edit program",
+          "remove_program": "Remove program"
+        }
+      },
+      "supplies": {
+        "title": "Water supplies",
+        "menu_options": {
+          "add_supply": "Add water supply",
+          "edit_supply": "Edit water supply",
+          "remove_supply": "Remove water supply"
+        }
+      },
+      "add_valve": {
+        "title": "Add valve (1/4): device",
+        "description": "Choose the device. Devices with a switch or valve are shown.",
+        "data": {
+          "device": "Device"
+        }
+      },
+      "valve_entities": {
+        "title": "Valve (2/4): entities and driver",
+        "description": "Suggested profile: {profile}. Check the assignment.",
+        "data": {
+          "name": "Name",
+          "driver": "Driver",
+          "profile": "Device profile",
+          "valve": "Valve (switch or valve)",
+          "flow": "Flow rate",
+          "volume": "Volume",
+          "status": "Device status",
+          "battery": "Battery"
+        },
+        "data_description": {
+          "driver": "Zigbee2MQTT and service call send the duration to the device (safer).",
+          "flow": "Used for monitoring."
+        }
+      },
+      "valve_driver": {
+        "title": "Valve (3/4): driver settings",
+        "description": "The open command must contain the duration as {placeholder}.",
+        "data": {
+          "friendly_name": "Zigbee2MQTT friendly name",
+          "base_topic": "MQTT base topic",
+          "open_service": "Open service (domain.service)",
+          "open_data": "Open data",
+          "duration_unit": "Duration unit",
+          "close_service": "Close service (empty = valve entity)",
+          "close_data": "Close data",
+          "device_timer": "Device closes by itself"
+        }
+      },
+      "valve_assign": {
+        "title": "Valve (4/4): assign and test",
+        "description": "Test run: the valve opens for {seconds} seconds.",
+        "data": {
+          "water_supply": "Water supply",
+          "create_zone": "Create zone",
+          "zone_name": "Zone name",
+          "zone_duration": "Zone watering duration",
+          "run_test": "Run test now"
+        }
+      },
+      "valve_test": {
+        "title": "Test run"
+      },
+      "valve_test_result": {
+        "title": "Test result",
+        "description": "{outcome}\n\nFlow: {flow}\nClosed afterwards: {closed}"
+      },
+      "edit_valve": {
+        "title": "Choose valve",
+        "data": {
+          "item": "Selection"
+        }
+      },
+      "remove_valve": {
+        "title": "Remove valve",
+        "data": {
+          "item": "Selection"
+        }
+      },
+      "edit_zone": {
+        "title": "Choose zone",
+        "data": {
+          "item": "Selection"
+        }
+      },
+      "remove_zone": {
+        "title": "Remove zone",
+        "data": {
+          "item": "Selection"
+        }
+      },
+      "edit_program": {
+        "title": "Choose program",
+        "data": {
+          "item": "Selection"
+        }
+      },
+      "remove_program": {
+        "title": "Remove program",
+        "data": {
+          "item": "Selection"
+        }
+      },
+      "edit_supply": {
+        "title": "Choose water supply",
+        "data": {
+          "item": "Selection"
+        }
+      },
+      "remove_supply": {
+        "title": "Remove water supply",
+        "data": {
+          "item": "Selection"
+        }
+      },
+      "add_zone": {
+        "title": "Add zone",
+        "data": {
+          "name": "Name",
+          "valve": "Valve",
+          "duration": "Watering duration",
+          "max_duration": "Maximum duration (0 = none)",
+          "priority": "Priority",
+          "enabled": "Zone enabled"
+        },
+        "data_description": {
+          "duration": "How long the zone waters (manual for now). 0 = none, skipped in programs.",
+          "max_duration": "Upper limit for every run of this zone.",
+          "priority": "For mode 'by priority': higher first."
+        }
+      },
+      "edit_zone_form": {
+        "title": "Edit zone",
+        "data": {
+          "name": "Name",
+          "valve": "Valve",
+          "duration": "Watering duration",
+          "max_duration": "Maximum duration (0 = none)",
+          "priority": "Priority",
+          "enabled": "Zone enabled"
+        },
+        "data_description": {
+          "duration": "How long the zone waters (manual for now). 0 = none, skipped in programs.",
+          "max_duration": "Upper limit for every run of this zone.",
+          "priority": "For mode 'by priority': higher first."
+        }
+      },
+      "add_program": {
+        "title": "Add program",
+        "data": {
+          "name": "Name",
+          "zones": "Zones (in this order)",
+          "mode": "Mode",
+          "pause_between": "Pause between valves",
+          "cycle": "Cycle length (cycle and soak)",
+          "soak": "Soak time (cycle and soak)",
+          "schedule": "Schedule",
+          "time": "Time",
+          "weekdays": "Weekdays (empty = every day)",
+          "interval_days": "Every N days (0 = off)",
+          "skip_on_rain": "Skip on rain",
+          "skip_on_frost": "Skip on frost",
+          "skip_on_wind": "Skip on strong wind",
+          "enabled": "Program enabled"
+        },
+        "data_description": {
+          "pause_between": "Lets the pressure recover, e.g. 10 to 30 s.",
+          "soak": "Minimum time between two cycles of the same zone.",
+          "schedule": "'Finish by' calculates the start from the total duration."
+        }
+      },
+      "edit_program_form": {
+        "title": "Edit program",
+        "data": {
+          "name": "Name",
+          "zones": "Zones (in this order)",
+          "mode": "Mode",
+          "pause_between": "Pause between valves",
+          "cycle": "Cycle length (cycle and soak)",
+          "soak": "Soak time (cycle and soak)",
+          "schedule": "Schedule",
+          "time": "Time",
+          "weekdays": "Weekdays (empty = every day)",
+          "interval_days": "Every N days (0 = off)",
+          "skip_on_rain": "Skip on rain",
+          "skip_on_frost": "Skip on frost",
+          "skip_on_wind": "Skip on strong wind",
+          "enabled": "Program enabled"
+        },
+        "data_description": {
+          "pause_between": "Lets the pressure recover, e.g. 10 to 30 s.",
+          "soak": "Minimum time between two cycles of the same zone.",
+          "schedule": "'Finish by' calculates the start from the total duration."
+        }
+      },
+      "add_supply": {
+        "title": "Add water supply",
+        "data": {
+          "name": "Name",
+          "max_open_valves": "Valves open at the same time"
+        },
+        "data_description": {
+          "max_open_valves": "Default 1. Only change if the pressure is sufficient for several valves."
+        }
+      },
+      "edit_supply_form": {
+        "title": "Edit water supply",
+        "data": {
+          "name": "Name",
+          "max_open_valves": "Valves open at the same time"
+        },
+        "data_description": {
+          "max_open_valves": "Default 1. Only change if the pressure is sufficient for several valves."
+        }
+      },
+      "settings": {
+        "title": "Settings",
+        "data": {
+          "weather_entity": "Weather source",
+          "window_start": "Watering window start",
+          "window_end": "Watering window end",
+          "winter_start": "Winter pause from (MM-DD)",
+          "winter_end": "Winter pause until (MM-DD)"
+        },
+        "data_description": {
+          "winter_start": "Optional, e.g. 11-01.",
+          "winter_end": "Optional, e.g. 04-01."
+        }
+      }
+    },
+    "error": {
+      "invalid": "Invalid: {error}",
+      "device_not_found": "Device not found.",
+      "entity_no_unique_id": "This entity has no unique ID.",
+      "profile_driver_mismatch": "Profile does not match the driver.",
+      "window_empty": "Start and end must differ."
+    },
+    "abort": {
+      "not_loaded": "The planner is not loaded.",
+      "nothing_to_select": "Nothing to select yet."
+    },
+    "progress": {
+      "hardware_test": "Test run in progress ({seconds} s)…"
+    }
+  },
+  "selector": {
+    "driver": {
+      "options": {
+        "ha_switch": "Switch (HA only)",
+        "ha_valve": "Valve entity (HA only)",
+        "zigbee2mqtt": "Zigbee2MQTT (duration to device)",
+        "service_call": "Service call (duration to device)"
+      }
+    },
+    "duration_unit": {
+      "options": {
+        "s": "Seconds",
+        "min": "Minutes (rounded up)"
+      }
+    },
+    "program_mode": {
+      "options": {
+        "sequence": "Sequence",
+        "cycle_soak": "Cycle and soak",
+        "priority": "By priority"
+      }
+    },
+    "schedule": {
+      "options": {
+        "window": "Finish by end of window",
+        "start_time": "Start time",
+        "finish_by": "Finish by",
+        "manual": "Manual only"
+      }
+    },
+    "weekday": {
+      "options": {
+        "0": "Monday",
+        "1": "Tuesday",
+        "2": "Wednesday",
+        "3": "Thursday",
+        "4": "Friday",
+        "5": "Saturday",
+        "6": "Sunday"
+      }
+    }
   }
 }

@@ -129,6 +129,12 @@ class HassValveDriver(ValveDriver):
             self._close_timer()
             self._close_timer = None
 
+    @callback
+    def async_cancel_failsafe(self) -> None:
+        """Verwirft das eingeplante Schließen (nur wenn das Ventil bestätigt zu ist)."""
+        if self.is_open is False:
+            self._cancel_close_timer()
+
     @property
     def close_pending(self) -> bool:
         """Gibt an, ob ein Sicherheits-Schließen eingeplant ist."""

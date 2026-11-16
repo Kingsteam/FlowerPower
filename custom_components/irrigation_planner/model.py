@@ -11,6 +11,7 @@ nie über die ``entity_id``. So machen Umbenennungen nichts kaputt.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date
 from enum import StrEnum
 from typing import Any
 
@@ -203,6 +204,8 @@ class Settings:
     # Winterpause automatisch nach Datum (MM-TT), z. B. "11-01" bis "03-31".
     winter_start: str | None = None
     winter_end: str | None = None
+    # Geräte, die die Winterpause deaktiviert hat (nur diese werden wieder aktiviert).
+    winter_disabled_devices: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True, kw_only=True)
@@ -222,6 +225,12 @@ class GardenModel:
 
         Löst ``ValueError`` mit einer verständlichen Meldung aus.
         """
+        for label, value in (
+            ("Winterpause ab", self.settings.winter_start),
+            ("Winterpause bis", self.settings.winter_end),
+        ):
+            if value is not None:
+                _check_month_day(label, value)
         zone_ids = _unique_ids("Zone", self.zones)
         valve_ids = _unique_ids("Ventil", self.valves)
         supply_ids = _unique_ids("Wasserversorgung", self.water_supplies)
@@ -309,3 +318,11 @@ def _check_time(owner: str, value: str) -> None:
         raise ValueError(f"{owner}: {value!r} ist keine Uhrzeit (HH:MM)") from None
     if not (0 <= hour < 24 and 0 <= minute < 60 and 0 <= second < 60) or len(parts) > 3:
         raise ValueError(f"{owner}: {value!r} ist keine Uhrzeit (HH:MM)")
+
+
+def _check_month_day(owner: str, value: str) -> None:
+    try:
+        month, day = (int(x) for x in value.split("-"))
+        date(2024, month, day)  # Schaltjahr, damit 02-29 gültig ist
+    except ValueError:
+        raise ValueError(f"{owner}: {value!r} ist kein Datum (MM-TT)") from None

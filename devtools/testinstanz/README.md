@@ -6,7 +6,7 @@ Eine eigene, **komplett simulierte** Home-Assistant-Instanz zum Ausprobieren des
 
 ```bash
 source ../venv/bin/activate          # venv aus CLAUDE.md
-uv pip install home-assistant-frontend==20260930.5   # einmalig; Version passend zu HA 2026.10.4
+uv pip install -r devtools/testinstanz/requirements.txt   # einmalig
 python devtools/testinstanz/start.py
 ```
 

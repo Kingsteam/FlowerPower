@@ -5,7 +5,13 @@ Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die V
 
 ## [Unveröffentlicht]
 
+## [0.2.0] – 2026-11-16
+
+Phase 1 (MVP Backend) fertig.
+
 ### Neu
+- Einrichtung über die Oberfläche (Einstellungen → Bewässerungsplaner → Konfigurieren): Ventile, Zonen, Programme, Wasserversorgungen und Einstellungen anlegen, ändern, löschen. Assistent „Ventil hinzufügen“ mit Geräteerkennung (Profil, Treiber, Entitäten) und optionalem Testlauf (10 s, über die Warteschlange), der die Sicherheitsstufe bestimmt.
+- Winterpause nach Konzept: alles schließen und bestätigen, Zeitpläne aus, zugeordnete Geräte deaktivieren (nur wenn alles zu ist) und beim Ende genau diese wieder aktivieren; optional automatisch nach Datum.
 - Überwachung des Durchflusses (`watchdog.py`): Leck, Durchfluss zu hoch (Schlauch gelöst), kein Durchfluss oder Wassermangel, Durchfluss zu niedrig, Durchfluss bei geschlossenem Ventil, zu viele Ventile offen. Reaktion: Ventil schließen, Benachrichtigung, Ereignis `irrigation_planner_alarm`; bei Leck und zu hohem Durchfluss bleibt die Zone gesperrt, bis sie mit „Zone freigeben“ (Knopf oder Dienst `release_zone`) wieder freigegeben wird. In der Winterpause ruht die Überwachung.
 - Der Durchfluss jedes Ventils wird aus ungestörten Läufen gelernt (gleitender Mittelwert).
 - Entitäten: Status, aktive Zone, Ende des Laufs, Warteschlange, Problem-Melder, Schalter Automatik und Winterpause, Knöpfe Alles stoppen und Zone überspringen; je Zone Zustand, letzter Lauf, Zone aktiv, Gießdauer, Jetzt gießen; je Programm nächster Lauf, geschätzte Dauer, Programm aktiv, Ablauf, Programm starten. Änderungen werden gespeichert.

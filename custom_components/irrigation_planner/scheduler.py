@@ -38,17 +38,32 @@ from .const import (
     CLOSE_CONFIRM_TIMEOUT_S,
     CLOSE_RETRY_INTERVAL_S,
     DEFAULT_MAX_OPEN_VALVES,
+    HARDWARE_TEST_MAX_S,
+    HARDWARE_TEST_MIN_S,
     LOGGER,
     MAX_VALVE_DURATION_S,
     UNASSIGNED_SUPPLY_ID,
 )
-from .drivers.base import validate_duration
+from .drivers.base import Capability, validate_duration
 from .drivers.ha import HassValveDriver
 from .model import GardenModel, ValveRole
 
 
 class QueueError(ValueError):
     """Ein Lauf kann nicht eingereiht werden (verständliche Meldung)."""
+
+
+@dataclass(slots=True)
+class HardwareTestResult:
+    """Ergebnis eines Testlaufs."""
+
+    opened: bool
+    # True: Gerät hat selbst geschlossen; False: nicht; None: nicht prüfbar
+    # (Treiber schickt keine Dauer ans Gerät).
+    device_closed: bool | None = None
+    flow_l_min: float | None = None
+    closed_ok: bool = True
+    error: str | None = None
 
 
 class RunState(StrEnum):
@@ -100,6 +115,7 @@ class SupplyQueue:
     active: dict[str, Run] = field(default_factory=dict)  # valve_id → Lauf
     stuck: set[str] = field(default_factory=set)  # Ventile, die nicht schließen
     ready: bool = False  # Startprüfung erledigt
+    test_running: bool = False  # Testlauf: Warteschlange wartet
 
     @property
     def error(self) -> str | None:
@@ -448,7 +464,7 @@ class IrrigationScheduler:
     @callback
     def _kick(self, supply: SupplyQueue) -> None:
         """Startet wartende Läufe, solange Platz ist (immer der Reihe nach)."""
-        if self._stopping or not supply.ready:
+        if self._stopping or not supply.ready or supply.test_running:
             return
         while supply.pending:
             occupied = self._occupied(supply)
@@ -531,7 +547,10 @@ class IrrigationScheduler:
 
     async def _close_confirmed(self, valve_id: str) -> bool:
         """Schickt OFF und wartet, bis das Ventil als zu gemeldet wird."""
-        driver = self.drivers[valve_id]
+        return await self._close_driver_confirmed(self.drivers[valve_id])
+
+    async def _close_driver_confirmed(self, driver: HassValveDriver) -> bool:
+        """Wie ``_close_confirmed``, für einen beliebigen Treiber."""
         for attempt in range(1, CLOSE_ATTEMPTS + 1):
             try:
                 await driver.async_close()
@@ -549,6 +568,92 @@ class IrrigationScheduler:
             if driver.is_open is False:
                 return True
         return False
+
+    async def async_wait_idle(self, timeout_s: int) -> bool:
+        """Wartet, bis nichts mehr läuft und alles bestätigt zu ist."""
+        for _ in range(timeout_s):
+            busy = self._closing or any(
+                s.active or s.pending or s.stuck or s.test_running
+                for s in self.supplies.values()
+            )
+            if not busy:
+                return True
+            await self._sleep(None, 1)
+        return False
+
+    async def async_hardware_test(
+        self,
+        driver: HassValveDriver,
+        supply_id: str | None,
+        duration_s: int,
+        flow_reader: Callable[[], float | None] | None = None,
+    ) -> HardwareTestResult:
+        """Testlauf: öffnen mit Dauer, prüfen, ob das Gerät selbst schließt.
+
+        Sicherheitsregeln: nur 10 bis 60 s; nur wenn auf der Wasserversorgung
+        nichts läuft; die Warteschlange wartet, bis der Test vorbei ist.
+        Nach Ablauf + 5 s wird geprüft, ob das Ventil ohne Schließbefehl zu
+        ist. (Treiber mit Gerätetimer schließen von Home Assistant aus erst
+        nach Ablauf + ``FAILSAFE_GRACE_S``.) Danach wird auf jeden Fall
+        geschlossen und bestätigt.
+        """
+        if not HARDWARE_TEST_MIN_S <= duration_s <= HARDWARE_TEST_MAX_S:
+            raise QueueError(
+                f"Testlauf nur mit {HARDWARE_TEST_MIN_S} bis {HARDWARE_TEST_MAX_S} s"
+            )
+        if self._stopping:
+            raise QueueError("Der Bewässerungsplaner wird gerade beendet")
+        supply = self.supplies.get(supply_id or "")
+        if supply is not None and (
+            supply.active
+            or supply.pending
+            or supply.test_running
+            or self._occupied(supply)
+        ):
+            raise QueueError(
+                f"Auf „{supply.name}“ läuft gerade etwas. Testlauf bitte später."
+            )
+        if supply is not None:
+            supply.test_running = True
+        try:
+            try:
+                await driver.async_open(duration_s)
+            except Exception as err:
+                closed = await self._close_driver_confirmed(driver)
+                return HardwareTestResult(
+                    opened=False, closed_ok=closed, error=str(err)
+                )
+            await self._sleep(None, max(1, duration_s - 2))
+            flow = flow_reader() if flow_reader else None
+            await self._sleep(None, 2 + 5)
+            device_closed: bool | None = None
+            if Capability.DEVICE_TIMER in driver.capabilities:
+                device_closed = driver.is_open is False
+            closed = driver.is_open is False or await self._close_driver_confirmed(
+                driver
+            )
+            if closed:
+                driver.async_cancel_failsafe()
+            if not closed:
+                LOGGER.error(
+                    "%s: Testlauf beendet, aber das Ventil schließt nicht!",
+                    driver.valve.name,
+                )
+                if supply is not None:
+                    self.drivers.setdefault(driver.valve.id, driver)
+                    self._supply_of_valve.setdefault(driver.valve.id, supply.id)
+                    self._mark_stuck(supply, driver.valve.id)
+            return HardwareTestResult(
+                opened=True,
+                device_closed=device_closed,
+                flow_l_min=flow,
+                closed_ok=closed,
+            )
+        finally:
+            if supply is not None:
+                supply.test_running = False
+                self._notify()
+                self._kick(supply)
 
     async def _close_or_mark(self, supply: SupplyQueue, valve_id: str) -> None:
         self._closing.add(valve_id)

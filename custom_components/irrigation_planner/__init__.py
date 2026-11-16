@@ -23,6 +23,7 @@ from .drivers.registry import create_driver
 from .profiles import Profile, async_load_builtin_profiles
 from .programs import ProgramManager
 from .scheduler import IrrigationScheduler
+from .season import Season
 from .services import async_setup_services
 from .store import IrrigationPlannerStore
 from .watchdog import Watchdog
@@ -49,6 +50,7 @@ class IrrigationPlannerData:
     scheduler: IrrigationScheduler
     programs: ProgramManager
     watchdog: Watchdog
+    season: Season | None = None
     # Geräte-ID des Hauptgeräts (Zonen und Programme hängen daran).
     main_device_id: str = ""
 
@@ -72,15 +74,9 @@ class IrrigationPlannerData:
         self.programs.async_notify()
 
     async def async_set_winter_mode(self, on: bool) -> None:
-        """Winterpause ein- oder ausschalten.
-
-        Beim Einschalten werden alle Läufe beendet und alle Ventile
-        geschlossen; Zeitpläne starten dann nicht mehr.
-        """
-        self.store.model.settings.winter_mode = on
-        if on:
-            await self.scheduler.async_stop_all()
-        self.async_model_changed()
+        """Winterpause ein- oder ausschalten (siehe ``season.py``)."""
+        assert self.season is not None
+        await self.season.async_set(on)
 
 
 type IrrigationPlannerConfigEntry = ConfigEntry[IrrigationPlannerData]
@@ -139,6 +135,8 @@ async def async_setup_entry(
         entry_type=dr.DeviceEntryType.SERVICE,
     )
     entry.runtime_data.main_device_id = main_device.id
+    entry.runtime_data.season = Season(hass, entry.runtime_data)
+    entry.runtime_data.season.async_start()
     await scheduler.async_start()
     programs.async_start()
     watchdog.async_start()
@@ -158,5 +156,7 @@ async def async_unload_entry(
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     entry.runtime_data.programs.async_stop()
     entry.runtime_data.watchdog.async_stop()
+    if entry.runtime_data.season is not None:
+        entry.runtime_data.season.async_stop()
     await entry.runtime_data.scheduler.async_shutdown()
     return unloaded

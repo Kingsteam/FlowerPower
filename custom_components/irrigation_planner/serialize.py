@@ -326,6 +326,7 @@ def settings_to_dict(settings: Settings) -> Data:
         "winter_mode": settings.winter_mode,
         "winter_start": settings.winter_start,
         "winter_end": settings.winter_end,
+        "winter_disabled_devices": list(settings.winter_disabled_devices),
     }
 
 
@@ -336,6 +337,7 @@ def settings_from_dict(raw: Data) -> Settings:
         winter_mode=bool(_opt(raw, "winter_mode", False)),
         winter_start=raw.get("winter_start"),
         winter_end=raw.get("winter_end"),
+        winter_disabled_devices=list(_opt(raw, "winter_disabled_devices", [])),
     )
 
 

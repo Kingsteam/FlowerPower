@@ -33,6 +33,18 @@ OPT_OPEN_PAYLOAD: Final = "open_payload"
 OPT_CLOSE_PAYLOAD: Final = "close_payload"
 
 
+OPT_DEVICE_TIMER: Final = "device_timer"
+
+
+def _timer_confirmed(valve: Valve, profile: Profile | None) -> bool:
+    """Gerätetimer bestätigt? Ein Testlauf-Ergebnis (Option) hat Vorrang."""
+    if OPT_DEVICE_TIMER in valve.driver_options:
+        return bool(valve.driver_options[OPT_DEVICE_TIMER])
+    return Capability.DEVICE_TIMER in valve.capabilities or (
+        profile is not None and Capability.DEVICE_TIMER in profile.capabilities
+    )
+
+
 class Zigbee2MqttDriver(HassValveDriver):
     """Schaltet über ``<base_topic>/<friendly_name>/set``."""
 
@@ -74,9 +86,7 @@ class Zigbee2MqttDriver(HassValveDriver):
             self.close_payload, dict
         ):
             raise ValueError(f"{valve.name}: Befehle müssen JSON-Objekte sein")
-        timer_known = Capability.DEVICE_TIMER in valve.capabilities or (
-            profile is not None and Capability.DEVICE_TIMER in profile.capabilities
-        )
+        timer_known = _timer_confirmed(valve, profile)
         if timer_known and not contains_placeholder(self.open_payload):
             # Sicherheitsregel 1: Kann das Gerät einen Timer, MUSS die Dauer mit.
             raise ValueError(
@@ -87,11 +97,9 @@ class Zigbee2MqttDriver(HassValveDriver):
 
     def _device_timer(self) -> bool:
         """Gerätetimer nur, wenn die Dauer im Befehl steckt UND bestätigt ist."""
-        confirmed = Capability.DEVICE_TIMER in self.valve.capabilities or (
-            self.profile is not None
-            and Capability.DEVICE_TIMER in self.profile.capabilities
+        return _timer_confirmed(self.valve, self.profile) and contains_placeholder(
+            self.open_payload
         )
-        return confirmed and contains_placeholder(self.open_payload)
 
     async def _publish(self, payload: dict[str, Any]) -> None:
         if not await mqtt.async_wait_for_mqtt_client(self.hass):
